@@ -1,8 +1,114 @@
-export default function EditListingPage() {
+import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { ListingWizard } from "@/components/host/listing-wizard";
+import { Button } from "@/components/ui/button";
+
+export const metadata = {
+  title: "Edit Listing",
+};
+
+export default async function EditListingPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const { id } = await params;
+
+  const listing = await db.listing.findUnique({
+    where: { id },
+    include: {
+      amenities: true,
+      connectivityProfile: true,
+      images: { orderBy: { order: "asc" } },
+      availabilityRules: true,
+      blockedDates: { where: { source: "MANUAL" } },
+    },
+  });
+
+  if (!listing || listing.hostId !== session.user.id) {
+    notFound();
+  }
+
+  // Transform listing data into wizard form shape
+  const initialData = {
+    title: listing.title,
+    description: listing.description,
+    workspaceType: listing.workspaceType,
+    address: listing.address,
+    city: listing.city,
+    state: listing.state || "",
+    country: listing.country,
+    postalCode: listing.postalCode || "",
+    lat: listing.lat,
+    lng: listing.lng,
+    maxGuests: listing.maxGuests,
+    pricePerDay: listing.pricePerDay,
+    cleaningFee: listing.cleaningFee,
+    cancellationPolicy: listing.cancellationPolicy,
+    amenities: listing.amenities.map((a) => ({
+      category: a.category,
+      name: a.name,
+      description: a.description || undefined,
+      quantity: a.quantity,
+    })),
+    connectivity: listing.connectivityProfile
+      ? {
+          declaredDownloadMbps:
+            listing.connectivityProfile.declaredDownloadMbps,
+          declaredUploadMbps: listing.connectivityProfile.declaredUploadMbps,
+          networkType: listing.connectivityProfile.networkType,
+          speedTestScreenshotUrl:
+            listing.connectivityProfile.speedTestScreenshotUrl || undefined,
+          speedTestDate: listing.connectivityProfile.speedTestDate?.toISOString() || undefined,
+          hasBackupConnection:
+            listing.connectivityProfile.hasBackupConnection,
+          backupType: listing.connectivityProfile.backupType || undefined,
+        }
+      : {
+          declaredDownloadMbps: 100,
+          declaredUploadMbps: 50,
+          networkType: "WIFI" as const,
+          hasBackupConnection: false,
+        },
+    images: listing.images.map((img) => ({
+      url: img.url,
+      alt: img.alt || undefined,
+      order: img.order,
+      isPrimary: img.isPrimary,
+    })),
+    availability: listing.availabilityRules.map((r) => ({
+      dayOfWeek: r.dayOfWeek ?? undefined,
+      startDate: r.startDate?.toISOString() || undefined,
+      endDate: r.endDate?.toISOString() || undefined,
+      available: r.available,
+    })),
+    blockedDates: listing.blockedDates.map((d) => ({
+      date: d.date.toISOString().split("T")[0],
+      source: d.source as "MANUAL" | "ICAL" | "BOOKING",
+    })),
+  };
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="text-2xl font-bold">Edit Listing</h1>
-      <p className="mt-2 text-gray-600">Coming soon.</p>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Edit Listing</h1>
+          <p className="mt-1 text-gray-600">{listing.title}</p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/host/listings">Back to Listings</Link>
+        </Button>
+      </div>
+      <ListingWizard
+        mode="edit"
+        listingId={listing.id}
+        initialData={initialData}
+      />
     </div>
   );
 }
