@@ -1,0 +1,441 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// AUTH (NextAuth.js / Auth.js)
+// ============================================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================================
+// USERS
+// ============================================================================
+
+enum UserRole {
+  GUEST
+  HOST
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  phone         String?
+  phoneVerified Boolean   @default(false)
+  image         String?
+  bio           String?   @db.Text
+  linkedinUrl   String?
+  role          UserRole  @default(GUEST)
+
+  // Stripe
+  stripeCustomerId       String? @unique
+  stripeConnectAccountId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  accounts       Account[]
+  sessions       Session[]
+  listings       Listing[]
+  bookings       Booking[]        @relation("GuestBookings")
+  reviewsWritten Review[]         @relation("ReviewAuthor")
+  sentMessages   Message[]        @relation("MessageSender")
+  guestThreads   MessageThread[]  @relation("ThreadGuest")
+  hostThreads    MessageThread[]  @relation("ThreadHost")
+}
+
+// ============================================================================
+// LISTINGS
+// ============================================================================
+
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  REJECTED
+}
+
+enum WorkspaceType {
+  PRIVATE_OFFICE
+  STUDIO
+  MEETING_ROOM
+  HOME_OFFICE
+  HYBRID_SPACE
+}
+
+enum CancellationPolicy {
+  FLEXIBLE
+  MODERATE
+  STRICT
+}
+
+model Listing {
+  id     String @id @default(cuid())
+  hostId String
+  status ListingStatus @default(DRAFT)
+
+  // Core info
+  title       String
+  description String  @db.Text
+  slug        String  @unique
+
+  // Type
+  workspaceType WorkspaceType
+
+  // Location
+  address    String
+  city       String
+  state      String?
+  country    String
+  postalCode String?
+  lat        Float
+  lng        Float
+
+  // Capacity
+  maxGuests Int @default(1)
+
+  // Pricing (in cents)
+  pricePerDay Int
+  cleaningFee Int      @default(0)
+  currency    String   @default("USD")
+
+  // Policy
+  cancellationPolicy CancellationPolicy @default(FLEXIBLE)
+
+  // Work Score (computed, cached)
+  workScore Int @default(0)
+
+  // iCal sync
+  icalUrl         String?
+  icalLastSyncAt  DateTime?
+
+  // Admin
+  rejectionReason String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  host                User                 @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  images              ListingImage[]
+  amenities           ListingAmenity[]
+  connectivityProfile ConnectivityProfile?
+  availabilityRules   AvailabilityRule[]
+  blockedDates        BlockedDate[]
+  bookings            Booking[]
+  reviews             Review[]
+  messageThreads      MessageThread[]
+
+  @@index([status])
+  @@index([city])
+  @@index([country])
+  @@index([workspaceType])
+  @@index([workScore])
+  @@index([pricePerDay])
+  @@index([lat, lng])
+}
+
+model ListingImage {
+  id        String  @id @default(cuid())
+  listingId String
+  url       String
+  alt       String?
+  order     Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+}
+
+enum AmenityCategory {
+  DESK
+  MONITOR
+  MEETING
+  CONNECTIVITY
+  ERGONOMICS
+  QUIET
+  AV
+  KITCHEN
+  BATHROOM
+  PARKING
+  OTHER
+}
+
+model ListingAmenity {
+  id        String          @id @default(cuid())
+  listingId String
+  category  AmenityCategory
+  name      String
+  description String?
+  quantity  Int             @default(1)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+}
+
+enum NetworkType {
+  WIFI
+  WIRED
+  BOTH
+}
+
+model ConnectivityProfile {
+  id        String @id @default(cuid())
+  listingId String @unique
+
+  declaredDownloadMbps Float
+  declaredUploadMbps   Float
+  networkType          NetworkType @default(WIFI)
+
+  speedTestScreenshotUrl String?
+  speedTestDate          DateTime?
+
+  hasBackupConnection Boolean @default(false)
+  backupType          String?
+
+  verified Boolean @default(false)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// AVAILABILITY
+// ============================================================================
+
+model AvailabilityRule {
+  id        String @id @default(cuid())
+  listingId String
+
+  dayOfWeek Int?      // 0=Sunday, 6=Saturday. null = date range mode
+  startDate DateTime? // For date range mode
+  endDate   DateTime? // For date range mode
+  available Boolean   @default(true)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+}
+
+enum BlockedDateSource {
+  MANUAL
+  ICAL
+  BOOKING
+}
+
+model BlockedDate {
+  id        String            @id @default(cuid())
+  listingId String
+  date      DateTime          @db.Date
+  source    BlockedDateSource @default(MANUAL)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, date])
+  @@index([listingId])
+}
+
+// ============================================================================
+// BOOKINGS
+// ============================================================================
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED_BY_GUEST
+  CANCELLED_BY_HOST
+  COMPLETED
+  REFUNDED
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  guestId   String
+  listingId String
+  status    BookingStatus @default(PENDING)
+
+  checkIn       DateTime @db.Date
+  checkOut      DateTime @db.Date
+  numberOfDays  Int
+  numberOfGuests Int     @default(1)
+
+  // Pricing (in cents)
+  subtotal   Int // pricePerDay * numberOfDays
+  cleaningFee Int @default(0)
+  serviceFee Int // 12% of subtotal
+  totalPrice Int // subtotal + cleaningFee + serviceFee
+  hostPayout Int // subtotal + cleaningFee - stripe fees
+
+  // Stripe
+  stripePaymentIntentId String? @unique
+  stripeTransferId      String?
+
+  // Guest info
+  specialRequests    String? @db.Text
+  calendarEventSent  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  guest     User              @relation("GuestBookings", fields: [guestId], references: [id])
+  listing   Listing           @relation(fields: [listingId], references: [id])
+  attendees BookingAttendee[]
+  review    Review?
+  messages  MessageThread[]
+
+  @@index([guestId])
+  @@index([listingId])
+  @@index([status])
+  @@index([checkIn])
+}
+
+enum AttendeeStatus {
+  INVITED
+  CONFIRMED
+}
+
+model BookingAttendee {
+  id        String         @id @default(cuid())
+  bookingId String
+  email     String
+  name      String?
+  status    AttendeeStatus @default(INVITED)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, email])
+  @@index([bookingId])
+}
+
+// ============================================================================
+// REVIEWS
+// ============================================================================
+
+enum ReviewTargetType {
+  LISTING
+  GUEST
+}
+
+model Review {
+  id        String           @id @default(cuid())
+  bookingId String           @unique
+  authorId  String
+  listingId String?
+  targetType ReviewTargetType
+
+  // Ratings (1-5)
+  overallRating  Int
+  wifiAccuracy   Int? // Only for LISTING reviews
+  quietness      Int? // Only for LISTING reviews
+  deskSetup      Int? // Only for LISTING reviews
+  cleanliness    Int? // Only for LISTING reviews
+
+  comment      String? @db.Text
+  hostResponse String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id])
+  author  User    @relation("ReviewAuthor", fields: [authorId], references: [id])
+  listing Listing? @relation(fields: [listingId], references: [id])
+
+  @@index([listingId])
+  @@index([authorId])
+}
+
+// ============================================================================
+// MESSAGING
+// ============================================================================
+
+enum ThreadType {
+  INQUIRY
+  BOOKING
+}
+
+model MessageThread {
+  id        String     @id @default(cuid())
+  listingId String
+  bookingId String?
+  guestId   String
+  hostId    String
+  type      ThreadType @default(INQUIRY)
+
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  // Relations
+  listing  Listing   @relation(fields: [listingId], references: [id])
+  booking  Booking?  @relation(fields: [bookingId], references: [id])
+  guest    User      @relation("ThreadGuest", fields: [guestId], references: [id])
+  host     User      @relation("ThreadHost", fields: [hostId], references: [id])
+  messages Message[]
+
+  @@index([guestId])
+  @@index([hostId])
+  @@index([listingId])
+}
+
+model Message {
+  id       String @id @default(cuid())
+  threadId String
+  senderId String
+
+  content String @db.Text
+  readAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User          @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([threadId])
+  @@index([senderId])
+}
