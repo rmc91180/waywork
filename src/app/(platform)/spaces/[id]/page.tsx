@@ -15,6 +15,8 @@ import { WORKSPACE_TYPES, CANCELLATION_POLICIES, AMENITY_CATEGORIES } from "@/li
 import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
 import { formatCurrency } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
+import { BookingSidebar } from "@/components/booking/booking-sidebar";
+import { InquiryButton } from "@/components/messaging/inquiry-button";
 import type { Metadata } from "next";
 
 interface Props {
@@ -403,102 +405,18 @@ export default async function SpaceDetailPage({ params }: Props) {
         </div>
 
         {/* Booking sidebar */}
-        <div className="w-full lg:w-96 flex-shrink-0">
-          <Card className="sticky top-24">
-            <CardContent className="p-6">
-              <div className="flex items-baseline justify-between mb-4">
-                <div>
-                  <span className="text-2xl font-bold">
-                    {formatCurrency(listing.pricePerDay)}
-                  </span>
-                  <span className="text-gray-500"> /day</span>
-                </div>
-                <div
-                  className={cn(
-                    "text-lg font-bold",
-                    getWorkScoreColor(listing.workScore)
-                  )}
-                >
-                  Score: {listing.workScore}
-                </div>
-              </div>
-
-              {/* Quick info */}
-              <div className="space-y-2 mb-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Guests</span>
-                  <span>Up to {listing.maxGuests}</span>
-                </div>
-                {listing.connectivityProfile && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Internet</span>
-                    <span>
-                      {listing.connectivityProfile.declaredDownloadMbps} Mbps
-                    </span>
-                  </div>
-                )}
-                {listing.cleaningFee > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Cleaning fee</span>
-                    <span>{formatCurrency(listing.cleaningFee)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Service fee (12%)</span>
-                  <span>
-                    {formatCurrency(Math.round(listing.pricePerDay * 0.12))}
-                    /day
-                  </span>
-                </div>
-              </div>
-
-              <Separator className="my-4" />
-
-              {/* Booking form placeholder */}
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs font-medium text-gray-500">
-                      CHECK-IN
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded-md px-2 py-1.5 text-sm mt-1"
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-500">
-                      CHECK-OUT
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded-md px-2 py-1.5 text-sm mt-1"
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-500">
-                    GUESTS
-                  </label>
-                  <select className="w-full border rounded-md px-2 py-1.5 text-sm mt-1">
-                    {Array.from({ length: listing.maxGuests }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1} guest{i > 0 ? "s" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <Button className="w-full" size="lg">
-                  Book This Space
-                </Button>
-                <p className="text-xs text-center text-gray-500">
-                  You won't be charged yet
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="w-full lg:w-96 flex-shrink-0 space-y-4">
+          <BookingSidebar
+            listingId={listing.id}
+            pricePerDay={listing.pricePerDay}
+            cleaningFee={listing.cleaningFee}
+            maxGuests={listing.maxGuests}
+            cancellationPolicy={listing.cancellationPolicy}
+          />
+          <InquiryButton
+            listingId={listing.id}
+            hostName={listing.host.name || "Host"}
+          />
         </div>
       </div>
     </div>

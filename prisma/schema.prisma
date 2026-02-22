@@ -149,6 +149,10 @@ model Listing {
   // Work Score (computed, cached)
   workScore Int @default(0)
 
+  // Review stats (computed, cached)
+  averageRating Float?
+  reviewCount   Int    @default(0)
+
   // iCal sync
   icalUrl         String?
   icalLastSyncAt  DateTime?
