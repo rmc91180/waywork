@@ -473,9 +473,18 @@ async function main() {
     },
   ];
 
-  // Create listings
+  // Create listings (idempotent - skip if slug already exists)
   for (const listingData of listings) {
     const { amenities, connectivity, ...data } = listingData;
+
+    // Check if listing already exists
+    const existing = await prisma.listing.findFirst({
+      where: { slug: data.slug },
+    });
+    if (existing) {
+      console.log(`Skipping existing listing: ${data.title}`);
+      continue;
+    }
 
     // Compute work score
     const score = computeWorkScore({ amenities, connectivity });
