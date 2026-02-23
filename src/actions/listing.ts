@@ -151,6 +151,9 @@ export async function setListingAmenities(
 
   // Recompute work score
   await recomputeWorkScore(listingId);
+
+  revalidatePath(`/host/listings/${listingId}`);
+  revalidatePath(`/spaces/${listingId}`);
 }
 
 // ============================================================================
@@ -256,6 +259,9 @@ export async function setAvailabilityRules(
       available: r.available,
     })),
   });
+
+  revalidatePath(`/host/listings/${listingId}`);
+  revalidatePath(`/host/calendar`);
 }
 
 export async function addBlockedDates(
@@ -288,6 +294,9 @@ export async function addBlockedDates(
       update: {},
     });
   }
+
+  revalidatePath(`/host/listings/${listingId}`);
+  revalidatePath(`/host/calendar`);
 }
 
 export async function removeBlockedDate(listingId: string, dateStr: string) {
@@ -306,6 +315,9 @@ export async function removeBlockedDate(listingId: string, dateStr: string) {
       listingId_date: { listingId, date: new Date(dateStr) },
     },
   });
+
+  revalidatePath(`/host/listings/${listingId}`);
+  revalidatePath(`/host/calendar`);
 }
 
 // ============================================================================

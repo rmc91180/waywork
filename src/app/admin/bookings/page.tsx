@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import type { Prisma } from "@/generated/prisma";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -30,14 +31,14 @@ export default async function AdminBookingsPage({ searchParams }: Props) {
   const page = parseInt(params.page || "1", 10);
   const perPage = 20;
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.BookingWhereInput = {};
   if (statusFilter) {
-    where.status = statusFilter;
+    where.status = statusFilter as Prisma.EnumBookingStatusFilter;
   }
 
   const [bookings, total] = await Promise.all([
     db.booking.findMany({
-      where: where as any,
+      where,
       include: {
         listing: {
           select: { id: true, title: true, slug: true },
@@ -50,7 +51,7 @@ export default async function AdminBookingsPage({ searchParams }: Props) {
       skip: (page - 1) * perPage,
       take: perPage,
     }),
-    db.booking.count({ where: where as any }),
+    db.booking.count({ where }),
   ]);
 
   const totalPages = Math.ceil(total / perPage);

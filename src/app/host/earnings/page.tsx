@@ -267,9 +267,11 @@ export default async function EarningsPage() {
                       </td>
                       <td className="py-3 text-right text-gray-600">
                         {formatCurrency(
-                          Math.round(
-                            listing.totalEarnings / listing.bookingCount
-                          )
+                          listing.bookingCount > 0
+                            ? Math.round(
+                                listing.totalEarnings / listing.bookingCount
+                              )
+                            : 0
                         )}
                       </td>
                       <td className="py-3 text-right font-medium">

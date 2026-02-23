@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getStripe, calculatePricing, formatCurrency } from "@/lib/stripe";
 import { createBookingSchema } from "@/lib/validators";
 import { differenceInDays } from "date-fns";
+import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Checkout error:", error);
-    if (error instanceof Error && error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         { error: "Invalid booking data" },
         { status: 400 }

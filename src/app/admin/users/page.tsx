@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { AdminUserRoleSelect } from "@/components/admin/user-role-select";
+import type { Prisma } from "@/generated/prisma";
 
 const roleColors: Record<string, string> = {
   GUEST: "bg-gray-100 text-gray-800",
@@ -28,7 +29,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const page = parseInt(params.page || "1", 10);
   const perPage = 20;
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.UserWhereInput = {};
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
@@ -36,12 +37,12 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     ];
   }
   if (roleFilter) {
-    where.role = roleFilter;
+    where.role = roleFilter as Prisma.EnumUserRoleFilter;
   }
 
   const [users, total] = await Promise.all([
     db.user.findMany({
-      where: where as any,
+      where,
       include: {
         _count: {
           select: { listings: true, bookings: true, reviewsWritten: true },
@@ -51,7 +52,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       skip: (page - 1) * perPage,
       take: perPage,
     }),
-    db.user.count({ where: where as any }),
+    db.user.count({ where }),
   ]);
 
   const totalPages = Math.ceil(total / perPage);

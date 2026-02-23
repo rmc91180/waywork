@@ -6,6 +6,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { nanoid } from "nanoid";
 
 function getS3Client() {
+  if (!process.env.R2_ACCOUNT_ID) {
+    throw new Error("R2_ACCOUNT_ID environment variable is not set");
+  }
   return new S3Client({
     region: "auto",
     endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
