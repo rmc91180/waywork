@@ -93,7 +93,7 @@ export function Header() {
                   </DropdownMenuItem>
                   {session.user.role === "ADMIN" && (
                     <DropdownMenuItem asChild>
-                      <Link href="/admin/listings">Admin</Link>
+                      <Link href="/admin/dashboard">Admin</Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
