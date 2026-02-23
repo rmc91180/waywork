@@ -10,19 +10,17 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "WayWork - Work-Verified Offsite Spaces",
+    default: "WayWork - Work-Verified Remote Workspaces",
     template: "%s | WayWork",
   },
-  description:
-    "Find and book work-verified spaces for focused productivity and small-team collaboration. Guaranteed connectivity, real desks, and verified work readiness.",
-  keywords: [
-    "coworking",
-    "offsite",
-    "remote work",
-    "workspace",
-    "work from anywhere",
-    "team offsite",
-  ],
+  description: "Find and book work-verified remote workspaces. Every space is rated on WiFi speed, desk setup, quietness, and more.",
+  keywords: ["remote work", "coworking", "workspace", "work from anywhere", "digital nomad", "office rental"],
+  openGraph: {
+    type: "website",
+    siteName: "WayWork",
+    title: "WayWork - Work-Verified Remote Workspaces",
+    description: "Find and book work-verified remote workspaces with verified WiFi and amenities.",
+  },
 };
 
 export default function RootLayout({

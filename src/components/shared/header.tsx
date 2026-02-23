@@ -82,6 +82,9 @@ export function Header() {
                     <Link href="/bookings">My Bookings</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link href="/favorites">Saved Spaces</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/messages">Messages</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

@@ -27,14 +27,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const listing = await db.listing.findUnique({
     where: { id, status: "ACTIVE" },
-    select: { title: true, description: true, city: true },
+    select: {
+      title: true,
+      description: true,
+      city: true,
+      images: { where: { isPrimary: true }, take: 1, select: { url: true, alt: true } },
+    },
   });
 
   if (!listing) return { title: "Space Not Found" };
 
+  const primaryImage = listing.images[0];
+
   return {
     title: `${listing.title} - ${listing.city}`,
     description: listing.description.slice(0, 160),
+    openGraph: {
+      title: `${listing.title} - ${listing.city}`,
+      description: listing.description.slice(0, 160),
+      ...(primaryImage?.url
+        ? {
+            images: [
+              {
+                url: primaryImage.url,
+                alt: primaryImage.alt || listing.title,
+              },
+            ],
+          }
+        : {}),
+    },
   };
 }
 

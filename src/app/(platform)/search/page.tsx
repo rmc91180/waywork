@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { SearchFilters } from "@/components/search/search-filters";
+import { SearchLayout } from "@/components/search/search-layout";
 import { ListingCard } from "@/components/listings/listing-card";
 import type { Prisma } from "@/generated/prisma";
 
@@ -101,6 +102,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     db.listing.count({ where }),
   ]);
 
+  // Map-ready listing data
+  const mapListings = listings.map((l) => ({
+    id: l.id,
+    title: l.title,
+    lat: l.lat,
+    lng: l.lng,
+    pricePerDay: l.pricePerDay,
+    workScore: l.workScore,
+    slug: l.slug,
+    city: l.city,
+    workspaceType: l.workspaceType,
+    images: l.images.map((img) => ({ url: img.url, alt: img.alt })),
+  }));
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6">
@@ -118,8 +133,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <SearchFilters />
         </div>
 
-        {/* Results */}
-        <div className="flex-1">
+        {/* Results with grid/map toggle */}
+        <SearchLayout listings={mapListings} total={total}>
           {listings.length === 0 ? (
             <div className="text-center py-12">
               <h3 className="text-lg font-semibold">No spaces found</h3>
@@ -128,35 +143,37 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {listings.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
 
-          {/* Pagination */}
-          {total > limit && (
-            <div className="mt-8 flex justify-center gap-2">
-              {Array.from({ length: Math.ceil(total / limit) }, (_, i) => (
-                <a
-                  key={i}
-                  href={`?${new URLSearchParams({
-                    ...params,
-                    page: String(i + 1),
-                  }).toString()}`}
-                  className={`px-3 py-1 rounded text-sm ${
-                    page === i + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-                  {i + 1}
-                </a>
-              ))}
-            </div>
+              {/* Pagination */}
+              {total > limit && (
+                <div className="mt-8 flex justify-center gap-2">
+                  {Array.from({ length: Math.ceil(total / limit) }, (_, i) => (
+                    <a
+                      key={i}
+                      href={`?${new URLSearchParams({
+                        ...params,
+                        page: String(i + 1),
+                      }).toString()}`}
+                      className={`px-3 py-1 rounded text-sm ${
+                        page === i + 1
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 hover:bg-gray-200"
+                      }`}
+                    >
+                      {i + 1}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </>
           )}
-        </div>
+        </SearchLayout>
       </div>
     </div>
   );
