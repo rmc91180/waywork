@@ -62,6 +62,102 @@ export function bookingConfirmationEmail(data: {
   };
 }
 
+export function hostNewBookingEmail(data: {
+  hostName: string;
+  guestName: string;
+  listingTitle: string;
+  checkIn: string;
+  checkOut: string;
+  hostPayout: string;
+  bookingId: string;
+}) {
+  return {
+    subject: `New Booking: ${data.listingTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #1a1a1a;">New Booking!</h1>
+        <p>Hi ${data.hostName},</p>
+        <p><strong>${data.guestName}</strong> has booked your space.</p>
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">${data.listingTitle}</h3>
+          <p><strong>Check-in:</strong> ${data.checkIn}</p>
+          <p><strong>Check-out:</strong> ${data.checkOut}</p>
+          <p><strong>Your payout:</strong> ${data.hostPayout}</p>
+        </div>
+        <p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/host/bookings"
+             style="background: #000; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block;">
+            View Bookings
+          </a>
+        </p>
+      </div>
+    `,
+  };
+}
+
+export function bookingCancellationEmail(data: {
+  recipientName: string;
+  listingTitle: string;
+  checkIn: string;
+  checkOut: string;
+  cancelledBy: string;
+  bookingId: string;
+}) {
+  return {
+    subject: `Booking Cancelled: ${data.listingTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1a1a1a;">Booking Cancelled</h2>
+        <p>Hi ${data.recipientName},</p>
+        <p>A booking for <strong>${data.listingTitle}</strong> has been cancelled by the ${data.cancelledBy}.</p>
+        <div style="background: #fff3f3; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p><strong>Check-in:</strong> ${data.checkIn}</p>
+          <p><strong>Check-out:</strong> ${data.checkOut}</p>
+        </div>
+        <p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/bookings/${data.bookingId}"
+             style="background: #000; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block;">
+            View Details
+          </a>
+        </p>
+      </div>
+    `,
+  };
+}
+
+export function reviewReceivedEmail(data: {
+  hostName: string;
+  guestName: string;
+  listingTitle: string;
+  rating: number;
+  comment?: string;
+  listingId: string;
+}) {
+  return {
+    subject: `New Review for ${data.listingTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1a1a1a;">New Review</h2>
+        <p>Hi ${data.hostName},</p>
+        <p><strong>${data.guestName}</strong> left a ${data.rating}-star review for <strong>${data.listingTitle}</strong>.</p>
+        ${
+          data.comment
+            ? `<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                <p style="margin: 0; color: #333; font-style: italic;">"${data.comment}"</p>
+              </div>`
+            : ""
+        }
+        <p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/spaces/${data.listingId}"
+             style="background: #000; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block;">
+            View Listing
+          </a>
+        </p>
+      </div>
+    `,
+  };
+}
+
 export function newMessageEmail(data: {
   recipientName: string;
   senderName: string;
