@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/shared/providers";
+import { BRAND } from "@/lib/brand";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -15,16 +16,17 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "WayWork - Work-Verified Remote Workspaces",
-    template: "%s | WayWork",
+    default: `${BRAND.name}: ${BRAND.tagline}`,
+    template: `%s | ${BRAND.name}`,
   },
-  description: "Find and book work-verified remote workspaces. Every space is rated on WiFi speed, desk setup, quietness, and more.",
+  description:
+    "Way Work helps property owners turn residential properties into usable workspaces, filling non-holiday season gaps with offsite worker and team bookings.",
   keywords: ["remote work", "coworking", "workspace", "work from anywhere", "digital nomad", "office rental"],
   openGraph: {
     type: "website",
-    siteName: "WayWork",
-    title: "WayWork - Work-Verified Remote Workspaces",
-    description: "Find and book work-verified remote workspaces with verified WiFi and amenities.",
+    siteName: BRAND.name,
+    title: `${BRAND.name}: ${BRAND.tagline}`,
+    description: BRAND.hostValueProp,
   },
 };
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/shared/brand-logo";
 
 export function Footer() {
   return (
@@ -6,10 +7,7 @@ export function Footer() {
       <div className="waywork-shell py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
-            <h3 className="font-display text-xl font-semibold tracking-tight text-slate-900">WayWork</h3>
-            <p className="mt-2 max-w-xs text-sm text-slate-600">
-              The marketplace for work-verified offsite spaces.
-            </p>
+            <BrandLogo showTagline />
           </div>
 
           <div>
@@ -31,6 +29,14 @@ export function Footer() {
                   className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
                   My Bookings
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
+                >
+                  About Us
                 </Link>
               </li>
             </ul>

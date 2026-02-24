@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BRAND } from "@/lib/brand";
 
 const intentChips = [
   {
@@ -32,13 +33,13 @@ export default function HomePage() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
             <div className="space-y-5">
               <Badge className="bg-slate-900 text-white hover:bg-slate-800">
-                Workspace Discovery Platform
+                {BRAND.name}: {BRAND.tagline}
               </Badge>
               <h1 className="font-display max-w-3xl text-4xl font-semibold leading-tight text-slate-900 md:text-6xl">
-                Work trips that feel productive by day and memorable after hours.
+                Property owners can turn quiet seasons into reliable revenue.
               </h1>
               <p className="max-w-2xl text-base text-slate-600 md:text-lg">
-                Discover global, work-ready spaces with verified internet, practical setups, and curated local activities for your team&apos;s downtime.
+                {BRAND.name} helps hosts rent residential properties to offsite workers and teams, filling non-holiday gaps while guests get productive, comfortable places to work.
               </p>
               <div className="flex flex-wrap gap-2.5">
                 {intentChips.map((chip) => (

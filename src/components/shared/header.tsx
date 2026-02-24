@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BrandLogo } from "@/components/shared/brand-logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,15 +22,7 @@ export function Header() {
       <div className="waywork-shell">
         <div className="flex h-[4.5rem] items-center justify-between gap-4">
           <Link href="/" className="group inline-flex items-center gap-3">
-            <div className="relative flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-teal-500 to-sky-600 shadow-sm shadow-cyan-700/30">
-              <span className="font-display text-sm font-bold text-white">WW</span>
-            </div>
-            <div className="leading-tight">
-              <p className="font-display text-lg font-semibold text-slate-900">WayWork</p>
-              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
-                Workspaces For Teams
-              </p>
-            </div>
+            <BrandLogo compact />
           </Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200/80 bg-white/75 p-1 shadow-xs md:flex">
@@ -44,6 +37,12 @@ export function Header() {
               className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
             >
               Trips
+            </Link>
+            <Link
+              href="/about"
+              className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            >
+              About
             </Link>
             {session?.user && (
               <Link
@@ -116,7 +115,7 @@ export function Header() {
             ) : (
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="hidden md:inline-flex">
-                  Work + Leisure
+                  Host Better. Work Better.
                 </Badge>
                 <Button variant="ghost" className="hidden md:inline-flex" asChild>
                   <Link href="/login">Log In</Link>
