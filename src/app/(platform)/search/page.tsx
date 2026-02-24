@@ -94,8 +94,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               </p>
               <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
                 {searchVariant === "immersive"
-                  ? "Explore workspaces built for deep work"
-                  : "Find your best place to work"}
+                  ? "Explore fun, work-ready offsite alternatives"
+                  : "Find your team's next offsite space"}
               </h1>
               <p className="mt-2 text-sm text-slate-600 md:text-base">
                 {summaryTitle(filters, total)}

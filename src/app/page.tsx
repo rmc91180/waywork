@@ -63,10 +63,10 @@ export default function HomePage() {
               <div className="space-y-5">
                 <Badge className="bg-slate-900 text-white hover:bg-slate-800">{BRAND.name} Marketplace</Badge>
                 <h2 className="font-display max-w-3xl text-4xl font-semibold leading-tight text-slate-900 md:text-6xl">
-                  Book work-ready spaces for focused offsites and better team outcomes.
+                  Hosts unlock offsite demand while teams discover better alternatives to standard rentals.
                 </h2>
                 <p className="max-w-2xl text-base text-slate-600 md:text-lg">
-                  {BRAND.name} helps hosts rent residential properties to offsite workers and teams, filling non-holiday gaps while guests get productive, comfortable places to work.
+                  Host value comes first: convert underused seasonal inventory into repeat revenue. Guests and teams benefit from comfortable spaces designed for both work sessions and enjoyable downtime.
                 </p>
                 <div className="flex flex-wrap gap-2.5">
                   {intentChips.map((chip) => (
