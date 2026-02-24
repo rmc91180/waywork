@@ -57,7 +57,7 @@ export function InquiryButton({ listingId, hostName }: InquiryButtonProps) {
         <DialogHeader>
           <DialogTitle>Send a message to {hostName || "the host"}</DialogTitle>
           <DialogDescription>
-            Ask about the space, availability, or anything else you'd like to
+            Ask about the space, availability, or anything else you&apos;d like to
             know before booking.
           </DialogDescription>
         </DialogHeader>

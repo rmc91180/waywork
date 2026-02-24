@@ -1,5 +1,8 @@
-import { notFound, redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { format } from "date-fns";
+import { CalendarDays, Clock3, MessageSquare, Users } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
@@ -8,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { format } from "date-fns";
 import { CancelBookingButton } from "@/components/booking/cancel-booking-button";
 
 interface Props {
@@ -16,19 +18,16 @@ interface Props {
   searchParams: Promise<{ success?: string }>;
 }
 
-const statusColors: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  CONFIRMED: "bg-green-100 text-green-800",
-  COMPLETED: "bg-blue-100 text-blue-800",
-  CANCELLED_BY_GUEST: "bg-red-100 text-red-800",
-  CANCELLED_BY_HOST: "bg-red-100 text-red-800",
-  REFUNDED: "bg-gray-100 text-gray-800",
+const statusStyles: Record<string, string> = {
+  PENDING: "bg-amber-100 text-amber-800 border-amber-200",
+  CONFIRMED: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  COMPLETED: "bg-cyan-100 text-cyan-800 border-cyan-200",
+  CANCELLED_BY_GUEST: "bg-rose-100 text-rose-800 border-rose-200",
+  CANCELLED_BY_HOST: "bg-rose-100 text-rose-800 border-rose-200",
+  REFUNDED: "bg-slate-100 text-slate-700 border-slate-200",
 };
 
-export default async function BookingDetailPage({
-  params,
-  searchParams,
-}: Props) {
+export default async function BookingDetailPage({ params, searchParams }: Props) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -52,7 +51,6 @@ export default async function BookingDetailPage({
 
   if (!booking) notFound();
 
-  // Auth check: only guest, host, or admin
   const isGuest = booking.guestId === session.user.id;
   const isHost = booking.listing.hostId === session.user.id;
   const isAdmin = session.user.role === "ADMIN";
@@ -62,267 +60,222 @@ export default async function BookingDetailPage({
   const primaryImage = booking.listing.images[0]?.url;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      {/* Success banner */}
-      {success && (
-        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
-          <h2 className="font-semibold text-green-800">Booking Confirmed!</h2>
-          <p className="text-sm text-green-700 mt-1">
-            Your workspace is reserved. Check your email for details.
-          </p>
-        </div>
-      )}
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-56 bg-gradient-to-br from-cyan-50 via-sky-50 to-emerald-50" />
+      <div className="relative mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
+        {success && (
+          <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-sm">
+            <p className="text-sm font-semibold">Booking confirmed</p>
+            <p className="mt-0.5 text-sm">Your workspace is reserved and ready.</p>
+          </div>
+        )}
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Booking Details</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Booking #{booking.id.slice(0, 8).toUpperCase()}
-          </p>
-        </div>
-        <Badge className={statusColors[booking.status] || "bg-gray-100"}>
-          {booking.status.replace(/_/g, " ")}
-        </Badge>
-      </div>
+        <header className="mb-6 rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">
+                Booking Details
+              </p>
+              <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Booking #{booking.id.slice(0, 8).toUpperCase()}</h1>
+            </div>
+            <Badge className={`border text-xs ${statusStyles[booking.status] || "bg-slate-100 text-slate-700 border-slate-200"}`}>
+              {booking.status.replace(/_/g, " ")}
+            </Badge>
+          </div>
+        </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Listing card */}
-          <Card>
-            <CardContent className="p-4">
-              <Link
-                href={`/spaces/${booking.listingId}`}
-                className="flex gap-4 hover:opacity-80 transition-opacity"
-              >
-                <div className="w-32 h-24 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                  {primaryImage ? (
-                    <img
-                      src={primaryImage}
-                      alt={booking.listing.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                      No photo
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{booking.listing.title}</h3>
-                  <p className="text-sm text-gray-600">
-                    {booking.listing.city}, {booking.listing.state}
-                  </p>
-                  {booking.listing.workScore && (
-                    <span className="inline-block mt-1 text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                      Work Score: {booking.listing.workScore}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Dates & Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Stay Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Check-in</p>
-                  <p className="font-medium">
-                    {format(new Date(booking.checkIn), "EEE, MMM d, yyyy")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Check-out</p>
-                  <p className="font-medium">
-                    {format(new Date(booking.checkOut), "EEE, MMM d, yyyy")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Duration</p>
-                  <p className="font-medium">
-                    {booking.numberOfDays} day{booking.numberOfDays > 1 ? "s" : ""}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase">Guests</p>
-                  <p className="font-medium">
-                    {booking.numberOfGuests} guest
-                    {booking.numberOfGuests > 1 ? "s" : ""}
-                  </p>
-                </div>
-              </div>
-
-              {booking.specialRequests && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase">
-                      Special Requests
-                    </p>
-                    <p className="text-sm mt-1">{booking.specialRequests}</p>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <Card className="overflow-hidden border-slate-200 py-0 shadow-sm">
+              <CardContent className="p-0">
+                <Link href={`/spaces/${booking.listingId}`} className="grid grid-cols-1 sm:grid-cols-[220px_minmax(0,1fr)]">
+                  <div className="relative h-52 bg-slate-100 sm:h-full">
+                    {primaryImage ? (
+                      <Image
+                        src={primaryImage}
+                        alt={booking.listing.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 220px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-sm text-slate-500">No photo</div>
+                    )}
                   </div>
-                </>
-              )}
-
-              {/* Attendees */}
-              {booking.attendees.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase mb-2">
-                      Attendees
+                  <div className="p-5">
+                    <h2 className="text-xl font-semibold text-slate-900">{booking.listing.title}</h2>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {booking.listing.city}
+                      {booking.listing.state ? `, ${booking.listing.state}` : ""}
                     </p>
-                    <div className="space-y-2">
-                      {booking.attendees.map((attendee) => (
-                        <div
-                          key={attendee.id}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span>{attendee.email}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {attendee.status}
-                          </Badge>
-                        </div>
-                      ))}
+                    {booking.listing.workScore && (
+                      <Badge variant="secondary" className="mt-3 bg-cyan-50 text-cyan-700">
+                        Work Score {booking.listing.workScore}
+                      </Badge>
+                    )}
+                    <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-slate-600">
+                      <p className="flex items-center gap-2">
+                        <CalendarDays className="size-4" />
+                        {format(new Date(booking.checkIn), "EEE, MMM d, yyyy")} to{" "}
+                        {format(new Date(booking.checkOut), "EEE, MMM d, yyyy")}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Clock3 className="size-4" />
+                        {booking.numberOfDays} day{booking.numberOfDays > 1 ? "s" : ""}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Users className="size-4" />
+                        {booking.numberOfGuests} guest{booking.numberOfGuests > 1 ? "s" : ""}
+                      </p>
                     </div>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          {isGuest && booking.status === "CONFIRMED" && (
-            <Card>
-              <CardContent className="p-4 flex gap-3">
-                <Button variant="outline" asChild>
-                  <Link href={`/messages?listing=${booking.listingId}`}>
-                    Message Host
-                  </Link>
-                </Button>
-                <CancelBookingButton
-                  bookingId={booking.id}
-                  cancellationPolicy={booking.listing.cancellationPolicy}
-                  checkIn={booking.checkIn.toISOString()}
-                />
+                </Link>
               </CardContent>
             </Card>
-          )}
 
-          {/* Review prompt */}
-          {isGuest &&
-            booking.status === "COMPLETED" &&
-            !booking.review && (
-              <Card>
-                <CardContent className="p-4">
-                  <p className="font-medium mb-2">How was your stay?</p>
-                  <Button asChild>
-                    <Link href={`/bookings/${booking.id}/review`}>
-                      Leave a Review
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Reservation Notes</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {booking.specialRequests ? (
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                    {booking.specialRequests}
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-500">No special requests were submitted.</p>
+                )}
+
+                {booking.attendees.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Attendees
+                      </p>
+                      <div className="space-y-2">
+                        {booking.attendees.map((attendee) => (
+                          <div
+                            key={attendee.id}
+                            className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                          >
+                            <span className="text-slate-700">{attendee.email}</span>
+                            <Badge variant="outline">{attendee.status}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {isGuest && booking.status === "CONFIRMED" && (
+              <Card className="border-slate-200 shadow-sm">
+                <CardContent className="flex flex-wrap gap-3 p-4">
+                  <Button variant="outline" asChild>
+                    <Link href={`/messages?listing=${booking.listingId}`}>
+                      <MessageSquare className="mr-1.5 size-4" />
+                      Message Host
                     </Link>
+                  </Button>
+                  <CancelBookingButton
+                    bookingId={booking.id}
+                    cancellationPolicy={booking.listing.cancellationPolicy}
+                    checkIn={booking.checkIn.toISOString()}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {isGuest && booking.status === "COMPLETED" && !booking.review && (
+              <Card className="border-cyan-200 bg-cyan-50/60 shadow-sm">
+                <CardContent className="flex items-center justify-between gap-3 p-4">
+                  <div>
+                    <p className="font-semibold text-slate-900">Share your workspace experience</p>
+                    <p className="text-sm text-slate-600">Your review helps other remote workers choose well.</p>
+                  </div>
+                  <Button asChild className="bg-cyan-700 hover:bg-cyan-800">
+                    <Link href={`/bookings/${booking.id}/review`}>Leave Review</Link>
                   </Button>
                 </CardContent>
               </Card>
             )}
-        </div>
+          </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Pricing */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Price Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">
-                  {formatCurrency(booking.listing.pricePerDay)} x{" "}
-                  {booking.numberOfDays} day
-                  {booking.numberOfDays > 1 ? "s" : ""}
-                </span>
-                <span>
-                  {formatCurrency(
-                    booking.listing.pricePerDay * booking.numberOfDays
-                  )}
-                </span>
-              </div>
-              {booking.listing.cleaningFee > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Cleaning fee</span>
+          <div className="space-y-6">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Price Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex justify-between text-slate-600">
                   <span>
-                    {formatCurrency(booking.listing.cleaningFee)}
+                    {formatCurrency(booking.listing.pricePerDay)} x {booking.numberOfDays} day
+                    {booking.numberOfDays > 1 ? "s" : ""}
+                  </span>
+                  <span>
+                    {formatCurrency(booking.listing.pricePerDay * booking.numberOfDays)}
                   </span>
                 </div>
-              )}
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Service fee</span>
-                <span>{formatCurrency(booking.serviceFee)}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>{formatCurrency(booking.totalPrice)}</span>
-              </div>
-              {isHost && (
-                <>
-                  <Separator />
-                  <div className="flex justify-between text-sm text-green-700">
-                    <span>Your payout</span>
-                    <span className="font-medium">
-                      {formatCurrency(booking.hostPayout)}
-                    </span>
+                {booking.listing.cleaningFee > 0 && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Cleaning fee</span>
+                    <span>{formatCurrency(booking.listing.cleaningFee)}</span>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                )}
+                <div className="flex justify-between text-slate-600">
+                  <span>Service fee</span>
+                  <span>{formatCurrency(booking.serviceFee)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-base font-semibold text-slate-900">
+                  <span>Total paid</span>
+                  <span>{formatCurrency(booking.totalPrice)}</span>
+                </div>
+                {isHost && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between text-sm font-medium text-emerald-700">
+                      <span>Your payout</span>
+                      <span>{formatCurrency(booking.hostPayout)}</span>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Host/Guest info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                {isGuest ? "Your Host" : "Guest"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isGuest ? (
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={booking.listing.host.image || undefined} />
-                    <AvatarFallback>
-                      {booking.listing.host.name?.[0] || "H"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">
-                      {booking.listing.host.name}
-                    </p>
-                    <p className="text-sm text-gray-500">Host</p>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">{isGuest ? "Your Host" : "Guest"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isGuest ? (
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={booking.listing.host.image || undefined} />
+                      <AvatarFallback>{booking.listing.host.name?.[0] || "H"}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-slate-900">{booking.listing.host.name}</p>
+                      <p className="text-sm text-slate-500">Host</p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={booking.guest.image || undefined} />
-                    <AvatarFallback>
-                      {booking.guest.name?.[0] || "G"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{booking.guest.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {booking.guest.email}
-                    </p>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={booking.guest.image || undefined} />
+                      <AvatarFallback>{booking.guest.name?.[0] || "G"}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-slate-900">{booking.guest.name}</p>
+                      <p className="text-sm text-slate-500">{booking.guest.email}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

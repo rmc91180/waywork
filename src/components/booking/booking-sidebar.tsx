@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { differenceInDays, format, addDays } from "date-fns";
+import { ShieldCheck, Wifi, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/stripe";
-import { differenceInDays, format, addDays } from "date-fns";
+import { trackEvent } from "@/lib/analytics";
 
 interface BookingSidebarProps {
   listingId: string;
@@ -30,7 +32,6 @@ export function BookingSidebar({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Default dates: tomorrow to day after
   const tomorrow = addDays(new Date(), 1);
   const dayAfter = addDays(new Date(), 2);
 
@@ -52,15 +53,33 @@ export function BookingSidebar({
     return { subtotal, cleaningFee, serviceFee, total };
   }, [numberOfDays, pricePerDay, cleaningFee]);
 
+  const policyLabel =
+    cancellationPolicy === "FLEXIBLE"
+      ? "Free cancellation up to 24 hours before check-in"
+      : cancellationPolicy === "MODERATE"
+        ? "Free cancellation up to 5 days before check-in"
+        : "50% refund up to 7 days before check-in";
+
   async function handleBooking() {
     if (numberOfDays === 0) {
       toast.error("Please select valid dates");
       return;
     }
 
+    trackEvent({
+      event: "checkout_started",
+      properties: {
+        listingId,
+        checkIn,
+        checkOut,
+        guests,
+        nights: numberOfDays,
+      },
+    });
+
     setLoading(true);
     try {
-      const res = await fetch("/api/bookings/checkout", {
+      const response = await fetch("/api/bookings/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -72,138 +91,144 @@ export function BookingSidebar({
         }),
       });
 
-      const data = await res.json();
+      const data = (await response.json()) as {
+        error?: string;
+        checkoutUrl?: string;
+        bookingId?: string;
+      };
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error(data.error || "Failed to create booking");
       }
 
       if (data.checkoutUrl) {
-        // Redirect to Stripe Checkout
+        trackEvent({
+          event: "checkout_redirected_to_stripe",
+          properties: { listingId },
+        });
         window.location.href = data.checkoutUrl;
-      } else if (data.bookingId) {
-        // Demo mode — booking confirmed directly
+        return;
+      }
+
+      if (data.bookingId) {
+        trackEvent({
+          event: "booking_confirmed_direct",
+          properties: { listingId, bookingId: data.bookingId },
+        });
         toast.success("Booking confirmed!");
         router.push(`/bookings/${data.bookingId}`);
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create booking"
-      );
+      trackEvent({
+        event: "checkout_failed",
+        properties: {
+          listingId,
+          error: error instanceof Error ? error.message : "unknown",
+        },
+      });
+      toast.error(error instanceof Error ? error.message : "Failed to create booking");
     } finally {
       setLoading(false);
     }
   }
 
-  const policyLabel =
-    cancellationPolicy === "FLEXIBLE"
-      ? "Free cancellation up to 24 hours before"
-      : cancellationPolicy === "MODERATE"
-        ? "Free cancellation up to 5 days before"
-        : "50% refund up to 7 days before";
-
   return (
-    <Card className="sticky top-24">
-      <CardHeader>
-        <CardTitle className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold">
-            {formatCurrency(pricePerDay)}
-          </span>
-          <span className="text-sm font-normal text-gray-500">/ day</span>
+    <Card className="sticky top-24 overflow-hidden border-slate-200 py-0 shadow-lg">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-cyan-900 px-6 py-5 text-white">
+        <p className="text-xs uppercase tracking-[0.18em] text-cyan-100">Reserve this workspace</p>
+        <CardTitle className="mt-2 flex items-baseline gap-2">
+          <span className="text-3xl font-bold">{formatCurrency(pricePerDay)}</span>
+          <span className="text-sm font-normal text-slate-200">/ day</span>
         </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Date Selection */}
-        <div className="grid grid-cols-2 gap-2">
+      </div>
+
+      <CardContent className="space-y-4 p-5">
+        <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
           <div className="space-y-1">
-            <Label htmlFor="checkIn" className="text-xs">
-              CHECK-IN
+            <Label htmlFor="checkIn" className="text-[11px] uppercase text-slate-500">
+              Check-in
             </Label>
             <Input
               id="checkIn"
               type="date"
               value={checkIn}
-              onChange={(e) => setCheckIn(e.target.value)}
+              onChange={(event) => setCheckIn(event.target.value)}
               min={format(new Date(), "yyyy-MM-dd")}
+              className="bg-white"
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="checkOut" className="text-xs">
-              CHECK-OUT
+            <Label htmlFor="checkOut" className="text-[11px] uppercase text-slate-500">
+              Check-out
             </Label>
             <Input
               id="checkOut"
               type="date"
               value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
+              onChange={(event) => setCheckOut(event.target.value)}
               min={checkIn}
+              className="bg-white"
             />
           </div>
         </div>
 
-        {/* Guest Count */}
         <div className="space-y-1">
-          <Label htmlFor="guests" className="text-xs">
-            GUESTS
+          <Label htmlFor="guests" className="text-[11px] uppercase text-slate-500">
+            Guests
           </Label>
           <select
             id="guests"
             value={guests}
-            onChange={(e) => setGuests(Number(e.target.value))}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+            onChange={(event) => setGuests(Number(event.target.value))}
+            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-xs"
           >
-            {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n} guest{n > 1 ? "s" : ""}
+            {Array.from({ length: maxGuests }, (_, index) => index + 1).map((count) => (
+              <option key={count} value={count}>
+                {count} guest{count > 1 ? "s" : ""}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Special Requests */}
         <div className="space-y-1">
-          <Label htmlFor="requests" className="text-xs">
-            SPECIAL REQUESTS (OPTIONAL)
+          <Label htmlFor="requests" className="text-[11px] uppercase text-slate-500">
+            Special Requests
           </Label>
           <Textarea
             id="requests"
-            placeholder="Any special needs or requests..."
+            placeholder="Quiet corner, early setup, accessibility needs..."
             value={specialRequests}
-            onChange={(e) => setSpecialRequests(e.target.value)}
+            onChange={(event) => setSpecialRequests(event.target.value)}
             rows={2}
-            className="text-sm"
           />
         </div>
 
-        {/* Book Button */}
         <Button
-          className="w-full"
+          className="w-full bg-cyan-700 hover:bg-cyan-800"
           size="lg"
           onClick={handleBooking}
           disabled={loading || numberOfDays === 0}
         >
-          {loading ? "Processing..." : "Book Now"}
+          {loading ? "Processing..." : "Reserve Workspace"}
         </Button>
 
-        {/* Price Breakdown */}
         {pricing && (
           <div className="space-y-2 text-sm">
             <Separator />
             <div className="flex justify-between">
-              <span className="text-gray-600">
-                {formatCurrency(pricePerDay)} x {numberOfDays} day
-                {numberOfDays > 1 ? "s" : ""}
+              <span className="text-slate-600">
+                {formatCurrency(pricePerDay)} x {numberOfDays} day{numberOfDays > 1 ? "s" : ""}
               </span>
               <span>{formatCurrency(pricing.subtotal)}</span>
             </div>
             {pricing.cleaningFee > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Cleaning fee</span>
+                <span className="text-slate-600">Cleaning fee</span>
                 <span>{formatCurrency(pricing.cleaningFee)}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-600">Service fee (12%)</span>
+              <span className="text-slate-600">Service fee (12%)</span>
               <span>{formatCurrency(pricing.serviceFee)}</span>
             </div>
             <Separator />
@@ -214,8 +239,20 @@ export function BookingSidebar({
           </div>
         )}
 
-        {/* Cancellation Policy */}
-        <p className="text-xs text-gray-500 text-center">{policyLabel}</p>
+        <div className="space-y-1 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 text-xs text-emerald-800">
+          <p className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
+            {policyLabel}
+          </p>
+          <p className="flex items-start gap-2">
+            <Wifi className="mt-0.5 size-3.5 shrink-0" />
+            Verified listings include tested internet and work amenities.
+          </p>
+          <p className="flex items-start gap-2">
+            <Clock3 className="mt-0.5 size-3.5 shrink-0" />
+            Most hosts respond to booking questions within a few hours.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
