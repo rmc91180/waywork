@@ -1,13 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-} from "react-leaflet";
+import { useEffect, useMemo } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import Link from "next/link";
 import "leaflet/dist/leaflet.css";
@@ -32,25 +26,24 @@ interface SearchMapProps {
 }
 
 function createPriceIcon(pricePerDay: number): L.DivIcon {
-  const priceLabel = `$${Math.round(pricePerDay / 100)}`;
+  const label = `$${Math.round(pricePerDay / 100)}`;
   return L.divIcon({
-    className: "custom-price-marker",
+    className: "waywork-map-marker",
     html: `<div style="
-      background: white;
-      border: 2px solid #2563eb;
-      border-radius: 8px;
-      padding: 2px 6px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(15,23,42,0.18);
+      border-radius: 999px;
+      padding: 3px 9px;
       font-size: 12px;
       font-weight: 700;
-      color: #1e40af;
+      color: #0f172a;
       white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      text-align: center;
-      line-height: 1.4;
-    ">${priceLabel}/day</div>`,
-    iconSize: [70, 28],
-    iconAnchor: [35, 28],
-    popupAnchor: [0, -30],
+      box-shadow: 0 10px 16px -12px rgba(15,23,42,0.55);
+      line-height: 1.2;
+    ">${label}</div>`,
+    iconSize: [56, 24],
+    iconAnchor: [28, 24],
+    popupAnchor: [0, -22],
   });
 }
 
@@ -59,22 +52,12 @@ function FitBounds({ listings }: { listings: MapListing[] }) {
 
   useEffect(() => {
     if (listings.length === 0) return;
-
-    const validListings = listings.filter(
-      (l) => l.lat !== 0 && l.lng !== 0 && isFinite(l.lat) && isFinite(l.lng)
-    );
-
-    if (validListings.length === 0) return;
-
-    if (validListings.length === 1) {
-      map.setView([validListings[0].lat, validListings[0].lng], 13);
+    if (listings.length === 1) {
+      map.setView([listings[0].lat, listings[0].lng], 13);
       return;
     }
-
-    const bounds = L.latLngBounds(
-      validListings.map((l) => [l.lat, l.lng] as [number, number])
-    );
-    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+    const bounds = L.latLngBounds(listings.map((listing) => [listing.lat, listing.lng] as [number, number]));
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
   }, [listings, map]);
 
   return null;
@@ -84,8 +67,11 @@ function SearchMapInner({ listings }: SearchMapProps) {
   const validListings = useMemo(
     () =>
       listings.filter(
-        (l) =>
-          l.lat !== 0 && l.lng !== 0 && isFinite(l.lat) && isFinite(l.lng)
+        (listing) =>
+          listing.lat !== 0 &&
+          listing.lng !== 0 &&
+          Number.isFinite(listing.lat) &&
+          Number.isFinite(listing.lng)
       ),
     [listings]
   );
@@ -94,29 +80,19 @@ function SearchMapInner({ listings }: SearchMapProps) {
     if (validListings.length > 0) {
       return [validListings[0].lat, validListings[0].lng];
     }
-    return [37.7749, -122.4194]; // San Francisco fallback
+    return [37.7749, -122.4194];
   }, [validListings]);
 
   if (validListings.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg border">
-        <div className="text-center">
-          <p className="text-gray-500 text-sm">
-            No listings with location data to display on the map.
-          </p>
-        </div>
+      <div className="flex h-full min-h-[420px] items-center justify-center bg-slate-50">
+        <p className="text-sm text-slate-500">No listings to display on the map.</p>
       </div>
     );
   }
 
   return (
-    <MapContainer
-      center={defaultCenter}
-      zoom={12}
-      className="h-full w-full rounded-lg"
-      style={{ minHeight: "400px" }}
-      scrollWheelZoom={true}
-    >
+    <MapContainer center={defaultCenter} zoom={12} className="h-full w-full" scrollWheelZoom>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -129,36 +105,30 @@ function SearchMapInner({ listings }: SearchMapProps) {
           icon={createPriceIcon(listing.pricePerDay)}
         >
           <Popup>
-            <div className="min-w-[200px]">
+            <div className="min-w-[220px] space-y-2">
               {listing.images[0]?.url?.startsWith("http") && (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={listing.images[0].url}
                   alt={listing.images[0].alt || listing.title}
-                  className="w-full h-24 object-cover rounded mb-2"
+                  className="h-24 w-full rounded-md object-cover"
                 />
               )}
-              <h3 className="font-semibold text-sm leading-tight mb-1">
-                {listing.title}
-              </h3>
-              <p className="text-xs text-gray-500 mb-1">
-                {listing.city} &middot; {listing.workspaceType}
+              <h3 className="line-clamp-2 text-sm font-semibold">{listing.title}</h3>
+              <p className="text-xs text-slate-500">
+                {listing.city} · {listing.workspaceType}
               </p>
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">
                   ${Math.round(listing.pricePerDay / 100)}/day
                 </span>
-                <span
-                  className={cn(
-                    "text-xs font-bold",
-                    getWorkScoreColor(listing.workScore)
-                  )}
-                >
-                  Score: {listing.workScore}
+                <span className={cn("text-xs font-bold", getWorkScoreColor(listing.workScore))}>
+                  Score {listing.workScore}
                 </span>
               </div>
               <Link
                 href={`/spaces/${listing.id}`}
-                className="block text-center bg-blue-600 text-white text-xs font-medium py-1.5 px-3 rounded hover:bg-blue-700 transition-colors"
+                className="block rounded-md bg-slate-900 px-3 py-2 text-center text-xs font-medium text-white hover:bg-slate-800"
               >
                 View Space
               </Link>

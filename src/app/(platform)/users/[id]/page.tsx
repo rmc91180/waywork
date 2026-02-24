@@ -53,7 +53,15 @@ export default async function UserProfilePage({ params }: Props) {
     pricePerDay: number;
     cleaningFee: number;
     maxGuests: number;
+    bedroomCount: number;
+    bedSize: string;
+    propertySizeSqm: number | null;
     workScore: number;
+    hasJacuzzi: boolean;
+    hasSwimmingPool: boolean;
+    hasBackyard: boolean;
+    hasPingPongTable: boolean;
+    hasPoolTable: boolean;
     averageRating: number | null;
     reviewCount: number;
     images: { url: string; alt: string | null }[];

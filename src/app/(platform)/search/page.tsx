@@ -1,179 +1,185 @@
-import { db } from "@/lib/db";
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { Badge } from "@/components/ui/badge";
 import { SearchFilters } from "@/components/search/search-filters";
 import { SearchLayout } from "@/components/search/search-layout";
 import { ListingCard } from "@/components/listings/listing-card";
-import type { Prisma } from "@/generated/prisma";
+import { SearchExperimentTracker } from "@/components/search/search-experiment-tracker";
+import {
+  parseSearchFilterParams,
+  serializeSearchFilterParams,
+  withPage,
+  type SearchFilterState,
+} from "@/lib/search-filters";
+import { searchListingsWithFacets } from "@/lib/search-query";
+import { getSearchUiVariant } from "@/lib/experiments";
 
 export const metadata = {
   title: "Find Spaces",
 };
 
 interface SearchPageProps {
-  searchParams: Promise<{
-    query?: string;
-    city?: string;
-    guests?: string;
-    minWorkScore?: string;
-    minSpeed?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    workspaceTypes?: string;
-    sortBy?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function toMapListings(
+  listings: Awaited<ReturnType<typeof searchListingsWithFacets>>["listings"]
+) {
+  return listings.map((listing) => ({
+    id: listing.id,
+    title: listing.title,
+    lat: listing.lat,
+    lng: listing.lng,
+    pricePerDay: listing.pricePerDay,
+    workScore: listing.workScore,
+    slug: listing.slug,
+    city: listing.city,
+    workspaceType: listing.workspaceType,
+    images: listing.images.map((img) => ({ url: img.url, alt: img.alt })),
+  }));
+}
+
+function summaryTitle(filters: SearchFilterState, total: number) {
+  if (filters.nearQuery) {
+    return `${total} workspace${total === 1 ? "" : "s"} near ${filters.nearQuery}`;
+  }
+  if (filters.city) {
+    return `${total} workspace${total === 1 ? "" : "s"} in ${filters.city}`;
+  }
+  if (filters.query) {
+    return `${total} result${total === 1 ? "" : "s"} for "${filters.query}"`;
+  }
+  return `${total} work-ready spaces available`;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
-
-  // Build where clause
-  const where: Prisma.ListingWhereInput = {
-    status: "ACTIVE",
-  };
-
-  if (params.query) {
-    where.OR = [
-      { title: { contains: params.query, mode: "insensitive" } },
-      { description: { contains: params.query, mode: "insensitive" } },
-      { city: { contains: params.query, mode: "insensitive" } },
-    ];
-  }
-
-  if (params.city) {
-    where.city = { contains: params.city, mode: "insensitive" };
-  }
-
-  if (params.guests) {
-    where.maxGuests = { gte: parseInt(params.guests) };
-  }
-
-  if (params.minWorkScore) {
-    where.workScore = { gte: parseInt(params.minWorkScore) };
-  }
-
-  if (params.minSpeed) {
-    where.connectivityProfile = {
-      declaredDownloadMbps: { gte: parseFloat(params.minSpeed) },
-    };
-  }
-
-  if (params.minPrice || params.maxPrice) {
-    where.pricePerDay = {};
-    if (params.minPrice) where.pricePerDay.gte = parseInt(params.minPrice);
-    if (params.maxPrice) where.pricePerDay.lte = parseInt(params.maxPrice);
-  }
-
-  if (params.workspaceTypes) {
-    where.workspaceType = {
-      in: params.workspaceTypes.split(",") as Prisma.EnumWorkspaceTypeFilter["in"],
-    };
-  }
-
-  const sortBy = params.sortBy || "workScore";
-  const orderByMap: Record<string, Prisma.ListingOrderByWithRelationInput> = {
-    workScore: { workScore: "desc" },
-    price_asc: { pricePerDay: "asc" },
-    price_desc: { pricePerDay: "desc" },
-    newest: { createdAt: "desc" },
-  };
-
-  const page = parseInt(params.page || "1");
-  const limit = 20;
-
-  const [listings, total] = await Promise.all([
-    db.listing.findMany({
-      where,
-      include: {
-        images: { where: { isPrimary: true }, take: 1 },
-        connectivityProfile: {
-          select: {
-            declaredDownloadMbps: true,
-            networkType: true,
-            verified: true,
-          },
-        },
-        host: { select: { name: true, image: true } },
-        _count: { select: { reviews: true } },
-      },
-      orderBy: orderByMap[sortBy] || orderByMap.workScore,
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    db.listing.count({ where }),
-  ]);
-
-  // Map-ready listing data
-  const mapListings = listings.map((l) => ({
-    id: l.id,
-    title: l.title,
-    lat: l.lat,
-    lng: l.lng,
-    pricePerDay: l.pricePerDay,
-    workScore: l.workScore,
-    slug: l.slug,
-    city: l.city,
-    workspaceType: l.workspaceType,
-    images: l.images.map((img) => ({ url: img.url, alt: img.alt })),
-  }));
+  const cookieStore = await cookies();
+  const searchVariant = getSearchUiVariant(cookieStore);
+  const filters = parseSearchFilterParams(params);
+  const { listings, total, facets, locationContext } = await searchListingsWithFacets(filters);
+  const totalPages = Math.max(1, Math.ceil(total / filters.limit));
+  const mapListings = toMapListings(listings);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Find Work-Ready Spaces</h1>
-        <p className="text-gray-600 mt-1">
-          {total} space{total !== 1 ? "s" : ""} available
-          {params.city ? ` in ${params.city}` : ""}
-          {params.query ? ` matching "${params.query}"` : ""}
-        </p>
-      </div>
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-br from-sky-50 via-cyan-50 to-emerald-50" />
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Filters sidebar */}
-        <div className="w-full lg:w-72 flex-shrink-0">
-          <SearchFilters />
-        </div>
-
-        {/* Results with grid/map toggle */}
-        <SearchLayout listings={mapListings} total={total}>
-          {listings.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-semibold">No spaces found</h3>
-              <p className="text-gray-500 mt-2">
-                Try adjusting your filters or search in a different area.
+      <div className="relative mx-auto max-w-[1320px] px-4 py-8 md:px-6 md:py-10">
+        <section className="rounded-2xl border border-white/50 bg-white/80 p-6 shadow-sm backdrop-blur md:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
+                Workspace Discovery
+              </p>
+              <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+                {searchVariant === "immersive"
+                  ? "Explore workspaces built for deep work"
+                  : "Find your best place to work"}
+              </h1>
+              <p className="mt-2 text-sm text-slate-600 md:text-base">
+                {summaryTitle(filters, total)}
               </p>
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {listings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {total > limit && (
-                <div className="mt-8 flex justify-center gap-2">
-                  {Array.from({ length: Math.ceil(total / limit) }, (_, i) => (
-                    <a
-                      key={i}
-                      href={`?${new URLSearchParams({
-                        ...params,
-                        page: String(i + 1),
-                      }).toString()}`}
-                      className={`px-3 py-1 rounded text-sm ${
-                        page === i + 1
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
-                      }`}
-                    >
-                      {i + 1}
-                    </a>
-                  ))}
-                </div>
+            <div className="flex flex-wrap gap-2">
+              {filters.verifiedInternet && (
+                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+                  Verified Internet
+                </Badge>
               )}
-            </>
-          )}
-        </SearchLayout>
+              {filters.workspaceTypes.length > 0 && (
+                <Badge variant="secondary" className="bg-sky-50 text-sky-700">
+                  {filters.workspaceTypes.length} workspace type
+                  {filters.workspaceTypes.length > 1 ? "s" : ""}
+                </Badge>
+              )}
+              {filters.amenities.length > 0 && (
+                <Badge variant="secondary" className="bg-amber-50 text-amber-700">
+                  {filters.amenities.length} amenities
+                </Badge>
+              )}
+              {locationContext && (
+                <Badge variant="secondary" className="bg-violet-50 text-violet-700">
+                  Near {locationContext.resolvedLabel} ({locationContext.radiusKm} km)
+                </Badge>
+              )}
+              {(filters.hasJacuzzi || filters.hasSwimmingPool || filters.hasBackyard) && (
+                <Badge variant="secondary" className="bg-rose-50 text-rose-700">
+                  Leisure-ready
+                </Badge>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <div className="mt-6 lg:hidden">
+          <SearchFilters mode="mobile" filters={filters} facets={facets} total={total} />
+        </div>
+
+        <div className="mt-6 flex flex-col gap-6 lg:flex-row">
+          <aside className="hidden w-full max-w-sm shrink-0 lg:block">
+            <div className="sticky top-24">
+              <SearchFilters mode="desktop" filters={filters} facets={facets} total={total} />
+            </div>
+          </aside>
+
+          <div className="min-w-0 flex-1">
+            <SearchLayout listings={mapListings} total={total} experimentVariant={searchVariant}>
+              <SearchExperimentTracker variant={searchVariant} />
+              {listings.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
+                  <h3 className="text-lg font-semibold text-slate-900">No spaces match these filters</h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Try broadening your dates, budget, or workspace requirements.
+                  </p>
+                  <Link
+                    href="/search"
+                    className="mt-4 inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-slate-50"
+                  >
+                    Clear all filters
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    {listings.map((listing) => (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        variant={searchVariant}
+                      />
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                      {Array.from({ length: totalPages }, (_, index) => {
+                        const page = index + 1;
+                        const href = `/search?${serializeSearchFilterParams(
+                          withPage(filters, page)
+                        ).toString()}`;
+                        const active = filters.page === page;
+                        return (
+                          <Link
+                            key={page}
+                            href={href}
+                            className={`inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-sm ${
+                              active
+                                ? "border-cyan-700 bg-cyan-700 text-white"
+                                : "bg-white text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {page}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </SearchLayout>
+          </div>
+        </div>
       </div>
     </div>
   );
