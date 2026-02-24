@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bot, Filter, RotateCcw, Sparkles } from "lucide-react";
+import { Bot, ChevronDown, Filter, RotateCcw, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ import {
 import type { SearchFacets } from "@/lib/search-query";
 import { trackEvent } from "@/lib/analytics";
 import { interpretSmartSearchPrompt } from "@/lib/smart-search";
+import { cn } from "@/lib/utils";
 
 interface SearchFiltersProps {
   mode: "desktop" | "mobile";
@@ -54,6 +55,46 @@ const NETWORK_OPTIONS = [
   { value: "WIRED", label: "Wired Ethernet" },
   { value: "BOTH", label: "WiFi + Wired" },
 ] as const;
+
+interface FilterCategoryProps {
+  title: string;
+  subtitle?: string;
+  defaultOpen?: boolean;
+  className?: string;
+  children: ReactNode;
+}
+
+function FilterCategory({
+  title,
+  subtitle,
+  defaultOpen = false,
+  className,
+  children,
+}: FilterCategoryProps) {
+  const [expanded, setExpanded] = useState(defaultOpen);
+
+  return (
+    <section className={cn("rounded-xl border border-slate-200 bg-white p-3", className)}>
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 text-left"
+        onClick={() => setExpanded((current) => !current)}
+      >
+        <div>
+          <p className="text-sm font-semibold text-slate-900">{title}</p>
+          {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
+        </div>
+        <ChevronDown
+          className={cn(
+            "size-4 text-slate-500 transition-transform duration-200",
+            expanded && "rotate-180"
+          )}
+        />
+      </button>
+      {expanded ? <div className="mt-3 space-y-3">{children}</div> : null}
+    </section>
+  );
+}
 
 export function SearchFilters({ mode, filters, facets, total }: SearchFiltersProps) {
   const router = useRouter();
@@ -172,7 +213,11 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
 
   const form = (
     <div className="space-y-5">
-      <section className="space-y-3 rounded-xl border border-cyan-200 bg-cyan-50/70 p-3">
+      <FilterCategory
+        title="Smart Assistant"
+        subtitle="Use natural language to auto-set filters."
+        className="border-cyan-200 bg-cyan-50/70"
+      >
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold uppercase tracking-wider text-cyan-800">
             Smart Assistant
@@ -209,9 +254,12 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
             ))}
           </div>
         )}
-      </section>
+      </FilterCategory>
 
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+      <FilterCategory
+        title="Quick Presets"
+        subtitle="One-click filter bundles for common intents."
+      >
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-600">
             Smart Presets
@@ -232,8 +280,13 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
             Budget Smart
           </Button>
         </div>
-      </section>
+      </FilterCategory>
 
+      <FilterCategory
+        title="Location, Dates & Capacity"
+        subtitle="Where, when, and team size."
+        defaultOpen
+      >
       <section className="space-y-3">
         <Label htmlFor={`query-${mode}`}>Search</Label>
         <Input
@@ -387,7 +440,12 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
           />
         </div>
       </section>
+      </FilterCategory>
 
+      <FilterCategory
+        title="Price, Score & Ranking"
+        subtitle="Budget and quality thresholds."
+      >
       <section className="space-y-3">
         <Label>Price per day (USD)</Label>
         <div className="grid grid-cols-2 gap-3">
@@ -484,6 +542,12 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
         </select>
       </section>
 
+      </FilterCategory>
+
+      <FilterCategory
+        title="Workspace Setup"
+        subtitle="Space type and sleeping setup."
+      >
       <section className="space-y-3">
         <Label>Workspace type</Label>
         <div className="space-y-2">
@@ -539,6 +603,12 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
         </div>
       </section>
 
+      </FilterCategory>
+
+      <FilterCategory
+        title="Connectivity"
+        subtitle="Network type and reliability."
+      >
       <section className="space-y-3">
         <Label>Connectivity</Label>
         <div className="space-y-2">
@@ -581,6 +651,12 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
         </div>
       </section>
 
+      </FilterCategory>
+
+      <FilterCategory
+        title="Cancellation Policy"
+        subtitle="Pick your flexibility level."
+      >
       <section className="space-y-3">
         <Label>Cancellation policy</Label>
         <div className="space-y-2">
@@ -604,10 +680,13 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
         </div>
       </section>
 
-      <section className="space-y-3 rounded-xl border border-rose-200 bg-rose-50/60 p-3">
-        <Label className="text-xs font-semibold uppercase tracking-wider text-rose-700">
-          Offsite Comfort
-        </Label>
+      </FilterCategory>
+
+      <FilterCategory
+        title="Offsite Comfort"
+        subtitle="Leisure features for stronger team downtime."
+        className="border-rose-200 bg-rose-50/60"
+      >
         <div className="space-y-2">
           {(
             [
@@ -632,8 +711,12 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
             </label>
           ))}
         </div>
-      </section>
+      </FilterCategory>
 
+      <FilterCategory
+        title="Amenities & Fees"
+        subtitle="Specific amenities and fee preferences."
+      >
       <section className="space-y-3">
         <Label>Top amenities</Label>
         <div className="space-y-2">
@@ -668,6 +751,7 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
           No cleaning fee
         </label>
       </section>
+      </FilterCategory>
 
       <div className="flex gap-2">
         <Button onClick={applyFilters} className="flex-1 bg-cyan-700 hover:bg-cyan-800">
