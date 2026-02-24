@@ -114,6 +114,13 @@ enum CancellationPolicy {
   STRICT
 }
 
+enum BedSize {
+  TWIN
+  DOUBLE
+  QUEEN
+  KING
+}
+
 model Listing {
   id     String @id @default(cuid())
   hostId String
@@ -138,11 +145,21 @@ model Listing {
 
   // Capacity
   maxGuests Int @default(1)
+  bedroomCount Int @default(1)
+  bedSize      BedSize @default(QUEEN)
+  propertySizeSqm Int?
 
   // Pricing (in cents)
   pricePerDay Int
   cleaningFee Int      @default(0)
   currency    String   @default("USD")
+
+  // Leisure / offsite quality
+  hasJacuzzi      Boolean @default(false)
+  hasSwimmingPool Boolean @default(false)
+  hasBackyard     Boolean @default(false)
+  hasPingPongTable Boolean @default(false)
+  hasPoolTable    Boolean @default(false)
 
   // Policy
   cancellationPolicy CancellationPolicy @default(FLEXIBLE)
@@ -171,6 +188,7 @@ model Listing {
   connectivityProfile ConnectivityProfile?
   availabilityRules   AvailabilityRule[]
   blockedDates        BlockedDate[]
+  activities          ListingActivity[]
   bookings            Booking[]
   reviews             Review[]
   messageThreads      MessageThread[]
@@ -183,6 +201,22 @@ model Listing {
   @@index([workScore])
   @@index([pricePerDay])
   @@index([lat, lng])
+}
+
+model ListingActivity {
+  id          String  @id @default(cuid())
+  listingId   String
+  title       String
+  category    String
+  description String?
+  durationMinutes Int?
+  distanceKm  Float?
+  indoor      Boolean @default(false)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([category])
 }
 
 model ListingImage {
