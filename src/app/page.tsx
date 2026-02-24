@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, Building2, MapPinned, ShieldCheck, Sparkles, Users, Wifi } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, CalendarRange, Coins, MapPinned, ShieldCheck, Sparkles, Users, Wifi } from "lucide-react";
 import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandLogo } from "@/components/shared/brand-logo";
+import { BRAND } from "@/lib/brand";
 
 const intentChips = [
   { label: "Deep Work", href: "/search?workspaceTypes=PRIVATE_OFFICE,HOME_OFFICE&minWorkScore=75&verifiedInternet=true" },
@@ -21,16 +23,50 @@ export default function HomePage() {
         <section className="waywork-hero-gradient relative overflow-hidden pb-12 pt-10 md:pb-16 md:pt-14">
           <div className="waywork-grid-bg absolute inset-0 opacity-55" />
           <div className="waywork-shell relative">
+            <div className="mb-6 rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-sm md:mb-8 md:p-7">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <BrandLogo />
+                <Badge className="w-fit bg-slate-900 text-white hover:bg-slate-800">Built for Hosts + Teams</Badge>
+              </div>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Primary Value Proposition
+              </p>
+              <h1 className="font-display mt-5 max-w-4xl text-3xl font-semibold leading-tight text-slate-900 md:text-5xl">
+                Turning residential property into usable workspace.
+              </h1>
+              <p className="mt-3 max-w-3xl text-base text-slate-700 md:text-lg">
+                Helping property owners fill non-holiday season gaps with revenue from offsite workers and teams.
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/85 p-3.5">
+                  <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                    <CalendarRange className="size-4 text-cyan-700" />
+                    Fill dead non-holiday periods
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Turn low-occupancy windows into booked offsite stays.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/85 p-3.5">
+                  <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                    <Coins className="size-4 text-cyan-700" />
+                    Capture a new revenue stream
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Attract distributed teams who pay for work-ready residential spaces.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
               <div className="space-y-5">
-                <Badge className="bg-slate-900 text-white hover:bg-slate-800">
-                  Workspace Discovery Platform
-                </Badge>
-                <h1 className="font-display max-w-3xl text-4xl font-semibold leading-tight text-slate-900 md:text-6xl">
-                  Work trips that feel productive by day and memorable after hours.
-                </h1>
+                <Badge className="bg-slate-900 text-white hover:bg-slate-800">{BRAND.name} Marketplace</Badge>
+                <h2 className="font-display max-w-3xl text-4xl font-semibold leading-tight text-slate-900 md:text-6xl">
+                  Book work-ready spaces for focused offsites and better team outcomes.
+                </h2>
                 <p className="max-w-2xl text-base text-slate-600 md:text-lg">
-                  Discover global, work-ready spaces with verified internet, practical setups, and curated local activities for your team&apos;s downtime.
+                  {BRAND.name} helps hosts rent residential properties to offsite workers and teams, filling non-holiday gaps while guests get productive, comfortable places to work.
                 </p>
                 <div className="flex flex-wrap gap-2.5">
                   {intentChips.map((chip) => (
