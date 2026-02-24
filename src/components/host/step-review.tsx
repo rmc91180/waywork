@@ -1,7 +1,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { WORKSPACE_TYPES, CANCELLATION_POLICIES } from "@/lib/constants";
+import {
+  BED_SIZE_OPTIONS,
+  CANCELLATION_POLICIES,
+  LEISURE_FEATURE_LABELS,
+  WORKSPACE_TYPES,
+} from "@/lib/constants";
 import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import type { ListingFormData } from "@/hooks/use-listing-form";
@@ -17,6 +22,7 @@ export function StepReview({ data }: StepReviewProps) {
     CANCELLATION_POLICIES[
       data.cancellationPolicy as keyof typeof CANCELLATION_POLICIES
     ];
+  const bedSize = BED_SIZE_OPTIONS[data.bedSize as keyof typeof BED_SIZE_OPTIONS];
 
   const workScore = computeWorkScore({
     amenities: data.amenities,
@@ -123,6 +129,10 @@ export function StepReview({ data }: StepReviewProps) {
           <p className="text-xs text-gray-500">
             Up to {data.maxGuests} guest{data.maxGuests > 1 ? "s" : ""}
           </p>
+          <p className="text-xs text-gray-500">
+            {data.bedroomCount} bedroom{data.bedroomCount > 1 ? "s" : ""} ·{" "}
+            {bedSize?.label || data.bedSize} · {data.propertySizeSqm || "N/A"} sqm
+          </p>
           <Badge variant="outline">
             {cancelPolicy?.label || data.cancellationPolicy}
           </Badge>
@@ -144,6 +154,26 @@ export function StepReview({ data }: StepReviewProps) {
             <p className="text-xs text-green-600">Has backup connection</p>
           )}
         </div>
+      </div>
+
+      {/* Offsite features */}
+      <div className="rounded-lg border p-4">
+        <h3 className="text-sm font-semibold text-gray-500 mb-2">Offsite Comfort</h3>
+        <div className="flex flex-wrap gap-1.5">
+          {(Object.keys(LEISURE_FEATURE_LABELS) as Array<keyof typeof LEISURE_FEATURE_LABELS>).map((field) => (
+            <Badge
+              key={field}
+              variant={data[field] ? "default" : "outline"}
+              className={data[field] ? "bg-rose-600 text-white" : ""}
+            >
+              {LEISURE_FEATURE_LABELS[field]}
+            </Badge>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-gray-500">
+          {data.activities.length} suggested activity
+          {data.activities.length !== 1 ? "ies" : "y"} added
+        </p>
       </div>
 
       {/* Amenities */}

@@ -56,6 +56,21 @@ export const CANCELLATION_POLICIES = {
   },
 } as const;
 
+export const BED_SIZE_OPTIONS = {
+  TWIN: { label: "Twin" },
+  DOUBLE: { label: "Double" },
+  QUEEN: { label: "Queen" },
+  KING: { label: "King" },
+} as const;
+
+export const LEISURE_FEATURE_LABELS = {
+  hasJacuzzi: "Jacuzzi",
+  hasSwimmingPool: "Swimming Pool",
+  hasBackyard: "Backyard",
+  hasPingPongTable: "Ping Pong",
+  hasPoolTable: "Pool Table",
+} as const;
+
 export const SUGGESTED_AMENITIES = [
   // Desk
   { category: "DESK" as const, name: "Dedicated Desk" },

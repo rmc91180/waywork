@@ -6,15 +6,21 @@ import { WizardSteps } from "@/components/host/wizard-steps";
 import { StepBasics } from "@/components/host/step-basics";
 import { StepLocation } from "@/components/host/step-location";
 import { StepPricing } from "@/components/host/step-pricing";
+import { StepOffsite } from "@/components/host/step-offsite";
 import { StepAmenities } from "@/components/host/step-amenities";
 import { StepConnectivity } from "@/components/host/step-connectivity";
 import { StepPhotos } from "@/components/host/step-photos";
 import { StepAvailability } from "@/components/host/step-availability";
 import { StepReview } from "@/components/host/step-review";
 import { useListingForm, type ListingFormData } from "@/hooks/use-listing-form";
-import { saveCompleteListing, updateCompleteListing } from "@/actions/listing";
+import {
+  saveCompleteListing,
+  submitListingForReview,
+  updateCompleteListing,
+} from "@/actions/listing";
 import { toast } from "sonner";
 import type {
+  BedSize,
   CancellationPolicy,
   WorkspaceType,
 } from "@/generated/prisma";
@@ -44,58 +50,53 @@ export function ListingWizard({
   const [isPending, startTransition] = useTransition();
   const [saving, setSaving] = useState(false);
 
+  const listingPayload = {
+    title: formData.title,
+    description: formData.description,
+    workspaceType: formData.workspaceType as WorkspaceType,
+    address: formData.address,
+    city: formData.city,
+    state: formData.state,
+    country: formData.country,
+    postalCode: formData.postalCode,
+    lat: formData.lat,
+    lng: formData.lng,
+    maxGuests: formData.maxGuests,
+    bedroomCount: formData.bedroomCount,
+    bedSize: formData.bedSize as BedSize,
+    propertySizeSqm:
+      formData.propertySizeSqm > 0 ? formData.propertySizeSqm : undefined,
+    pricePerDay: formData.pricePerDay,
+    cleaningFee: formData.cleaningFee,
+    currency: "USD",
+    cancellationPolicy: formData.cancellationPolicy as CancellationPolicy,
+    hasJacuzzi: formData.hasJacuzzi,
+    hasSwimmingPool: formData.hasSwimmingPool,
+    hasBackyard: formData.hasBackyard,
+    hasPingPongTable: formData.hasPingPongTable,
+    hasPoolTable: formData.hasPoolTable,
+  };
+
   const handleSaveDraft = () => {
     setSaving(true);
     startTransition(async () => {
       try {
         if (mode === "edit" && listingId) {
           await updateCompleteListing(listingId, {
-            listing: {
-              title: formData.title,
-              description: formData.description,
-              workspaceType: formData.workspaceType as WorkspaceType,
-              address: formData.address,
-              city: formData.city,
-              state: formData.state,
-              country: formData.country,
-              postalCode: formData.postalCode,
-              lat: formData.lat,
-              lng: formData.lng,
-              maxGuests: formData.maxGuests,
-              pricePerDay: formData.pricePerDay,
-              cleaningFee: formData.cleaningFee,
-              currency: "USD",
-              cancellationPolicy:
-                formData.cancellationPolicy as CancellationPolicy,
-            },
+            listing: listingPayload,
             connectivity: formData.connectivity,
             amenities: formData.amenities,
+            activities: formData.activities,
             images: formData.images,
             availability: formData.availability,
             blockedDates: formData.blockedDates,
           });
         } else {
           await saveCompleteListing({
-            listing: {
-              title: formData.title,
-              description: formData.description,
-              workspaceType: formData.workspaceType as WorkspaceType,
-              address: formData.address,
-              city: formData.city,
-              state: formData.state,
-              country: formData.country,
-              postalCode: formData.postalCode,
-              lat: formData.lat,
-              lng: formData.lng,
-              maxGuests: formData.maxGuests,
-              pricePerDay: formData.pricePerDay,
-              cleaningFee: formData.cleaningFee,
-              currency: "USD",
-              cancellationPolicy:
-                formData.cancellationPolicy as CancellationPolicy,
-            },
+            listing: listingPayload,
             connectivity: formData.connectivity,
             amenities: formData.amenities,
+            activities: formData.activities,
             images: formData.images,
             availability: formData.availability,
             blockedDates: formData.blockedDates,
@@ -117,32 +118,29 @@ export function ListingWizard({
     setSaving(true);
     startTransition(async () => {
       try {
-        await saveCompleteListing({
-          listing: {
-            title: formData.title,
-            description: formData.description,
-            workspaceType: formData.workspaceType as WorkspaceType,
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            country: formData.country,
-            postalCode: formData.postalCode,
-            lat: formData.lat,
-            lng: formData.lng,
-            maxGuests: formData.maxGuests,
-            pricePerDay: formData.pricePerDay,
-            cleaningFee: formData.cleaningFee,
-            currency: "USD",
-            cancellationPolicy:
-              formData.cancellationPolicy as CancellationPolicy,
-          },
-          connectivity: formData.connectivity,
-          amenities: formData.amenities,
-          images: formData.images,
-          availability: formData.availability,
-          blockedDates: formData.blockedDates,
-          submitForReview: true,
-        });
+        if (mode === "edit" && listingId) {
+          await updateCompleteListing(listingId, {
+            listing: listingPayload,
+            connectivity: formData.connectivity,
+            amenities: formData.amenities,
+            activities: formData.activities,
+            images: formData.images,
+            availability: formData.availability,
+            blockedDates: formData.blockedDates,
+          });
+          await submitListingForReview(listingId);
+        } else {
+          await saveCompleteListing({
+            listing: listingPayload,
+            connectivity: formData.connectivity,
+            amenities: formData.amenities,
+            activities: formData.activities,
+            images: formData.images,
+            availability: formData.availability,
+            blockedDates: formData.blockedDates,
+            submitForReview: true,
+          });
+        }
         toast.success("Listing submitted for review!");
       } catch (error) {
         toast.error(
@@ -163,14 +161,16 @@ export function ListingWizard({
       case 2:
         return <StepPricing data={formData} onChange={updateFormData} />;
       case 3:
-        return <StepAmenities data={formData} onChange={updateFormData} />;
+        return <StepOffsite data={formData} onChange={updateFormData} />;
       case 4:
-        return <StepConnectivity data={formData} onChange={updateFormData} />;
+        return <StepAmenities data={formData} onChange={updateFormData} />;
       case 5:
-        return <StepPhotos data={formData} onChange={updateFormData} />;
+        return <StepConnectivity data={formData} onChange={updateFormData} />;
       case 6:
-        return <StepAvailability data={formData} onChange={updateFormData} />;
+        return <StepPhotos data={formData} onChange={updateFormData} />;
       case 7:
+        return <StepAvailability data={formData} onChange={updateFormData} />;
+      case 8:
         return <StepReview data={formData} />;
       default:
         return null;

@@ -18,6 +18,8 @@ export const cancellationPolicySchema = z.enum([
   "STRICT",
 ]);
 
+export const bedSizeSchema = z.enum(["TWIN", "DOUBLE", "QUEEN", "KING"]);
+
 export const amenityCategorySchema = z.enum([
   "DESK",
   "MONITOR",
@@ -49,9 +51,17 @@ export const createListingSchema = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   maxGuests: z.number().int().min(1).max(10),
+  bedroomCount: z.number().int().min(1).max(12).optional(),
+  bedSize: bedSizeSchema.optional(),
+  propertySizeSqm: z.number().int().min(10).max(5000).optional(),
   pricePerDay: z.number().int().min(100, "Minimum price is $1.00"),
   cleaningFee: z.number().int().min(0).default(0),
   currency: z.string().default("USD"),
+  hasJacuzzi: z.boolean().optional(),
+  hasSwimmingPool: z.boolean().optional(),
+  hasBackyard: z.boolean().optional(),
+  hasPingPongTable: z.boolean().optional(),
+  hasPoolTable: z.boolean().optional(),
   cancellationPolicy: cancellationPolicySchema.default("FLEXIBLE"),
 });
 
@@ -79,6 +89,15 @@ export const listingImageSchema = z.object({
   alt: z.string().max(200).optional(),
   order: z.number().int().min(0).default(0),
   isPrimary: z.boolean().default(false),
+});
+
+export const listingActivitySchema = z.object({
+  title: z.string().min(2).max(120),
+  category: z.string().min(2).max(60),
+  description: z.string().max(400).optional(),
+  durationMinutes: z.number().int().min(10).max(600).optional(),
+  distanceKm: z.number().min(0).max(200).optional(),
+  indoor: z.boolean().default(false),
 });
 
 // ============================================================================
@@ -140,6 +159,8 @@ export const sendMessageSchema = z.object({
 export const searchListingsSchema = z.object({
   query: z.string().optional(),
   city: z.string().optional(),
+  nearQuery: z.string().optional(),
+  radiusKm: z.number().int().min(1).max(500).optional(),
   country: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
@@ -148,13 +169,38 @@ export const searchListingsSchema = z.object({
   checkOut: z.string().optional(),
   guests: z.number().int().min(1).optional(),
   workspaceTypes: z.array(workspaceTypeSchema).optional(),
+  bedSizes: z.array(bedSizeSchema).optional(),
   minWorkScore: z.number().int().min(0).max(100).optional(),
+  minPropertySizeSqm: z.number().int().min(0).optional(),
+  minBedrooms: z.number().int().min(1).optional(),
   minSpeed: z.number().optional(),
   minPrice: z.number().int().optional(),
   maxPrice: z.number().int().optional(),
+  reviewMin: z.number().min(0).max(5).optional(),
+  networkTypes: z.array(networkTypeSchema).optional(),
   cancellationPolicy: cancellationPolicySchema.optional(),
+  cancellationPolicies: z.array(cancellationPolicySchema).optional(),
   amenities: z.array(z.string()).optional(),
-  sortBy: z.enum(["workScore", "price", "distance", "createdAt"]).optional(),
+  verifiedInternet: z.boolean().optional(),
+  backupInternet: z.boolean().optional(),
+  noCleaningFee: z.boolean().optional(),
+  hasJacuzzi: z.boolean().optional(),
+  hasSwimmingPool: z.boolean().optional(),
+  hasBackyard: z.boolean().optional(),
+  hasPingPongTable: z.boolean().optional(),
+  hasPoolTable: z.boolean().optional(),
+  sortBy: z
+    .enum([
+      "recommended",
+      "work_score",
+      "price_asc",
+      "price_desc",
+      "rating_desc",
+      "most_reviewed",
+      "newest",
+      "fastest_internet",
+    ])
+    .optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(50).default(20),

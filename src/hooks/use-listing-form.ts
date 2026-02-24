@@ -3,12 +3,12 @@
 import { useState, useCallback } from "react";
 import type { z } from "zod";
 import type {
-  createListingSchema,
   connectivityProfileSchema,
   listingAmenitySchema,
   listingImageSchema,
   availabilityRuleSchema,
   blockedDateSchema,
+  listingActivitySchema,
 } from "@/lib/validators";
 
 export type ListingFormData = {
@@ -26,9 +26,18 @@ export type ListingFormData = {
   lng: number;
   // Step 3: Capacity & Pricing
   maxGuests: number;
+  bedroomCount: number;
+  bedSize: "TWIN" | "DOUBLE" | "QUEEN" | "KING";
+  propertySizeSqm: number;
   pricePerDay: number; // in cents
   cleaningFee: number; // in cents
   cancellationPolicy: string;
+  hasJacuzzi: boolean;
+  hasSwimmingPool: boolean;
+  hasBackyard: boolean;
+  hasPingPongTable: boolean;
+  hasPoolTable: boolean;
+  activities: z.infer<typeof listingActivitySchema>[];
   // Step 4: Amenities
   amenities: z.infer<typeof listingAmenitySchema>[];
   // Step 5: Connectivity
@@ -52,9 +61,27 @@ const INITIAL_STATE: ListingFormData = {
   lat: 0,
   lng: 0,
   maxGuests: 1,
+  bedroomCount: 1,
+  bedSize: "QUEEN",
+  propertySizeSqm: 60,
   pricePerDay: 5000,
   cleaningFee: 0,
   cancellationPolicy: "FLEXIBLE",
+  hasJacuzzi: false,
+  hasSwimmingPool: false,
+  hasBackyard: false,
+  hasPingPongTable: false,
+  hasPoolTable: false,
+  activities: [
+    {
+      title: "Local team dinner",
+      category: "Food",
+      description: "Popular nearby restaurant option for after-work downtime.",
+      durationMinutes: 90,
+      distanceKm: 1.5,
+      indoor: true,
+    },
+  ],
   amenities: [],
   connectivity: {
     declaredDownloadMbps: 100,
@@ -80,6 +107,7 @@ export const WIZARD_STEPS = [
   { id: "basics", title: "Basics", description: "Type, title, and description" },
   { id: "location", title: "Location", description: "Where is your space?" },
   { id: "pricing", title: "Pricing", description: "Capacity and rates" },
+  { id: "offsite", title: "Offsite", description: "Leisure and after-work activities" },
   { id: "amenities", title: "Amenities", description: "What do you offer?" },
   { id: "connectivity", title: "Connectivity", description: "Internet and network" },
   { id: "photos", title: "Photos", description: "Show your space" },

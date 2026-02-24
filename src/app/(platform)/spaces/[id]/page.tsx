@@ -2,8 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,9 +9,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { WORKSPACE_TYPES, CANCELLATION_POLICIES, AMENITY_CATEGORIES } from "@/lib/constants";
+import {
+  AMENITY_CATEGORIES,
+  BED_SIZE_OPTIONS,
+  CANCELLATION_POLICIES,
+  LEISURE_FEATURE_LABELS,
+  WORKSPACE_TYPES,
+} from "@/lib/constants";
 import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
-import { formatCurrency } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
 import { BookingSidebar } from "@/components/booking/booking-sidebar";
 import { InquiryButton } from "@/components/messaging/inquiry-button";
@@ -68,6 +71,7 @@ export default async function SpaceDetailPage({ params }: Props) {
       images: { orderBy: { order: "asc" } },
       amenities: { orderBy: { category: "asc" } },
       connectivityProfile: true,
+      activities: { orderBy: [{ distanceKm: "asc" }, { title: "asc" }] },
       host: { select: { id: true, name: true, image: true, bio: true, createdAt: true } },
       reviews: {
         include: { author: { select: { name: true, image: true } } },
@@ -83,6 +87,7 @@ export default async function SpaceDetailPage({ params }: Props) {
   }
 
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];
+  const bedSize = BED_SIZE_OPTIONS[listing.bedSize as keyof typeof BED_SIZE_OPTIONS];
   const cancelPolicy = CANCELLATION_POLICIES[listing.cancellationPolicy as keyof typeof CANCELLATION_POLICIES];
   const workScore = computeWorkScore({
     amenities: listing.amenities,
@@ -241,12 +246,90 @@ export default async function SpaceDetailPage({ params }: Props) {
             </div>
           </div>
 
+          {/* Stay profile */}
+          <div className="mb-8 rounded-lg border border-cyan-200 bg-cyan-50/60 p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Stay Profile</h2>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
+                <p className="text-xs uppercase text-slate-500">Bedrooms</p>
+                <p className="text-lg font-semibold text-slate-900">{listing.bedroomCount}</p>
+              </div>
+              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
+                <p className="text-xs uppercase text-slate-500">Bed Size</p>
+                <p className="text-lg font-semibold text-slate-900">{bedSize?.label || listing.bedSize}</p>
+              </div>
+              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
+                <p className="text-xs uppercase text-slate-500">Property Size</p>
+                <p className="text-lg font-semibold text-slate-900">
+                  {listing.propertySizeSqm ? `${listing.propertySizeSqm} sqm` : "N/A"}
+                </p>
+              </div>
+              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
+                <p className="text-xs uppercase text-slate-500">Max Guests</p>
+                <p className="text-lg font-semibold text-slate-900">{listing.maxGuests}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Leisure features */}
+          <div className="mb-8">
+            <h2 className="mb-3 text-lg font-semibold">Offsite Comfort Features</h2>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(LEISURE_FEATURE_LABELS) as Array<keyof typeof LEISURE_FEATURE_LABELS>).map((key) => (
+                <Badge
+                  key={key}
+                  variant={listing[key] ? "default" : "outline"}
+                  className={listing[key] ? "bg-rose-600 text-white" : ""}
+                >
+                  {LEISURE_FEATURE_LABELS[key]}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
           {/* Description */}
           <div className="mb-8">
             <h2 className="text-lg font-semibold mb-3">About This Space</h2>
             <p className="text-gray-700 whitespace-pre-line leading-relaxed">
               {listing.description}
             </p>
+          </div>
+
+          <Separator className="my-8" />
+
+          {/* Activities */}
+          <div className="mb-8">
+            <h2 className="mb-3 text-lg font-semibold">Suggested Activities After Work</h2>
+            {listing.activities.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Hosts can add nearby activity recommendations for this workspace.
+              </p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {listing.activities.map((activity) => (
+                  <div key={activity.id} className="rounded-lg border border-slate-200 bg-white p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">{activity.category}</p>
+                        <p className="font-medium text-slate-900">{activity.title}</p>
+                      </div>
+                      {activity.indoor ? (
+                        <Badge variant="secondary">Indoor</Badge>
+                      ) : (
+                        <Badge variant="outline">Outdoor</Badge>
+                      )}
+                    </div>
+                    {activity.description && (
+                      <p className="mt-2 text-sm text-slate-600">{activity.description}</p>
+                    )}
+                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+                      {activity.distanceKm ? <span>{activity.distanceKm.toFixed(1)} km away</span> : null}
+                      {activity.durationMinutes ? <span>{activity.durationMinutes} min</span> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <Separator className="my-8" />

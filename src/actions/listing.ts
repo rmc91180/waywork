@@ -9,6 +9,7 @@ import {
   updateListingSchema,
   connectivityProfileSchema,
   listingAmenitySchema,
+  listingActivitySchema,
   listingImageSchema,
   availabilityRuleSchema,
   blockedDateSchema,
@@ -151,6 +152,48 @@ export async function setListingAmenities(
 
   // Recompute work score
   await recomputeWorkScore(listingId);
+
+  revalidatePath(`/host/listings/${listingId}`);
+  revalidatePath(`/spaces/${listingId}`);
+}
+
+// ============================================================================
+// ACTIVITIES
+// ============================================================================
+
+export async function setListingActivities(
+  listingId: string,
+  activities: z.infer<typeof listingActivitySchema>[]
+) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const listing = await db.listing.findUnique({
+    where: { id: listingId },
+  });
+  if (!listing || listing.hostId !== session.user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const parsed = activities
+    .map((activity) => listingActivitySchema.parse(activity))
+    .filter((activity) => activity.title.trim().length > 0);
+
+  await db.listingActivity.deleteMany({ where: { listingId } });
+
+  if (parsed.length > 0) {
+    await db.listingActivity.createMany({
+      data: parsed.map((activity) => ({
+        listingId,
+        title: activity.title.trim(),
+        category: activity.category.trim(),
+        description: activity.description?.trim() || undefined,
+        durationMinutes: activity.durationMinutes,
+        distanceKm: activity.distanceKm,
+        indoor: activity.indoor,
+      })),
+    });
+  }
 
   revalidatePath(`/host/listings/${listingId}`);
   revalidatePath(`/spaces/${listingId}`);
@@ -429,6 +472,7 @@ export async function saveCompleteListing(formData: {
   listing: z.infer<typeof createListingSchema>;
   connectivity: z.infer<typeof connectivityProfileSchema>;
   amenities: z.infer<typeof listingAmenitySchema>[];
+  activities: z.infer<typeof listingActivitySchema>[];
   images: z.infer<typeof listingImageSchema>[];
   availability: z.infer<typeof availabilityRuleSchema>[];
   blockedDates: z.infer<typeof blockedDateSchema>[];
@@ -441,6 +485,7 @@ export async function saveCompleteListing(formData: {
     listing: listingData,
     connectivity,
     amenities,
+    activities,
     images,
     availability,
     blockedDates,
@@ -456,6 +501,11 @@ export async function saveCompleteListing(formData: {
   // Add amenities
   if (amenities.length > 0) {
     await setListingAmenities(listing.id, amenities);
+  }
+
+  // Add activities
+  if (activities.length > 0) {
+    await setListingActivities(listing.id, activities);
   }
 
   // Add images
@@ -488,6 +538,7 @@ export async function updateCompleteListing(
     listing: z.infer<typeof updateListingSchema>;
     connectivity: z.infer<typeof connectivityProfileSchema>;
     amenities: z.infer<typeof listingAmenitySchema>[];
+    activities: z.infer<typeof listingActivitySchema>[];
     images: z.infer<typeof listingImageSchema>[];
     availability: z.infer<typeof availabilityRuleSchema>[];
     blockedDates: z.infer<typeof blockedDateSchema>[];
@@ -496,7 +547,15 @@ export async function updateCompleteListing(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const { listing: listingData, connectivity, amenities, images, availability, blockedDates } = formData;
+  const {
+    listing: listingData,
+    connectivity,
+    amenities,
+    activities,
+    images,
+    availability,
+    blockedDates,
+  } = formData;
 
   // Update listing core fields
   await updateListing(listingId, listingData);
@@ -506,6 +565,9 @@ export async function updateCompleteListing(
 
   // Replace amenities
   await setListingAmenities(listingId, amenities);
+
+  // Replace activities
+  await setListingActivities(listingId, activities);
 
   // Replace images
   await db.listingImage.deleteMany({ where: { listingId } });
