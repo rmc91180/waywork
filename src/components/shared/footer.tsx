@@ -2,93 +2,89 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
+    <footer className="border-t border-slate-200/80 bg-gradient-to-b from-white to-slate-50/70">
+      <div className="waywork-shell py-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
-            <h3 className="text-lg font-bold tracking-tight">WayWork</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <h3 className="font-display text-xl font-semibold tracking-tight text-slate-900">WayWork</h3>
+            <p className="mt-2 max-w-xs text-sm text-slate-600">
               The marketplace for work-verified offsite spaces.
             </p>
           </div>
 
-          {/* For Guests */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
               For Guests
             </h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/search"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
                   Find Spaces
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/how-it-works"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  href="/bookings"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
-                  How It Works
+                  My Bookings
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* For Hosts */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
               For Hosts
             </h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/host/listings"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
-                  List Your Space
+                  Listings Dashboard
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/host-guide"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  href="/host/payouts"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
-                  Host Guide
+                  Payouts
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Legal</h4>
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Platform</h4>
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/terms"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  href="/messages"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
-                  Terms of Service
+                  Messages
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/privacy"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  href="/account"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
-                  Privacy Policy
+                  Account
                 </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t">
-          <p className="text-xs text-gray-500">
+        <div className="mt-10 border-t border-slate-200/80 pt-6">
+          <p className="text-xs text-slate-500">
             &copy; {new Date().getFullYear()} WayWork. All rights reserved.
           </p>
         </div>

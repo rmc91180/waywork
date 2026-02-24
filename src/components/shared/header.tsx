@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,43 +17,51 @@ export function Header() {
   const { data: session, status } = useSession();
 
   return (
-    <header className="border-b bg-white sticky top-0 z-50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold tracking-tight">WayWork</span>
+    <header className="sticky top-0 z-50 border-b border-white/50 bg-white/70 backdrop-blur-xl">
+      <div className="waywork-shell">
+        <div className="flex h-[4.5rem] items-center justify-between gap-4">
+          <Link href="/" className="group inline-flex items-center gap-3">
+            <div className="relative flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-teal-500 to-sky-600 shadow-sm shadow-cyan-700/30">
+              <span className="font-display text-sm font-bold text-white">WW</span>
+            </div>
+            <div className="leading-tight">
+              <p className="font-display text-lg font-semibold text-slate-900">WayWork</p>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                Workspaces For Teams
+              </p>
+            </div>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden items-center gap-1 rounded-full border border-slate-200/80 bg-white/75 p-1 shadow-xs md:flex">
             <Link
               href="/search"
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
             >
               Find Spaces
+            </Link>
+            <Link
+              href="/bookings"
+              className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            >
+              Trips
             </Link>
             {session?.user && (
               <Link
                 href="/host/listings"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
               >
                 Host
               </Link>
             )}
           </nav>
 
-          {/* Auth */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-3">
             {status === "loading" ? (
-              <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />
             ) : session?.user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-9 w-9 rounded-full"
-                  >
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full border border-slate-200 bg-white">
                     <Avatar className="h-9 w-9">
                       <AvatarImage
                         src={session.user.image || undefined}
@@ -69,13 +78,9 @@ export function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">
-                      {session.user.name || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {session.user.email}
-                    </p>
+                  <div className="space-y-0.5 px-2 py-1.5">
+                    <p className="text-sm font-semibold">{session.user.name || "User"}</p>
+                    <p className="truncate text-xs text-slate-500">{session.user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -96,7 +101,7 @@ export function Header() {
                   </DropdownMenuItem>
                   {session.user.role === "ADMIN" && (
                     <DropdownMenuItem asChild>
-                      <Link href="/admin/dashboard">Admin</Link>
+                      <Link href="/admin/dashboard">Admin Console</Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -109,11 +114,14 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" asChild>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="hidden md:inline-flex">
+                  Work + Leisure
+                </Badge>
+                <Button variant="ghost" className="hidden md:inline-flex" asChild>
                   <Link href="/login">Log In</Link>
                 </Button>
-                <Button asChild>
+                <Button className="shadow-sm shadow-cyan-700/20" asChild>
                   <Link href="/register">Sign Up</Link>
                 </Button>
               </div>
