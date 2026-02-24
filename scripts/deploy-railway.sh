@@ -1,6 +1,9 @@
 #!/bin/bash
 # WayWork Railway Deployment Script
 # Run this from the project root: bash scripts/deploy-railway.sh
+# Optional:
+#   APP_URL="https://your-domain.com" bash scripts/deploy-railway.sh
+#   SEED_DEMO_DATA="true" bash scripts/deploy-railway.sh
 
 set -e
 
@@ -39,10 +42,22 @@ echo ""
 
 # Set environment variables
 echo "🔧 Setting environment variables..."
-railway vars set AUTH_SECRET="$(openssl rand -base64 32)" 2>/dev/null || true
-railway vars set AUTH_URL="https://waywork.up.railway.app" 2>/dev/null || true
-railway vars set NEXT_PUBLIC_APP_URL="https://waywork.up.railway.app" 2>/dev/null || true
+if command -v openssl &> /dev/null; then
+    AUTH_SECRET_VALUE="$(openssl rand -base64 32)"
+else
+    AUTH_SECRET_VALUE="$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")"
+fi
+railway vars set AUTH_SECRET="$AUTH_SECRET_VALUE" 2>/dev/null || true
+railway vars set AUTH_TRUST_HOST="true" 2>/dev/null || true
 railway vars set EMAIL_FROM="WayWork <noreply@waywork.com>" 2>/dev/null || true
+
+if [ -n "${APP_URL:-}" ]; then
+    railway vars set AUTH_URL="$APP_URL" 2>/dev/null || true
+    railway vars set NEXT_PUBLIC_APP_URL="$APP_URL" 2>/dev/null || true
+    echo "✅ Set AUTH_URL/NEXT_PUBLIC_APP_URL to $APP_URL"
+else
+    echo "ℹ️ APP_URL not set. AUTH_URL/NEXT_PUBLIC_APP_URL will be set after domain creation."
+fi
 
 echo ""
 echo "🚂 Deploying to Railway..."
@@ -51,11 +66,32 @@ railway up --detach
 echo ""
 echo "✅ Deployment initiated!"
 echo ""
+echo "🗄️ Running database schema sync..."
+PUBLIC_DB_URL="$(railway run -s Postgres -- node -e "process.stdout.write(process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL || '')" 2>/dev/null || true)"
+if [ -n "$PUBLIC_DB_URL" ]; then
+    if DATABASE_URL="$PUBLIC_DB_URL" npm run db:deploy; then
+        echo "✅ Database schema synced"
+    else
+        echo "⚠️ Could not sync schema automatically. Run: DATABASE_URL=\"<postgres-public-url>\" npm run db:deploy"
+    fi
+else
+    echo "⚠️ Could not resolve Postgres public URL. Run schema sync manually."
+fi
+
+if [ "${SEED_DEMO_DATA:-false}" = "true" ]; then
+    echo ""
+    echo "🌱 Seeding demo data..."
+    railway run npm run db:seed
+fi
+
+echo ""
 echo "📋 Next steps:"
-echo "   1. Add a PostgreSQL database from your Railway dashboard"
-echo "   2. Railway will auto-inject DATABASE_URL"
-echo "   3. Generate a domain: railway domain"
-echo "   4. Your app will be live at the generated URL!"
+echo "   1. Ensure PostgreSQL is attached (Railway auto-injects DATABASE_URL)"
+echo "   2. Generate a domain: railway domain"
+echo "   3. Set APP_URL vars once domain is known:"
+echo "      railway vars set AUTH_URL=https://<your-domain>"
+echo "      railway vars set NEXT_PUBLIC_APP_URL=https://<your-domain>"
+echo "   4. Redeploy: railway up --detach"
 echo ""
 echo "   To check deployment status: railway status"
 echo "   To view logs: railway logs"

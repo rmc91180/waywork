@@ -6,7 +6,7 @@ nixpkgsArchive = '51ad838b03a05b1de6f9f2a0fffecee64a9788ee'
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npx prisma generate", "npm run build"]
+cmds = ["npm run build"]
 
 [start]
-cmd = "npx prisma db push --accept-data-loss && npx tsx prisma/seed.ts && npm start"
+cmd = "npm start"
