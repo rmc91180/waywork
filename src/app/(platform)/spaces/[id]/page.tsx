@@ -113,39 +113,43 @@ export default async function SpaceDetailPage({ params }: Props) {
           listingReviews.length
         ).toFixed(1)
       : null;
+  const reviewHighlights = listingReviews
+    .filter((review) => review.comment && review.comment.trim().length > 24)
+    .sort((a, b) => b.overallRating - a.overallRating)
+    .slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="waywork-shell py-8 md:py-10">
       {/* Breadcrumb */}
-      <div className="text-sm text-gray-500 mb-4">
-        <Link href="/search" className="hover:underline">
+      <div className="mb-4 text-sm text-slate-500">
+        <Link href="/search" className="transition-colors hover:text-slate-700 hover:underline">
           Find Spaces
         </Link>
         <span className="mx-2">/</span>
         <span>{listing.city}</span>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">{listing.title}</span>
+        <span className="text-slate-900">{listing.title}</span>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col gap-8 lg:flex-row">
         {/* Main content */}
         <div className="flex-1">
           {/* Title section */}
-          <div className="mb-6">
+          <div className="waywork-section mb-6 p-5 md:p-6">
             <div className="flex items-center gap-2 mb-2">
               <Badge variant="outline">{wsType?.label}</Badge>
               {listing.connectivityProfile?.verified && (
-                <Badge className="bg-green-500">Verified</Badge>
+                <Badge className="bg-emerald-600">Verified Internet</Badge>
               )}
               {avgRating && (
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-slate-600">
                   {"*".repeat(Math.round(parseFloat(avgRating)))} {avgRating} (
                   {listing._count.reviews})
                 </span>
               )}
             </div>
             <h1 className="text-2xl md:text-3xl font-bold">{listing.title}</h1>
-            <p className="text-gray-600 mt-1">
+            <p className="mt-1 text-slate-600">
               {listing.address}, {listing.city}
               {listing.state ? `, ${listing.state}` : ""}, {listing.country}
             </p>
@@ -191,7 +195,7 @@ export default async function SpaceDetailPage({ params }: Props) {
           </div>
 
           {/* Work Score */}
-          <div className="mb-8 rounded-lg border p-6">
+          <div className="waywork-section mb-8 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Work Score</h2>
               <Tooltip>
@@ -419,6 +423,20 @@ export default async function SpaceDetailPage({ params }: Props) {
               <p className="text-gray-500">No reviews yet.</p>
             ) : (
               <div className="space-y-4">
+                {reviewHighlights.length > 0 && (
+                  <div className="rounded-lg border border-cyan-200 bg-cyan-50/70 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">
+                      Guest Highlights
+                    </p>
+                    <div className="mt-2 space-y-2">
+                      {reviewHighlights.map((review) => (
+                        <p key={`${review.id}-highlight`} className="text-sm text-cyan-900">
+                          &quot;{review.comment}&quot;
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {listingReviews.map((review) => (
                   <div key={review.id} className="border rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
