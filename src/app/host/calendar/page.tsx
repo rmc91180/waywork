@@ -1,16 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, getDay } from "date-fns";
+import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { CalendarView } from "@/components/host/calendar-view";
 
 export default async function CalendarPage() {
@@ -31,12 +22,12 @@ export default async function CalendarPage() {
 
   if (listings.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Calendar</h1>
-        <div className="text-center py-16">
+      <div className="waywork-shell py-8 md:py-10">
+        <h1 className="font-display mb-6 text-3xl font-semibold text-slate-900">Calendar</h1>
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
           <div className="text-4xl mb-4">📅</div>
-          <p className="text-gray-500 mb-2">No listings yet</p>
-          <p className="text-sm text-gray-400">
+          <p className="mb-2 text-slate-500">No listings yet</p>
+          <p className="text-sm text-slate-400">
             Create a listing first to manage your calendar.
           </p>
         </div>
@@ -99,21 +90,28 @@ export default async function CalendarPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Calendar</h1>
+    <div className="waywork-shell py-8 md:py-10">
+      <div className="waywork-section mb-6 flex flex-wrap items-center justify-between gap-4 p-5 md:p-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+            Host Availability
+          </p>
+          <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight text-slate-900">
+            Calendar
+          </h1>
+        </div>
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-blue-500" />
-            <span className="text-gray-600">Booked</span>
+            <span className="text-slate-600">Booked</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-red-400" />
-            <span className="text-gray-600">Blocked</span>
+            <span className="text-slate-600">Blocked</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-yellow-400" />
-            <span className="text-gray-600">Pending</span>
+            <span className="text-slate-600">Pending</span>
           </div>
         </div>
       </div>

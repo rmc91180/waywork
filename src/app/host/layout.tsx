@@ -1,4 +1,5 @@
 import { Header } from "@/components/shared/header";
+import { HostShellNav } from "@/components/host/host-shell-nav";
 
 export default function HostLayout({
   children,
@@ -8,7 +9,8 @@ export default function HostLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 bg-gray-50">{children}</main>
+      <HostShellNav />
+      <main className="flex-1">{children}</main>
     </div>
   );
 }

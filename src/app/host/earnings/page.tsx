@@ -137,14 +137,24 @@ export default async function EarningsPage() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Earnings</h1>
+    <div className="waywork-shell py-8 md:py-10">
+      <section className="waywork-section mb-6 p-5 md:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+          Host Revenue Analytics
+        </p>
+        <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight text-slate-900">
+          Earnings
+        </h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Track payout performance across listings, months, and booking activity.
+        </p>
+      </section>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
+        <Card className="border-slate-200/80 bg-white/95">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
+            <CardTitle className="text-sm font-medium text-slate-500">
               Total Earnings
             </CardTitle>
           </CardHeader>
@@ -153,9 +163,9 @@ export default async function EarningsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200/80 bg-white/95">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
+            <CardTitle className="text-sm font-medium text-slate-500">
               Pending Payouts
             </CardTitle>
           </CardHeader>
@@ -166,9 +176,9 @@ export default async function EarningsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200/80 bg-white/95">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
+            <CardTitle className="text-sm font-medium text-slate-500">
               Completed Payouts
             </CardTitle>
           </CardHeader>
@@ -179,9 +189,9 @@ export default async function EarningsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200/80 bg-white/95">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
+            <CardTitle className="text-sm font-medium text-slate-500">
               Avg. Booking Value
             </CardTitle>
           </CardHeader>
@@ -189,7 +199,7 @@ export default async function EarningsPage() {
             <p className="text-2xl font-bold">
               {formatCurrency(averageBookingValue)}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               {totalBookings} booking{totalBookings !== 1 ? "s" : ""}
             </p>
           </CardContent>
@@ -197,7 +207,7 @@ export default async function EarningsPage() {
       </div>
 
       {/* Monthly Breakdown Chart */}
-      <Card className="mb-8">
+      <Card className="mb-8 border-slate-200/80 bg-white/95">
         <CardHeader>
           <CardTitle>Monthly Earnings</CardTitle>
         </CardHeader>
@@ -210,12 +220,12 @@ export default async function EarningsPage() {
             <div className="space-y-3">
               {months.map((month) => (
                 <div key={month.label} className="flex items-center gap-3">
-                  <span className="w-20 text-sm text-gray-600 shrink-0">
-                    {month.label}
-                  </span>
-                  <div className="flex-1 h-8 bg-gray-100 rounded overflow-hidden">
+                    <span className="w-20 text-sm text-slate-600 shrink-0">
+                      {month.label}
+                    </span>
+                  <div className="flex-1 h-8 bg-slate-100 rounded overflow-hidden">
                     <div
-                      className="h-full bg-blue-600 rounded transition-all"
+                      className="h-full bg-cyan-700 rounded transition-all"
                       style={{
                         width: `${(month.total / maxMonthTotal) * 100}%`,
                       }}
@@ -232,7 +242,7 @@ export default async function EarningsPage() {
       </Card>
 
       {/* Per-Listing Breakdown */}
-      <Card className="mb-8">
+      <Card className="mb-8 border-slate-200/80 bg-white/95">
         <CardHeader>
           <CardTitle>Earnings by Listing</CardTitle>
         </CardHeader>
@@ -246,14 +256,14 @@ export default async function EarningsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left">
-                    <th className="pb-3 font-medium text-gray-500">Listing</th>
-                    <th className="pb-3 font-medium text-gray-500 text-right">
+                    <th className="pb-3 font-medium text-slate-500">Listing</th>
+                    <th className="pb-3 font-medium text-slate-500 text-right">
                       Bookings
                     </th>
-                    <th className="pb-3 font-medium text-gray-500 text-right">
+                    <th className="pb-3 font-medium text-slate-500 text-right">
                       Avg / Booking
                     </th>
-                    <th className="pb-3 font-medium text-gray-500 text-right">
+                    <th className="pb-3 font-medium text-slate-500 text-right">
                       Total Earnings
                     </th>
                   </tr>
@@ -304,7 +314,7 @@ export default async function EarningsPage() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card>
+      <Card className="border-slate-200/80 bg-white/95">
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>

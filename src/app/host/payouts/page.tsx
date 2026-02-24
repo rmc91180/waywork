@@ -24,12 +24,22 @@ export default async function PayoutsPage({ searchParams }: Props) {
   const showOnboardingRefresh = params.onboarding === "refresh";
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Payouts</h1>
+    <div className="waywork-shell max-w-5xl py-8 md:py-10">
+      <section className="waywork-section mb-6 p-5 md:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+          Host Financial Setup
+        </p>
+        <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight text-slate-900">
+          Payouts
+        </h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Connect Stripe, verify your account, and keep your payout pipeline healthy.
+        </p>
+      </section>
 
       {/* Status Banner */}
       {showOnboardingComplete && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
           <p className="text-green-800 font-medium">
             Stripe onboarding complete! Your account is being verified.
           </p>
@@ -37,7 +47,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
       )}
 
       {showOnboardingRefresh && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <p className="text-yellow-800 font-medium">
             Your onboarding session expired. Please try again.
           </p>
@@ -45,7 +55,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
       )}
 
       {/* Connect Status Card */}
-      <Card className="mb-6">
+      <Card className="mb-6 border-slate-200/80 bg-white/95">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Stripe Connect</CardTitle>
@@ -86,7 +96,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
                 Stripe account. This allows us to securely transfer earnings
                 directly to your bank account.
               </p>
-              <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-2">
+              <div className="rounded-lg bg-slate-50 p-4 text-sm space-y-2">
                 <p className="font-medium">What you&apos;ll need:</p>
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
                   <li>Bank account or debit card for payouts</li>
@@ -101,14 +111,14 @@ export default async function PayoutsPage({ searchParams }: Props) {
       </Card>
 
       {/* How Payouts Work */}
-      <Card>
+      <Card className="border-slate-200/80 bg-white/95">
         <CardHeader>
           <CardTitle>How Payouts Work</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4 text-sm text-gray-600">
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold shrink-0">
+              <div className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold shrink-0">
                 1
               </div>
               <div>
@@ -117,7 +127,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
               </div>
             </div>
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold shrink-0">
+              <div className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold shrink-0">
                 2
               </div>
               <div>
@@ -126,7 +136,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
               </div>
             </div>
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold shrink-0">
+              <div className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold shrink-0">
                 3
               </div>
               <div>
