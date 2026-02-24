@@ -22,6 +22,25 @@ interface SearchPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
+const quickSearchLinks = [
+  {
+    label: "Deep Focus",
+    href: "/search?workspaceTypes=PRIVATE_OFFICE,HOME_OFFICE&minWorkScore=75&verifiedInternet=true",
+  },
+  {
+    label: "Team Sprint",
+    href: "/search?workspaceTypes=MEETING_ROOM,HYBRID_SPACE&networkTypes=BOTH&guests=6",
+  },
+  {
+    label: "Work + Pool",
+    href: "/search?hasSwimmingPool=true&hasBackyard=true",
+  },
+  {
+    label: "Under $150",
+    href: "/search?maxPrice=150&sortBy=price_asc",
+  },
+];
+
 function toMapListings(
   listings: Awaited<ReturnType<typeof searchListingsWithFacets>>["listings"]
 ) {
@@ -60,6 +79,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { listings, total, facets, locationContext } = await searchListingsWithFacets(filters);
   const totalPages = Math.max(1, Math.ceil(total / filters.limit));
   const mapListings = toMapListings(listings);
+  const filtersKey = serializeSearchFilterParams(filters).toString();
 
   return (
     <div className="relative overflow-hidden">
@@ -80,6 +100,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <p className="mt-2 text-sm text-slate-600 md:text-base">
                 {summaryTitle(filters, total)}
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {quickSearchLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {filters.verifiedInternet && (
@@ -113,13 +144,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </section>
 
         <div className="mt-6 lg:hidden">
-          <SearchFilters mode="mobile" filters={filters} facets={facets} total={total} />
+          <SearchFilters key={`mobile-${filtersKey}`} mode="mobile" filters={filters} facets={facets} total={total} />
         </div>
 
         <div className="mt-6 flex flex-col gap-6 lg:flex-row">
           <aside className="hidden w-full max-w-sm shrink-0 lg:block">
             <div className="sticky top-24">
-              <SearchFilters mode="desktop" filters={filters} facets={facets} total={total} />
+              <SearchFilters key={`desktop-${filtersKey}`} mode="desktop" filters={filters} facets={facets} total={total} />
             </div>
           </aside>
 

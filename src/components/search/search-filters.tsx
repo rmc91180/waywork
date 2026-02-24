@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Filter, RotateCcw, Sparkles } from "lucide-react";
+import { Bot, Filter, RotateCcw, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import {
 } from "@/lib/search-filters";
 import type { SearchFacets } from "@/lib/search-query";
 import { trackEvent } from "@/lib/analytics";
+import { interpretSmartSearchPrompt } from "@/lib/smart-search";
 
 interface SearchFiltersProps {
   mode: "desktop" | "mobile";
@@ -58,10 +59,8 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<SearchFilterState>(filters);
-
-  useEffect(() => {
-    setDraft(filters);
-  }, [filters]);
+  const [smartPrompt, setSmartPrompt] = useState(filters.query || "");
+  const [smartHighlights, setSmartHighlights] = useState<string[]>([]);
 
   const activeCount = useMemo(() => activeFilterCount(draft), [draft]);
 
@@ -151,8 +150,67 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
     }));
   };
 
+  const applySmartPrompt = () => {
+    const interpreted = interpretSmartSearchPrompt(smartPrompt);
+    if (Object.keys(interpreted.updates).length === 0) return;
+
+    trackEvent({
+      event: "smart_search_interpreted",
+      properties: {
+        promptLength: smartPrompt.length,
+        highlights: interpreted.highlights,
+      },
+    });
+
+    setSmartHighlights(interpreted.highlights);
+    setDraft((current) => ({
+      ...current,
+      query: smartPrompt,
+      ...interpreted.updates,
+    }));
+  };
+
   const form = (
     <div className="space-y-5">
+      <section className="space-y-3 rounded-xl border border-cyan-200 bg-cyan-50/70 p-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-cyan-800">
+            Smart Assistant
+          </Label>
+          <Bot className="size-4 text-cyan-700" />
+        </div>
+        <Input
+          placeholder='Try: "team offsite near Lisbon with pool under $220"'
+          value={smartPrompt}
+          onChange={(event) => setSmartPrompt(event.target.value)}
+        />
+        <div className="flex gap-2">
+          <Button type="button" size="xs" onClick={applySmartPrompt}>
+            Interpret Prompt
+          </Button>
+          <Button
+            type="button"
+            size="xs"
+            variant="outline"
+            onClick={() => {
+              setSmartPrompt("");
+              setSmartHighlights([]);
+            }}
+          >
+            Clear
+          </Button>
+        </div>
+        {smartHighlights.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {smartHighlights.map((tag) => (
+              <Badge key={tag} variant="outline" className="border-cyan-200 bg-white/80 text-cyan-700">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-600">
