@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandLogo } from "@/components/shared/brand-logo";
 import { BRAND } from "@/lib/brand";
 
 const intentChips = [
@@ -30,14 +31,25 @@ export default function HomePage() {
       <section className="waywork-hero-gradient relative overflow-hidden pb-12 pt-10 md:pb-16 md:pt-14">
         <div className="waywork-grid-bg absolute inset-0 opacity-55" />
         <div className="waywork-shell relative">
+          <div className="mb-6 rounded-3xl border border-slate-200/80 bg-white/92 p-5 shadow-sm md:mb-8 md:p-7">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <BrandLogo />
+              <Badge className="w-fit bg-slate-900 text-white hover:bg-slate-800">Host Revenue Positioning</Badge>
+            </div>
+            <h1 className="font-display mt-5 max-w-4xl text-3xl font-semibold leading-tight text-slate-900 md:text-5xl">
+              Turning residential property into usable workspace.
+            </h1>
+            <p className="mt-3 max-w-3xl text-base text-slate-700 md:text-lg">
+              Helping property owners fill non-holiday season gaps with revenue from offsite workers and teams.
+            </p>
+          </div>
+
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
             <div className="space-y-5">
-              <Badge className="bg-slate-900 text-white hover:bg-slate-800">
-                {BRAND.name}: {BRAND.tagline}
-              </Badge>
-              <h1 className="font-display max-w-3xl text-4xl font-semibold leading-tight text-slate-900 md:text-6xl">
+              <Badge className="bg-slate-900 text-white hover:bg-slate-800">{BRAND.name} Marketplace</Badge>
+              <h2 className="font-display max-w-3xl text-4xl font-semibold leading-tight text-slate-900 md:text-6xl">
                 Property owners can turn quiet seasons into reliable revenue.
-              </h1>
+              </h2>
               <p className="max-w-2xl text-base text-slate-600 md:text-lg">
                 {BRAND.name} helps hosts rent residential properties to offsite workers and teams, filling non-holiday gaps while guests get productive, comfortable places to work.
               </p>
