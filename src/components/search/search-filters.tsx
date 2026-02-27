@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bot, ChevronDown, Filter, RotateCcw, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,7 @@ function FilterCategory({
   children,
 }: FilterCategoryProps) {
   const [expanded, setExpanded] = useState(defaultOpen);
+  const panelId = useId();
 
   return (
     <section className={cn("rounded-xl border border-slate-200 bg-white p-3", className)}>
@@ -79,6 +80,8 @@ function FilterCategory({
         type="button"
         className="flex w-full items-center justify-between gap-3 text-left"
         onClick={() => setExpanded((current) => !current)}
+        aria-expanded={expanded}
+        aria-controls={panelId}
       >
         <div>
           <p className="text-sm font-semibold text-slate-900">{title}</p>
@@ -91,7 +94,11 @@ function FilterCategory({
           )}
         />
       </button>
-      {expanded ? <div className="mt-3 space-y-3">{children}</div> : null}
+      {expanded ? (
+        <div id={panelId} className="mt-3 space-y-3">
+          {children}
+        </div>
+      ) : null}
     </section>
   );
 }

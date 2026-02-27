@@ -8,15 +8,13 @@ import {
 
 export default function VerifyPage() {
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border-slate-200 bg-white/95 shadow-lg">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Check your email</CardTitle>
-        <CardDescription>
-          We sent you a magic link to sign in
-        </CardDescription>
+        <CardTitle className="text-2xl text-[var(--ww-primary-blue)]">Check your email</CardTitle>
+        <CardDescription>We sent a secure magic link to complete sign in.</CardDescription>
       </CardHeader>
       <CardContent className="text-center">
-        <p className="text-gray-600">
+        <p className="text-[var(--ww-text-primary)]">
           Click the link in your email to sign in to WayWork.
           The link will expire in 24 hours.
         </p>

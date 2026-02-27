@@ -86,6 +86,29 @@ export default async function SpaceDetailPage({ params }: Props) {
     notFound();
   }
 
+  const relatedListings = await db.listing.findMany({
+    where: {
+      status: "ACTIVE",
+      id: { not: listing.id },
+      OR: [{ city: listing.city }, { country: listing.country }],
+    },
+    orderBy: [{ reviewCount: "desc" }, { workScore: "desc" }],
+    take: 4,
+    select: {
+      id: true,
+      title: true,
+      city: true,
+      state: true,
+      pricePerDay: true,
+      workScore: true,
+      images: {
+        where: { isPrimary: true },
+        take: 1,
+        select: { url: true, alt: true },
+      },
+    },
+  });
+
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];
   const bedSize = BED_SIZE_OPTIONS[listing.bedSize as keyof typeof BED_SIZE_OPTIONS];
   const cancelPolicy = CANCELLATION_POLICIES[listing.cancellationPolicy as keyof typeof CANCELLATION_POLICIES];
@@ -136,11 +159,17 @@ export default async function SpaceDetailPage({ params }: Props) {
         <div className="flex-1">
           {/* Title section */}
           <div className="waywork-section mb-6 p-5 md:p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
+              Work Wonders Worldwide
+            </p>
             <div className="flex items-center gap-2 mb-2">
               <Badge variant="outline">{wsType?.label}</Badge>
               {listing.connectivityProfile?.verified && (
-                <Badge className="bg-emerald-600">Verified Internet</Badge>
+                <Badge className="bg-[var(--ww-secondary-green)]">Verified Internet</Badge>
               )}
+              <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                Secure Booking
+              </Badge>
               {avgRating && (
                 <span className="text-sm text-slate-600">
                   {"*".repeat(Math.round(parseFloat(avgRating)))} {avgRating} (
@@ -373,7 +402,7 @@ export default async function SpaceDetailPage({ params }: Props) {
                 </div>
               </div>
               {listing.connectivityProfile.verified && (
-                <p className="text-xs text-green-600 mt-2">
+                <p className="text-xs text-[var(--ww-secondary-green)] mt-2">
                   Speed verified by WayWork
                 </p>
               )}
@@ -524,6 +553,49 @@ export default async function SpaceDetailPage({ params }: Props) {
             <p className="text-sm font-medium">{cancelPolicy?.label}</p>
             <p className="text-sm text-gray-600">{cancelPolicy?.description}</p>
           </div>
+
+          {relatedListings.length > 0 ? (
+            <div className="mt-10">
+              <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">Similar Spots You May Love</h2>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {relatedListings.map((related) => (
+                  <Link
+                    key={related.id}
+                    href={`/spaces/${related.id}`}
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="aspect-[16/9] bg-slate-100">
+                      {related.images[0]?.url ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={related.images[0].url}
+                            alt={related.images[0].alt || related.title}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        </>
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                          Workspace Preview
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1 p-4">
+                      <p className="line-clamp-1 font-semibold text-slate-900">{related.title}</p>
+                      <p className="text-sm text-slate-600">
+                        {related.city}
+                        {related.state ? `, ${related.state}` : ""}
+                      </p>
+                      <p className="text-sm font-semibold text-[var(--ww-primary-blue)]">
+                        ${(related.pricePerDay / 100).toFixed(0)}/day · Work Score {related.workScore}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Booking sidebar */}

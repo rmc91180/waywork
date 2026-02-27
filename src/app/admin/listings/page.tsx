@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -81,6 +81,7 @@ export default async function AdminListingsPage() {
                       {/* Image */}
                       <div className="w-32 h-24 rounded-lg bg-gray-100 overflow-hidden shrink-0">
                         {listing.images[0]?.url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={listing.images[0].url}
                             alt={listing.title}

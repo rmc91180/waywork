@@ -24,9 +24,9 @@ export function BrandLogo({
       >
         <defs>
           <linearGradient id={gradientId} x1="0%" x2="100%" y1="0%" y2="100%">
-            <stop offset="0%" stopColor="#14b8a6" />
-            <stop offset="55%" stopColor="#0ea5e9" />
-            <stop offset="100%" stopColor="#0891b2" />
+            <stop offset="0%" stopColor="#033f63" />
+            <stop offset="55%" stopColor="#28666e" />
+            <stop offset="100%" stopColor="#097c87" />
           </linearGradient>
         </defs>
         <rect x="4" y="4" width="56" height="56" rx="16" fill={`url(#${gradientId})`} />
@@ -36,16 +36,16 @@ export function BrandLogo({
         <path d="M32 34V46" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
       </svg>
       <div className="leading-tight">
-        <p className="font-display text-lg font-semibold tracking-tight text-slate-900">
+        <p className="font-display text-lg font-bold tracking-tight text-[var(--ww-primary-blue)]">
           {BRAND.name}
         </p>
         {!compact ? (
-          <p className="text-[11px] uppercase tracking-[0.15em] text-slate-500">
+          <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--ww-secondary-green)]">
             {BRAND.tagline}
           </p>
         ) : null}
         {showTagline ? (
-          <p className="mt-1 max-w-sm text-xs text-slate-600">{BRAND.hostValueProp}</p>
+          <p className="mt-1 max-w-sm text-xs text-[var(--ww-text-primary)]">{BRAND.descriptor}</p>
         ) : null}
       </div>
     </div>

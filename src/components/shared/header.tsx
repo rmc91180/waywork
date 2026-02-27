@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import {
   DropdownMenu,
@@ -18,43 +18,23 @@ export function Header() {
   const { data: session, status } = useSession();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/50 bg-white/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/95 backdrop-blur-xl">
       <div className="waywork-shell">
-        <div className="flex h-[4.5rem] items-center justify-between gap-4">
+        <div className="grid h-20 grid-cols-[auto_1fr_auto] items-center gap-4">
           <Link href="/" className="group inline-flex items-center gap-3">
             <BrandLogo compact />
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-slate-200/80 bg-white/75 p-1 shadow-xs md:flex">
-            <Link
-              href="/search"
-              className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            >
-              Find Spaces
-            </Link>
-            <Link
-              href="/bookings"
-              className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            >
-              Trips
-            </Link>
-            <Link
-              href="/about"
-              className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            >
-              About
-            </Link>
-            {session?.user && (
-              <Link
-                href="/host/listings"
-                className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
-              >
-                Host
-              </Link>
-            )}
-          </nav>
+          <p className="hidden px-4 text-center text-xs font-semibold tracking-[0.13em] text-[var(--ww-secondary-green)] lg:block">
+            Turning residential properties into fun and experiential workspaces
+          </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="ghost" size="icon-sm" asChild>
+              <Link href="/search" aria-label="Search spaces">
+                <Search className="size-4" />
+              </Link>
+            </Button>
             {status === "loading" ? (
               <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />
             ) : session?.user ? (
@@ -114,14 +94,17 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="hidden md:inline-flex">
-                  Host Better. Work Better.
-                </Badge>
-                <Button variant="ghost" className="hidden md:inline-flex" asChild>
+                <Button variant="ghost" className="hidden sm:inline-flex" asChild>
                   <Link href="/login">Log In</Link>
                 </Button>
-                <Button className="shadow-sm shadow-cyan-700/20" asChild>
-                  <Link href="/register">Sign Up</Link>
+                <Button
+                  className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] shadow-sm shadow-orange-300/40 hover:bg-[var(--ww-neutral-light)]"
+                  asChild
+                >
+                  <Link href="/register">Sign Up Free</Link>
+                </Button>
+                <Button variant="ghost" className="hidden lg:inline-flex text-[var(--ww-secondary-green)]" asChild>
+                  <Link href="/host/listings/new">Become a Host</Link>
                 </Button>
               </div>
             )}

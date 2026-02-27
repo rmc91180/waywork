@@ -6,40 +6,44 @@ import { getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import type { SearchUiVariant } from "@/lib/experiments";
 
+export interface ListingCardData {
+  id: string;
+  title: string;
+  slug: string;
+  lat?: number;
+  lng?: number;
+  workspaceType: string;
+  city: string;
+  state: string | null;
+  country: string;
+  pricePerDay: number;
+  cleaningFee: number;
+  maxGuests: number;
+  bedroomCount: number;
+  bedSize: string;
+  propertySizeSqm: number | null;
+  workScore: number;
+  hasJacuzzi: boolean;
+  hasSwimmingPool: boolean;
+  hasBackyard: boolean;
+  hasPingPongTable: boolean;
+  hasPoolTable: boolean;
+  averageRating?: number | null;
+  reviewCount?: number;
+  images: { url: string; alt: string | null }[];
+  connectivityProfile: {
+    declaredDownloadMbps: number;
+    networkType: string;
+    verified: boolean;
+    hasBackupConnection?: boolean;
+  } | null;
+  host: { name: string | null; image: string | null };
+  _count: { reviews: number };
+}
+
 interface ListingCardProps {
   variant?: SearchUiVariant;
-  listing: {
-    id: string;
-    title: string;
-    slug: string;
-    workspaceType: string;
-    city: string;
-    state: string | null;
-    country: string;
-    pricePerDay: number;
-    cleaningFee: number;
-    maxGuests: number;
-    bedroomCount: number;
-    bedSize: string;
-    propertySizeSqm: number | null;
-    workScore: number;
-    hasJacuzzi: boolean;
-    hasSwimmingPool: boolean;
-    hasBackyard: boolean;
-    hasPingPongTable: boolean;
-    hasPoolTable: boolean;
-    averageRating?: number | null;
-    reviewCount?: number;
-    images: { url: string; alt: string | null }[];
-    connectivityProfile: {
-      declaredDownloadMbps: number;
-      networkType: string;
-      verified: boolean;
-      hasBackupConnection?: boolean;
-    } | null;
-    host: { name: string | null; image: string | null };
-    _count: { reviews: number };
-  };
+  listing: ListingCardData;
 }
 
 function networkLabel(type: string) {
@@ -82,7 +86,7 @@ export function ListingCard({ listing, variant = "control" }: ListingCardProps) 
           <div className="absolute left-3 top-3 flex gap-2">
             <Badge className="bg-white/95 text-slate-800">{wsType?.label || listing.workspaceType}</Badge>
             {listing.connectivityProfile?.verified && (
-              <Badge className="bg-emerald-600 text-white">Verified Internet</Badge>
+              <Badge className="bg-[var(--ww-secondary-green)] text-white">Verified Internet</Badge>
             )}
           </div>
 
@@ -147,7 +151,7 @@ export function ListingCard({ listing, variant = "control" }: ListingCardProps) 
               {rating ? `${rating.toFixed(1)} avg rating` : "New listing"}
               {reviewCount > 0 ? ` · ${reviewCount} review${reviewCount > 1 ? "s" : ""}` : ""}
             </div>
-            <span className="text-xs font-medium text-cyan-700 transition-colors group-hover:text-cyan-800">
+            <span className="text-xs font-medium text-[var(--ww-primary-blue)] transition-colors group-hover:text-[var(--ww-secondary-green)]">
               View details
             </span>
           </div>

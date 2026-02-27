@@ -41,10 +41,12 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border-slate-200 bg-white/95 shadow-lg">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your WayWork account</CardDescription>
+        <CardTitle className="text-2xl text-[var(--ww-primary-blue)]">Welcome back</CardTitle>
+        <CardDescription className="text-[var(--ww-text-primary)]">
+          Sign in to continue your next work wonder.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {hasGoogleOAuth && (
@@ -86,12 +88,12 @@ export default function LoginPage() {
 
         {/* Demo login button */}
         {!hasGoogleOAuth && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 mb-4">
-            <p className="text-sm text-blue-800 font-medium mb-3">
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+            <p className="mb-3 text-sm font-medium text-emerald-900">
               Preview Mode — Try WayWork with a demo account
             </p>
             <Button
-              className="w-full"
+              className="w-full bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
               onClick={handleDemoLogin}
               disabled={loading}
             >
@@ -127,9 +129,9 @@ export default function LoginPage() {
         </form>
       </CardContent>
       <CardFooter className="justify-center">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
+          <Link href="/register" className="text-[var(--ww-primary-blue)] hover:underline">
             Sign up
           </Link>
         </p>

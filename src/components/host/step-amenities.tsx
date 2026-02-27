@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { AMENITY_CATEGORIES, SUGGESTED_AMENITIES } from "@/lib/constants";
 import type { ListingFormData } from "@/hooks/use-listing-form";

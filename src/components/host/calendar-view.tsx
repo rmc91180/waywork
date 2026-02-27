@@ -14,7 +14,6 @@ import {
   addMonths,
   subMonths,
   isSameDay,
-  isSameMonth,
   getDay,
   isWithinInterval,
   parseISO,
@@ -131,7 +130,7 @@ export function CalendarView({
         return;
       }
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update date");
     } finally {
       setToggling(false);

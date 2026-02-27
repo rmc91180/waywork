@@ -110,6 +110,7 @@ export default async function ThreadPage({ params }: Props) {
           <div className="flex items-center gap-3">
             <div className="w-16 h-12 rounded bg-gray-100 overflow-hidden shrink-0">
               {listingImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={listingImage}
                   alt={thread.listing.title}

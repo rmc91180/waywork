@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getStripe, calculatePricing, formatCurrency } from "@/lib/stripe";
+import { getStripe, calculatePricing } from "@/lib/stripe";
 import { createBookingSchema } from "@/lib/validators";
 import { differenceInDays } from "date-fns";
 import { ZodError } from "zod";

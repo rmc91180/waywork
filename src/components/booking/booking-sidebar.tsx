@@ -134,7 +134,7 @@ export function BookingSidebar({
 
   return (
     <Card className="sticky top-24 overflow-hidden border-slate-200 py-0 shadow-lg">
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-cyan-900 px-6 py-5 text-white">
+      <div className="bg-gradient-to-r from-[var(--ww-primary-blue)] via-[var(--ww-secondary-green)] to-[var(--ww-text-primary)] px-6 py-5 text-white">
         <p className="text-xs uppercase tracking-[0.18em] text-cyan-100">Reserve this workspace</p>
         <CardTitle className="mt-2 flex items-baseline gap-2">
           <span className="text-3xl font-bold">{formatCurrency(pricePerDay)}</span>
@@ -204,7 +204,7 @@ export function BookingSidebar({
         </div>
 
         <Button
-          className="w-full bg-cyan-700 hover:bg-cyan-800"
+          className="w-full bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
           size="lg"
           onClick={handleBooking}
           disabled={loading || numberOfDays === 0}
@@ -239,7 +239,7 @@ export function BookingSidebar({
           </div>
         )}
 
-        <div className="space-y-1 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 text-xs text-emerald-800">
+        <div className="space-y-1 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 text-xs text-emerald-900">
           <p className="flex items-start gap-2">
             <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
             {policyLabel}

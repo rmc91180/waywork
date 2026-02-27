@@ -6,6 +6,8 @@ export interface AnalyticsPayload {
 declare global {
   interface Window {
     __wwAnalyticsSessionId?: string;
+    gtag?: (...args: unknown[]) => void;
+    hj?: (...args: unknown[]) => void;
   }
 }
 
@@ -36,15 +38,22 @@ export function trackEvent(payload: AnalyticsPayload) {
 
   if (navigator.sendBeacon) {
     navigator.sendBeacon("/api/analytics/events", serialized);
-    return;
+  } else {
+    void fetch("/api/analytics/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: serialized,
+      keepalive: true,
+    }).catch(() => {
+      // Non-blocking analytics sink.
+    });
   }
 
-  void fetch("/api/analytics/events", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: serialized,
-    keepalive: true,
-  }).catch(() => {
-    // Non-blocking analytics sink.
-  });
+  if (typeof window.gtag === "function") {
+    window.gtag("event", payload.event, payload.properties || {});
+  }
+
+  if (typeof window.hj === "function") {
+    window.hj("event", payload.event);
+  }
 }

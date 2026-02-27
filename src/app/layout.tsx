@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/shared/providers";
 import { BRAND } from "@/lib/brand";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -20,13 +21,20 @@ export const metadata: Metadata = {
     template: `%s | ${BRAND.name}`,
   },
   description:
-    "Way Work helps property owners turn residential properties into usable workspaces, filling non-holiday season gaps with offsite worker and team bookings.",
-  keywords: ["remote work", "coworking", "workspace", "work from anywhere", "digital nomad", "office rental"],
+    "Way Work helps guests and teams book fun, high-speed residential workspaces worldwide with verified internet, productive layouts, and local experiences.",
+  keywords: [
+    "workation",
+    "digital nomad",
+    "team offsite",
+    "remote workspace",
+    "residential workspace",
+    "work from anywhere",
+  ],
   openGraph: {
     type: "website",
     siteName: BRAND.name,
     title: `${BRAND.name}: ${BRAND.tagline}`,
-    description: BRAND.hostValueProp,
+    description: BRAND.guestValueProp,
   },
 };
 
@@ -37,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${plusJakartaSans.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${playfairDisplay.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

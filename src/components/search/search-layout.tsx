@@ -48,7 +48,7 @@ export function SearchLayout({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-        <p className="pl-2 text-sm text-slate-600">
+        <p className="pl-2 text-sm text-[var(--ww-text-primary)]">
           {total} result{total === 1 ? "" : "s"}
         </p>
         <div className="flex items-center rounded-lg border bg-slate-50 p-1">
@@ -76,7 +76,7 @@ export function SearchLayout({
             onClick={() => setView("map")}
           >
             <Map className="mr-1.5 size-3.5" />
-            Map
+            Map View
           </Button>
         </div>
       </div>
