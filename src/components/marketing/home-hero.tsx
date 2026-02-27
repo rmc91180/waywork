@@ -64,7 +64,11 @@ export function HomeHero({ images }: HomeHeroProps) {
   };
 
   return (
-    <section className="relative min-h-[100svh] overflow-hidden" aria-roledescription="carousel" aria-label="Featured workspace destinations">
+    <section
+      className="relative h-[clamp(560px,82svh,780px)] overflow-hidden"
+      aria-roledescription="carousel"
+      aria-label="Featured workspace destinations"
+    >
       <div className="absolute inset-0">
         {slides.map((slide, index) => (
           <div key={`${slide.url}-${index}`}>
@@ -117,15 +121,15 @@ export function HomeHero({ images }: HomeHeroProps) {
         Slide {active + 1} of {slides.length}
       </p>
 
-      <div className="waywork-shell relative flex min-h-[100svh] items-center py-24">
+      <div className="waywork-shell relative flex h-full items-center py-16 md:py-20">
         <div className="max-w-4xl text-white">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.14em]">
             Work Wonders Worldwide
           </p>
-          <h1 className="mt-5 text-5xl font-bold leading-[1.05] md:text-7xl">
+          <h1 className="mt-5 text-5xl font-bold leading-[1.05] md:text-6xl lg:text-7xl">
             Work Wonders Worldwide
           </h1>
-          <p className="mt-5 max-w-3xl text-lg text-white/90 md:text-2xl">
+          <p className="mt-5 max-w-3xl text-lg text-white/90 md:text-xl lg:text-2xl">
             Escape the office, embrace the adventure. Book fun, high-speed workspaces in
             residential gems for your next workation or team offsite.
           </p>
