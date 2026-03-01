@@ -14,7 +14,8 @@
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:setup": "prisma db push && npx tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "mews:sandbox": "npx tsx scripts/mews-sandbox-cycle.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
