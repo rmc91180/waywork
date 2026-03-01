@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useMemo, useState } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { trackEvent } from "@/lib/analytics";
+import { toast } from "sonner";
 
 const steps = ["Email", "Preferences", "Access"] as const;
 
@@ -22,10 +23,39 @@ export default function RegisterPage() {
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState("");
   const [intent, setIntent] = useState<"WORKATION" | "TEAM_OFFSITE">("WORKATION");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [providerIds, setProviderIds] = useState<string[]>([]);
+  const [providersLoaded, setProvidersLoaded] = useState(false);
+  const [providerError, setProviderError] = useState<string | null>(null);
 
-  const hasGoogleOAuth = process.env.NEXT_PUBLIC_HAS_GOOGLE_AUTH === "true";
+  useEffect(() => {
+    let mounted = true;
+    void (async () => {
+      try {
+        const providers = await getProviders();
+        if (!mounted) return;
+        setProviderIds(providers ? Object.keys(providers) : []);
+      } catch {
+        if (!mounted) return;
+        setProviderError("Unable to load sign-up methods right now.");
+      } finally {
+        if (mounted) setProvidersLoaded(true);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const { hasGoogleOAuth, hasMagicLink, hasCredentials } = useMemo(
+    () => ({
+      hasGoogleOAuth: providerIds.includes("google"),
+      hasMagicLink: providerIds.includes("resend"),
+      hasCredentials: providerIds.includes("credentials"),
+    }),
+    [providerIds]
+  );
 
   async function handleCompleteSignup() {
     if (!email) return;
@@ -34,10 +64,25 @@ export default function RegisterPage() {
     window.localStorage.setItem("ww-signup-intent", intent);
     trackEvent({
       event: "signup_completed",
-      properties: { method: "magic_link", intent, hasPasswordInput: password.length > 0 },
+      properties: {
+        method: hasMagicLink ? "magic_link" : hasCredentials ? "credentials_demo" : "unknown",
+        intent,
+      },
     });
-    await signIn("resend", { email, callbackUrl: "/search?welcome=true" });
-    setLoading(false);
+
+    try {
+      if (hasMagicLink) {
+        await signIn("resend", { email, callbackUrl: "/search?welcome=true" });
+        return;
+      }
+      if (hasCredentials) {
+        await signIn("credentials", { email, callbackUrl: "/search?welcome=true" });
+        return;
+      }
+      toast.error("No signup provider is currently available.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -66,6 +111,18 @@ export default function RegisterPage() {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {!providersLoaded && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+            Loading sign-up methods...
+          </div>
+        )}
+
+        {providerError && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+            {providerError}
+          </div>
+        )}
+
         {hasGoogleOAuth && (
           <Button
             variant="outline"
@@ -155,17 +212,12 @@ export default function RegisterPage() {
 
         {step === 2 ? (
           <div className="space-y-3">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              minLength={8}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="At least 8 characters"
-            />
             <p className="text-xs text-slate-500">
-              We currently send a secure magic link to complete signup.
+              {hasMagicLink
+                ? "We will send a secure magic link to complete signup."
+                : hasCredentials
+                  ? "Demo mode is enabled. You will be signed in immediately."
+                  : "No signup method is configured yet."}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={() => setStep(1)}>
@@ -174,7 +226,7 @@ export default function RegisterPage() {
               <Button
                 className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
                 onClick={handleCompleteSignup}
-                disabled={loading}
+                disabled={loading || !providersLoaded}
               >
                 {loading ? "Sending link..." : "Create Account"}
               </Button>

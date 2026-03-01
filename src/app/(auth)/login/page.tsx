@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useMemo, useState } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,29 +15,78 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [providerIds, setProviderIds] = useState<string[]>([]);
+  const [providersLoaded, setProvidersLoaded] = useState(false);
+  const [providerError, setProviderError] = useState<string | null>(null);
 
-  const hasGoogleOAuth = !!(
-    process.env.NEXT_PUBLIC_HAS_GOOGLE_AUTH === "true"
-  );
+  useEffect(() => {
+    let mounted = true;
+    void (async () => {
+      try {
+        const providers = await getProviders();
+        if (!mounted) return;
+        const ids = providers ? Object.keys(providers) : [];
+        setProviderIds(ids);
+      } catch {
+        if (!mounted) return;
+        setProviderError("Unable to load sign-in methods right now.");
+      } finally {
+        if (mounted) setProvidersLoaded(true);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const { hasGoogleOAuth, hasMagicLink, hasCredentials, hasAnyEmailMethod, isDemoMode } =
+    useMemo(() => {
+      const hasGoogle = providerIds.includes("google");
+      const hasResend = providerIds.includes("resend");
+      const hasCreds = providerIds.includes("credentials");
+      const hasEmailMethod = hasResend || hasCreds;
+      return {
+        hasGoogleOAuth: hasGoogle,
+        hasMagicLink: hasResend,
+        hasCredentials: hasCreds,
+        hasAnyEmailMethod: hasEmailMethod,
+        isDemoMode: hasCreds && !hasResend && !hasGoogle,
+      };
+    }, [providerIds]);
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault();
+    if (!email) return;
     setLoading(true);
-    // Use credentials provider (demo mode) or resend (production)
-    await signIn("credentials", { email, callbackUrl: "/search" });
-    setLoading(false);
+    try {
+      if (hasMagicLink) {
+        await signIn("resend", { email, callbackUrl: "/search" });
+      } else if (hasCredentials) {
+        await signIn("credentials", { email, callbackUrl: "/search" });
+      } else {
+        toast.error("No email sign-in method is enabled.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDemoLogin() {
+    if (!hasCredentials) return;
     setLoading(true);
-    await signIn("credentials", {
-      email: "demo@waywork.com",
-      callbackUrl: "/search",
-    });
+    try {
+      await signIn("credentials", {
+        email: "demo@waywork.com",
+        callbackUrl: "/search",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -49,6 +98,12 @@ export default function LoginPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {providerError && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+            {providerError}
+          </div>
+        )}
+
         {hasGoogleOAuth && (
           <>
             <Button
@@ -86,8 +141,7 @@ export default function LoginPage() {
           </>
         )}
 
-        {/* Demo login button */}
-        {!hasGoogleOAuth && (
+        {isDemoMode && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
             <p className="mb-3 text-sm font-medium text-emerald-900">
               Preview Mode — Try WayWork with a demo account
@@ -102,31 +156,39 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full"
-            variant={hasGoogleOAuth ? "default" : "outline"}
-            disabled={loading}
-          >
-            {loading
-              ? "Signing in..."
-              : hasGoogleOAuth
-                ? "Continue with Email"
-                : "Sign in with Email"}
-          </Button>
-        </form>
+        {!providersLoaded ? (
+          <p className="text-sm text-slate-600">Loading sign-in methods...</p>
+        ) : hasAnyEmailMethod ? (
+          <form onSubmit={handleEmailLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              variant={hasGoogleOAuth ? "default" : "outline"}
+              disabled={loading}
+            >
+              {loading
+                ? "Signing in..."
+                : hasMagicLink
+                  ? "Send Magic Link"
+                  : "Sign in with Email"}
+            </Button>
+          </form>
+        ) : (
+          <p className="text-sm text-slate-600">
+            Email sign-in is currently unavailable. Contact support to enable an auth provider.
+          </p>
+        )}
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-slate-600">

@@ -15,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { differenceInDays } from "date-fns";
+import { differenceInHours } from "date-fns";
 
 interface CancelBookingButtonProps {
   bookingId: string;
@@ -31,27 +31,28 @@ export function CancelBookingButton({
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
 
-  const daysUntilCheckIn = differenceInDays(
+  const hoursUntilCheckIn = differenceInHours(
     new Date(checkIn),
     new Date()
   );
+  const daysUntilCheckIn = hoursUntilCheckIn / 24;
 
   let refundMessage = "";
   if (cancellationPolicy === "FLEXIBLE") {
     refundMessage =
-      daysUntilCheckIn >= 1
+      hoursUntilCheckIn > 24
         ? "You will receive a full refund."
         : "No refund — less than 24 hours before check-in.";
   } else if (cancellationPolicy === "MODERATE") {
     refundMessage =
-      daysUntilCheckIn >= 5
+      daysUntilCheckIn > 5
         ? "You will receive a full refund."
-        : daysUntilCheckIn >= 1
+        : hoursUntilCheckIn > 24
           ? "You will receive a 50% refund."
           : "No refund — less than 24 hours before check-in.";
   } else {
     refundMessage =
-      daysUntilCheckIn >= 7
+      daysUntilCheckIn > 7
         ? "You will receive a 50% refund."
         : "No refund — less than 7 days before check-in.";
   }

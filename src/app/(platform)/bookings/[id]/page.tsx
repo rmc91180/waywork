@@ -58,6 +58,10 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
   if (!isGuest && !isHost && !isAdmin) notFound();
 
   const primaryImage = booking.listing.images[0]?.url;
+  const perDaySnapshot =
+    booking.numberOfDays > 0
+      ? Math.round(booking.subtotal / booking.numberOfDays)
+      : booking.listing.pricePerDay;
 
   return (
     <div className="relative overflow-hidden">
@@ -211,17 +215,17 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between text-slate-600">
                   <span>
-                    {formatCurrency(booking.listing.pricePerDay)} x {booking.numberOfDays} day
+                    {formatCurrency(perDaySnapshot)} x {booking.numberOfDays} day
                     {booking.numberOfDays > 1 ? "s" : ""}
                   </span>
                   <span>
-                    {formatCurrency(booking.listing.pricePerDay * booking.numberOfDays)}
+                    {formatCurrency(booking.subtotal)}
                   </span>
                 </div>
-                {booking.listing.cleaningFee > 0 && (
+                {booking.cleaningFee > 0 && (
                   <div className="flex justify-between text-slate-600">
                     <span>Cleaning fee</span>
-                    <span>{formatCurrency(booking.listing.cleaningFee)}</span>
+                    <span>{formatCurrency(booking.cleaningFee)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-slate-600">

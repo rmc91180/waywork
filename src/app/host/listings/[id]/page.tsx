@@ -106,7 +106,7 @@ export default async function EditListingPage({
     })),
     blockedDates: listing.blockedDates.map((d) => ({
       date: d.date.toISOString().split("T")[0],
-      source: d.source as "MANUAL" | "ICAL" | "BOOKING",
+      source: d.source as "MANUAL" | "ICAL" | "BOOKING" | "PMS",
     })),
   };
 

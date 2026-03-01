@@ -38,6 +38,8 @@ function StarRating({
           <button
             key={star}
             type="button"
+            aria-label={`${label}: ${star} star${star > 1 ? "s" : ""}`}
+            aria-pressed={star <= value}
             onClick={() => onChange(star)}
             onMouseEnter={() => setHover(star)}
             onMouseLeave={() => setHover(0)}

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
@@ -35,16 +35,16 @@ export default async function GuestBookingsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const now = new Date();
+  const today = startOfDay(new Date());
   const upcoming = bookings.filter(
     (booking) =>
       (booking.status === "CONFIRMED" || booking.status === "PENDING") &&
-      new Date(booking.checkIn) >= now
+      new Date(booking.checkOut) > today
   );
   const past = bookings.filter(
     (booking) =>
       booking.status === "COMPLETED" ||
-      (booking.status === "CONFIRMED" && new Date(booking.checkOut) < now)
+      (booking.status === "CONFIRMED" && new Date(booking.checkOut) <= today)
   );
   const cancelled = bookings.filter(
     (booking) =>

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { CalendarDays, UserRound } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -34,15 +34,15 @@ export default async function HostBookingsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const now = new Date();
+  const today = startOfDay(new Date());
   const pending = bookings.filter((booking) => booking.status === "PENDING");
   const confirmed = bookings.filter(
-    (booking) => booking.status === "CONFIRMED" && new Date(booking.checkIn) >= now
+    (booking) => booking.status === "CONFIRMED" && new Date(booking.checkOut) > today
   );
   const past = bookings.filter(
     (booking) =>
       booking.status === "COMPLETED" ||
-      (booking.status === "CONFIRMED" && new Date(booking.checkOut) < now)
+      (booking.status === "CONFIRMED" && new Date(booking.checkOut) <= today)
   );
   const cancelled = bookings.filter(
     (booking) =>

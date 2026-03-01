@@ -1,10 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
+import { addDays, differenceInDays, isBefore, startOfDay } from "date-fns";
+import { ZodError } from "zod";
+import { Prisma } from "@/generated/prisma";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getStripe, calculatePricing } from "@/lib/stripe";
+import { syncBookingToMews } from "@/lib/pms/mews-sync";
+import { getStripe, SERVICE_FEE_PERCENTAGE } from "@/lib/stripe";
 import { createBookingSchema } from "@/lib/validators";
-import { differenceInDays } from "date-fns";
-import { ZodError } from "zod";
+
+function parseDateInput(value: string) {
+  return new Date(`${value}T00:00:00.000Z`);
+}
+
+function getDateRange(checkIn: Date, checkOut: Date): Date[] {
+  const dates: Date[] = [];
+  let current = startOfDay(checkIn);
+  const end = startOfDay(checkOut);
+
+  while (isBefore(current, end)) {
+    dates.push(current);
+    current = addDays(current, 1);
+  }
+
+  return dates;
+}
+
+async function releasePendingInventory(bookingId: string) {
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      listingId: true,
+      checkIn: true,
+      checkOut: true,
+      status: true,
+    },
+  });
+
+  if (!booking || booking.status !== "PENDING") return;
+
+  await db.$transaction([
+    db.blockedDate.deleteMany({
+      where: {
+        listingId: booking.listingId,
+        source: "BOOKING",
+        date: {
+          gte: booking.checkIn,
+          lt: booking.checkOut,
+        },
+      },
+    }),
+    db.booking.delete({ where: { id: booking.id } }),
+  ]);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +64,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = createBookingSchema.parse(body);
 
-    // Fetch listing
     const listing = await db.listing.findUnique({
       where: { id: parsed.listingId, status: "ACTIVE" },
       include: { host: true },
@@ -29,7 +76,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Can't book own listing
     if (listing.hostId === session.user.id) {
       return NextResponse.json(
         { error: "You cannot book your own listing" },
@@ -37,13 +83,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate dates
-    const checkIn = new Date(parsed.checkIn);
-    const checkOut = new Date(parsed.checkOut);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const checkIn = parseDateInput(parsed.checkIn);
+    const checkOut = parseDateInput(parsed.checkOut);
+    const today = startOfDay(new Date());
 
-    if (checkIn < today) {
+    if (isBefore(checkIn, today)) {
       return NextResponse.json(
         { error: "Check-in date must be in the future" },
         { status: 400 }
@@ -58,7 +102,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check guest count
     if (parsed.numberOfGuests > listing.maxGuests) {
       return NextResponse.json(
         { error: `Maximum ${listing.maxGuests} guests allowed` },
@@ -66,70 +109,135 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for blocked dates
-    const blockedDates = await db.blockedDate.findMany({
+    const datesToBlock = getDateRange(checkIn, checkOut);
+    const dateKeys = datesToBlock.map((date) => date.toISOString().split("T")[0]);
+    const overrideRates = await db.listingDailyRate.findMany({
       where: {
         listingId: listing.id,
-        date: { gte: checkIn, lt: checkOut },
+        date: { in: datesToBlock },
+      },
+      select: {
+        date: true,
+        pricePerDay: true,
       },
     });
-
-    if (blockedDates.length > 0) {
-      return NextResponse.json(
-        { error: "Some of your selected dates are unavailable" },
-        { status: 400 }
-      );
-    }
-
-    // Calculate pricing
-    const pricing = calculatePricing(
-      listing.pricePerDay,
-      numberOfDays,
-      listing.cleaningFee
+    const overrideMap = new Map(
+      overrideRates.map((rate) => [rate.date.toISOString().split("T")[0], rate.pricePerDay])
     );
 
-    // Create booking
-    const booking = await db.booking.create({
-      data: {
-        guestId: session.user.id,
-        listingId: listing.id,
-        checkIn,
-        checkOut,
-        numberOfDays,
-        numberOfGuests: parsed.numberOfGuests,
-        subtotal: pricing.subtotal,
-        cleaningFee: pricing.cleaningFee,
-        totalPrice: pricing.totalPrice,
-        serviceFee: pricing.serviceFee,
-        hostPayout: pricing.hostPayout,
-        specialRequests: parsed.specialRequests,
-        status: "PENDING",
-      },
-    });
+    const subtotal = dateKeys.reduce((sum, key) => {
+      const rate = overrideMap.get(key) ?? listing.pricePerDay;
+      return sum + rate;
+    }, 0);
+    const serviceFee = Math.round(subtotal * SERVICE_FEE_PERCENTAGE);
+    const totalPrice = subtotal + listing.cleaningFee + serviceFee;
+    const hostPayout = subtotal + listing.cleaningFee;
+    const pricing = {
+      subtotal,
+      cleaningFee: listing.cleaningFee,
+      serviceFee,
+      totalPrice,
+      hostPayout,
+    };
 
-    // Create attendees if provided
-    if (parsed.attendeeEmails && parsed.attendeeEmails.length > 0) {
-      await db.bookingAttendee.createMany({
-        data: parsed.attendeeEmails.map((email) => ({
-          bookingId: booking.id,
-          email,
-          status: "INVITED" as const,
-        })),
-      });
+    let bookingId = "";
+
+    try {
+      const booking = await db.$transaction(
+        async (tx) => {
+          const unavailableDate = await tx.blockedDate.findFirst({
+            where: {
+              listingId: listing.id,
+              date: { in: datesToBlock },
+            },
+            select: { id: true },
+          });
+
+          if (unavailableDate) {
+            throw new Error("Some of your selected dates are unavailable");
+          }
+
+          const created = await tx.booking.create({
+            data: {
+              guestId: session.user.id,
+              listingId: listing.id,
+              checkIn,
+              checkOut,
+              numberOfDays,
+              numberOfGuests: parsed.numberOfGuests,
+              subtotal: pricing.subtotal,
+              cleaningFee: pricing.cleaningFee,
+              totalPrice: pricing.totalPrice,
+              serviceFee: pricing.serviceFee,
+              hostPayout: pricing.hostPayout,
+              specialRequests: parsed.specialRequests,
+              status: "PENDING",
+            },
+          });
+
+          await tx.blockedDate.createMany({
+            data: datesToBlock.map((date) => ({
+              listingId: listing.id,
+              date,
+              source: "BOOKING",
+            })),
+          });
+
+          if (parsed.attendeeEmails && parsed.attendeeEmails.length > 0) {
+            await tx.bookingAttendee.createMany({
+              data: parsed.attendeeEmails.map((email) => ({
+                bookingId: created.id,
+                email,
+                status: "INVITED",
+              })),
+            });
+          }
+
+          return created;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      );
+
+      bookingId = booking.id;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        return NextResponse.json(
+          { error: "Some of your selected dates are unavailable" },
+          { status: 409 }
+        );
+      }
+      if (error instanceof Error) {
+        if (error.message.includes("unavailable")) {
+          return NextResponse.json({ error: error.message }, { status: 409 });
+        }
+      }
+      throw error;
     }
 
-    // Check if Stripe is configured
     const hasStripe = !!process.env.STRIPE_SECRET_KEY;
 
-    if (hasStripe) {
-      // Create Stripe Checkout Session
+    if (!hasStripe) {
+      await db.booking.update({
+        where: { id: bookingId },
+        data: { status: "CONFIRMED" },
+      });
+      void syncBookingToMews(bookingId, "UPSERT");
+      return NextResponse.json({ bookingId });
+    }
+
+    try {
       const stripe = getStripe();
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const expiresAt = Math.floor((Date.now() + 1000 * 60 * 30) / 1000);
 
       const checkoutSession = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
         customer_email: session.user.email || undefined,
+        expires_at: expiresAt,
         line_items: [
           {
             price_data: {
@@ -144,18 +252,19 @@ export async function POST(request: NextRequest) {
           },
         ],
         metadata: {
-          bookingId: booking.id,
+          bookingId,
           listingId: listing.id,
           guestId: session.user.id,
+          checkIn: parsed.checkIn,
+          checkOut: parsed.checkOut,
         },
-        success_url: `${appUrl}/bookings/${booking.id}?success=true`,
-        cancel_url: `${appUrl}/spaces/${listing.id}?cancelled=true`,
+        success_url: `${appUrl}/bookings/${bookingId}?success=true`,
+        cancel_url: `${appUrl}/spaces/${listing.id}?cancelled=true&bookingId=${bookingId}`,
       });
 
-      // Store payment intent reference
       if (checkoutSession.payment_intent) {
         await db.booking.update({
-          where: { id: booking.id },
+          where: { id: bookingId },
           data: {
             stripePaymentIntentId:
               typeof checkoutSession.payment_intent === "string"
@@ -166,40 +275,18 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({ checkoutUrl: checkoutSession.url });
-    } else {
-      // Demo mode: confirm booking directly
-      await db.booking.update({
-        where: { id: booking.id },
-        data: { status: "CONFIRMED" },
-      });
-
-      // Block dates
-      const dates: Date[] = [];
-      const current = new Date(checkIn);
-      while (current < checkOut) {
-        dates.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
-
-      for (const date of dates) {
-        await db.blockedDate.upsert({
-          where: {
-            listingId_date: { listingId: listing.id, date },
-          },
-          create: { listingId: listing.id, date, source: "BOOKING" },
-          update: {},
-        });
-      }
-
-      return NextResponse.json({ bookingId: booking.id });
+    } catch (stripeError) {
+      console.error("Stripe checkout session error:", stripeError);
+      await releasePendingInventory(bookingId);
+      return NextResponse.json(
+        { error: "Failed to initialize payment session" },
+        { status: 502 }
+      );
     }
   } catch (error) {
     console.error("Checkout error:", error);
     if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: "Invalid booking data" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid booking data" }, { status: 400 });
     }
     return NextResponse.json(
       { error: "Internal server error" },

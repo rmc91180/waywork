@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { getFavorites } from "@/actions/favorite";
 import { ListingCard } from "@/components/listings/listing-card";
 import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
 
 export const metadata = {
   title: "Saved Spaces",
@@ -25,10 +26,10 @@ export default async function FavoritesPage() {
       </div>
 
       {listings.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-4">❤️</div>
-          <h3 className="text-lg font-semibold">No saved spaces yet</h3>
-          <p className="text-gray-500 mt-2 mb-4">
+        <div className="waywork-section py-16 text-center">
+          <Heart className="mx-auto mb-4 size-10 text-[var(--ww-accent-orange)]" />
+          <h3 className="text-lg font-semibold text-slate-900">No saved spaces yet</h3>
+          <p className="mt-2 mb-4 text-slate-500">
             When you find a workspace you love, save it here for easy access.
           </p>
           <Button asChild>

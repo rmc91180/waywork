@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
+import { MessageCircleMore } from "lucide-react";
 
 export default async function MessagesPage() {
   const session = await auth();
@@ -74,10 +75,10 @@ export default async function MessagesPage() {
       <h1 className="text-2xl font-bold mb-6">Messages</h1>
 
       {threadsWithMeta.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-4xl mb-4">💬</div>
-          <p className="text-gray-500 mb-2">No messages yet</p>
-          <p className="text-sm text-gray-400">
+        <div className="waywork-section py-16 text-center">
+          <MessageCircleMore className="mx-auto mb-4 size-10 text-[var(--ww-secondary-green)]" />
+          <p className="mb-2 text-slate-600">No messages yet</p>
+          <p className="text-sm text-slate-500">
             When you message a host or receive an inquiry, it will appear here.
           </p>
         </div>

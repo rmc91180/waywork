@@ -1,7 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
+import { syncBookingToMews } from "@/lib/pms/mews-sync";
 import type Stripe from "stripe";
+
+async function releaseBookingInventory(bookingId: string) {
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      listingId: true,
+      checkIn: true,
+      checkOut: true,
+      status: true,
+    },
+  });
+
+  if (!booking || booking.status !== "PENDING") return;
+
+  await db.$transaction([
+    db.blockedDate.deleteMany({
+      where: {
+        listingId: booking.listingId,
+        source: "BOOKING",
+        date: {
+          gte: booking.checkIn,
+          lt: booking.checkOut,
+        },
+      },
+    }),
+    db.booking.update({
+      where: { id: booking.id },
+      data: { status: "CANCELLED_BY_GUEST" },
+    }),
+  ]);
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -51,6 +84,10 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        if (booking.status !== "PENDING") {
+          break;
+        }
+
         // Update booking status
         await db.booking.update({
           where: { id: bookingId },
@@ -63,30 +100,18 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Block dates for this booking
-        const checkIn = new Date(booking.checkIn);
-        const checkOut = new Date(booking.checkOut);
-        const current = new Date(checkIn);
-
-        while (current < checkOut) {
-          await db.blockedDate.upsert({
-            where: {
-              listingId_date: {
-                listingId: booking.listingId,
-                date: new Date(current),
-              },
-            },
-            create: {
-              listingId: booking.listingId,
-              date: new Date(current),
-              source: "BOOKING",
-            },
-            update: {},
-          });
-          current.setDate(current.getDate() + 1);
-        }
-
+        void syncBookingToMews(bookingId, "UPSERT");
         console.log(`Booking ${bookingId} confirmed via Stripe`);
+        break;
+      }
+
+      case "checkout.session.expired":
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const bookingId = session.metadata?.bookingId;
+        if (bookingId) {
+          await releaseBookingInventory(bookingId);
+        }
         break;
       }
 
@@ -121,6 +146,7 @@ export async function POST(request: NextRequest) {
             });
 
             console.log(`Booking ${booking.id} refunded`);
+            void syncBookingToMews(booking.id, "CANCEL");
           }
         }
         break;

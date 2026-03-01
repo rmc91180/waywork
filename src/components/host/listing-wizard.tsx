@@ -50,6 +50,121 @@ export function ListingWizard({
   const [isPending, startTransition] = useTransition();
   const [saving, setSaving] = useState(false);
 
+  const validateStep = (stepIndex: number) => {
+    if (stepIndex === 0) {
+      if (formData.title.trim().length < 5) {
+        toast.error("Add a title with at least 5 characters.");
+        return false;
+      }
+      if (formData.description.trim().length < 20) {
+        toast.error("Add a description with at least 20 characters.");
+        return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 1) {
+      if (!formData.address.trim() || !formData.city.trim() || !formData.country.trim()) {
+        toast.error("Address, city, and country are required.");
+        return false;
+      }
+      if (
+        !Number.isFinite(formData.lat) ||
+        !Number.isFinite(formData.lng) ||
+        formData.lat === 0 ||
+        formData.lng === 0
+      ) {
+        toast.error("Add valid latitude and longitude coordinates.");
+        return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 2) {
+      if (formData.maxGuests < 1 || formData.maxGuests > 10) {
+        toast.error("Maximum guests must be between 1 and 10.");
+        return false;
+      }
+      if (formData.pricePerDay < 100) {
+        toast.error("Price per day must be at least $1.");
+        return false;
+      }
+      if (formData.cleaningFee < 0) {
+        toast.error("Cleaning fee cannot be negative.");
+        return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 3) {
+      if (formData.bedroomCount < 1) {
+        toast.error("Bedrooms must be at least 1.");
+        return false;
+      }
+      if (formData.propertySizeSqm > 0 && formData.propertySizeSqm < 10) {
+        toast.error("Property size must be at least 10 sqm.");
+        return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 4) {
+      if (formData.amenities.length < 1) {
+        toast.error("Select at least one amenity.");
+        return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 5) {
+      if (formData.connectivity.declaredDownloadMbps < 1) {
+        toast.error("Download speed must be at least 1 Mbps.");
+        return false;
+      }
+      if (formData.connectivity.declaredUploadMbps < 1) {
+        toast.error("Upload speed must be at least 1 Mbps.");
+        return false;
+      }
+      if (
+        formData.connectivity.hasBackupConnection &&
+        !formData.connectivity.backupType?.trim()
+      ) {
+        toast.error("Specify the backup connection type.");
+        return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 6) {
+      if (formData.images.length < 1) {
+        toast.error("Add at least one photo before continuing.");
+        return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 7) {
+      if (formData.availability.length < 1) {
+        toast.error("Add at least one availability rule.");
+        return false;
+      }
+      if (!formData.availability.some((rule) => rule.available)) {
+        toast.error("At least one day must be available.");
+        return false;
+      }
+      return true;
+    }
+
+    return true;
+  };
+
+  const validateStepsBeforeSubmit = () => {
+    for (let stepIndex = 0; stepIndex <= 7; stepIndex += 1) {
+      if (!validateStep(stepIndex)) return false;
+    }
+    return true;
+  };
+
   const listingPayload = {
     title: formData.title,
     description: formData.description,
@@ -115,6 +230,8 @@ export function ListingWizard({
   };
 
   const handleSubmitForReview = () => {
+    if (!validateStepsBeforeSubmit()) return;
+
     setSaving(true);
     startTransition(async () => {
       try {
@@ -150,6 +267,11 @@ export function ListingWizard({
         setSaving(false);
       }
     });
+  };
+
+  const handleContinue = () => {
+    if (!validateStep(step)) return;
+    nextStep();
   };
 
   const renderStep = () => {
@@ -212,7 +334,7 @@ export function ListingWizard({
             </>
           )}
           {!isLastStep && (
-            <Button onClick={nextStep} disabled={isPending}>
+            <Button onClick={handleContinue} disabled={isPending}>
               Continue
             </Button>
           )}

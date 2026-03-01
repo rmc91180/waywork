@@ -86,6 +86,7 @@ model User {
   guestThreads   MessageThread[]  @relation("ThreadGuest")
   hostThreads    MessageThread[]  @relation("ThreadHost")
   favorites      Favorite[]
+  pmsConnections PmsConnection[]
 }
 
 // ============================================================================
@@ -119,6 +120,26 @@ enum BedSize {
   DOUBLE
   QUEEN
   KING
+}
+
+enum PmsProvider {
+  MEWS
+}
+
+enum PmsSyncStatus {
+  PENDING
+  SYNCED
+  FAILED
+}
+
+enum PmsSyncDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum DailyRateSource {
+  MANUAL
+  PMS
 }
 
 model Listing {
@@ -175,6 +196,14 @@ model Listing {
   icalUrl         String?
   icalLastSyncAt  DateTime?
 
+  // PMS sync
+  pmsConnectionId       String?
+  pmsExternalListingId  String?
+  pmsExternalRatePlanId String?
+  pmsLastSyncedAt       DateTime?
+  pmsSyncStatus         PmsSyncStatus @default(PENDING)
+  pmsSyncError          String?       @db.Text
+
   // Admin
   rejectionReason String? @db.Text
 
@@ -193,6 +222,9 @@ model Listing {
   reviews             Review[]
   messageThreads      MessageThread[]
   favorites           Favorite[]
+  dailyRates          ListingDailyRate[]
+  pmsSyncEvents       PmsSyncEvent[]
+  pmsConnection       PmsConnection?        @relation(fields: [pmsConnectionId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([city])
@@ -201,6 +233,8 @@ model Listing {
   @@index([workScore])
   @@index([pricePerDay])
   @@index([lat, lng])
+  @@index([pmsConnectionId])
+  @@index([pmsExternalListingId])
 }
 
 model ListingActivity {
@@ -306,6 +340,7 @@ enum BlockedDateSource {
   MANUAL
   ICAL
   BOOKING
+  PMS
 }
 
 model BlockedDate {
@@ -355,6 +390,12 @@ model Booking {
   stripePaymentIntentId String? @unique
   stripeTransferId      String?
 
+  // PMS sync
+  pmsExternalReservationId String?        @unique
+  pmsLastSyncedAt          DateTime?
+  pmsSyncStatus            PmsSyncStatus  @default(PENDING)
+  pmsSyncError             String?        @db.Text
+
   // Guest info
   specialRequests    String? @db.Text
   calendarEventSent  Boolean @default(false)
@@ -368,11 +409,84 @@ model Booking {
   attendees BookingAttendee[]
   review    Review?
   messages  MessageThread[]
+  pmsSyncEvents PmsSyncEvent[]
 
   @@index([guestId])
   @@index([listingId])
   @@index([status])
   @@index([checkIn])
+}
+
+model PmsConnection {
+  id String @id @default(cuid())
+
+  userId   String
+  provider PmsProvider @default(MEWS)
+  enabled  Boolean     @default(false)
+
+  // Mews Channel Manager API
+  mewsApiBaseUrl     String  @default("https://api.mews.com")
+  mewsClientToken    String?
+  mewsConnectionToken String?
+
+  // Mews Connector API (optional)
+  mewsAccessToken  String?
+  mewsEnterpriseId String?
+  mewsClientName   String  @default("WayWork PMS Sync/1.0")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings  Listing[]
+  syncEvents PmsSyncEvent[]
+
+  @@unique([userId, provider])
+  @@index([provider, enabled])
+}
+
+model ListingDailyRate {
+  id String @id @default(cuid())
+
+  listingId String
+  date      DateTime @db.Date
+  pricePerDay Int
+  currency String @default("USD")
+  source   DailyRateSource @default(MANUAL)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, date])
+  @@index([listingId, date])
+}
+
+model PmsSyncEvent {
+  id String @id @default(cuid())
+
+  connectionId String
+  listingId    String?
+  bookingId    String?
+
+  direction  PmsSyncDirection
+  action     String
+  success    Boolean
+  messageId  String?
+  error      String? @db.Text
+  requestPayload  Json?
+  responsePayload Json?
+
+  createdAt DateTime @default(now())
+
+  connection PmsConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  listing    Listing?      @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  booking    Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([connectionId, createdAt])
+  @@index([listingId, createdAt])
+  @@index([bookingId, createdAt])
 }
 
 enum AttendeeStatus {

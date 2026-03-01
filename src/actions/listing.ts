@@ -332,7 +332,7 @@ export async function addBlockedDates(
       create: {
         listingId,
         date: new Date(d.date),
-        source: d.source as "MANUAL" | "ICAL" | "BOOKING",
+        source: d.source as "MANUAL" | "ICAL" | "BOOKING" | "PMS",
       },
       update: {},
     });

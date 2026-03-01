@@ -228,5 +228,5 @@ export const availabilityRuleSchema = z.object({
 
 export const blockedDateSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  source: z.enum(["MANUAL", "ICAL", "BOOKING"]).default("MANUAL"),
+  source: z.enum(["MANUAL", "ICAL", "BOOKING", "PMS"]).default("MANUAL"),
 });

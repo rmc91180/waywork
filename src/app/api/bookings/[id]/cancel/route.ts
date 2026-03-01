@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { syncBookingToMews } from "@/lib/pms/mews-sync";
 import { getStripe } from "@/lib/stripe";
-import { differenceInDays } from "date-fns";
+import { differenceInHours } from "date-fns";
 
 export async function POST(
   request: NextRequest,
@@ -46,10 +47,11 @@ export async function POST(
     }
 
     let refundPercentage = 0;
-    const daysUntilCheckIn = differenceInDays(
+    const hoursUntilCheckIn = differenceInHours(
       new Date(booking.checkIn),
       new Date()
     );
+    const daysUntilCheckIn = hoursUntilCheckIn / 24;
 
     if (isHost) {
       // Host cancellations always get full refund for guest
@@ -58,14 +60,14 @@ export async function POST(
       // Guest cancellation - depends on policy
       const policy = booking.listing.cancellationPolicy;
       if (policy === "FLEXIBLE") {
-        refundPercentage = daysUntilCheckIn >= 1 ? 100 : 0;
+        refundPercentage = hoursUntilCheckIn > 24 ? 100 : 0;
       } else if (policy === "MODERATE") {
-        if (daysUntilCheckIn >= 5) refundPercentage = 100;
-        else if (daysUntilCheckIn >= 1) refundPercentage = 50;
+        if (daysUntilCheckIn > 5) refundPercentage = 100;
+        else if (hoursUntilCheckIn > 24) refundPercentage = 50;
         else refundPercentage = 0;
       } else {
         // STRICT
-        refundPercentage = daysUntilCheckIn >= 7 ? 50 : 0;
+        refundPercentage = daysUntilCheckIn > 7 ? 50 : 0;
       }
     }
 
@@ -90,11 +92,23 @@ export async function POST(
       }
     }
 
+    const fullRefundStatus =
+      !isHost &&
+      refundPercentage === 100 &&
+      booking.status === "CONFIRMED" &&
+      Boolean(booking.stripePaymentIntentId);
+
+    const finalStatus = isHost
+      ? "CANCELLED_BY_HOST"
+      : fullRefundStatus
+        ? "REFUNDED"
+        : "CANCELLED_BY_GUEST";
+
     // Update booking status
     await db.booking.update({
       where: { id },
       data: {
-        status: isHost ? "CANCELLED_BY_HOST" : "CANCELLED_BY_GUEST",
+        status: finalStatus,
       },
     });
 
@@ -110,7 +124,13 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ success: true, refundPercentage });
+    void syncBookingToMews(id, "CANCEL");
+
+    return NextResponse.json({
+      success: true,
+      refundPercentage,
+      status: finalStatus,
+    });
   } catch (error) {
     console.error("Cancel error:", error);
     return NextResponse.json(

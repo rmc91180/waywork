@@ -58,6 +58,12 @@ npm run dev
 - `R2_BUCKET_NAME`
 - `R2_PUBLIC_URL`
 - `NEXT_PUBLIC_MAPBOX_TOKEN`
+- `MEWS_API_BASE_URL`
+- `MEWS_CLIENT_TOKEN`
+- `MEWS_CONNECTION_TOKEN`
+- `MEWS_ACCESS_TOKEN`
+- `MEWS_ENTERPRISE_ID`
+- `MEWS_WEBHOOK_SECRET`
 
 ### Deploy flow
 
@@ -86,3 +92,21 @@ You can also use the helper script:
 ```bash
 bash scripts/deploy-railway.sh
 ```
+
+## Mews Two-Way PMS Sync
+
+WayWork includes a Mews channel manager integration foundation with:
+
+- outbound booking sync to Mews `processGroup` after booking confirmation/cancellation
+- inbound ARI and reservation updates from Mews channel manager operations
+- persistent sync state and event logging in Prisma (`PmsConnection`, `PmsSyncEvent`, `ListingDailyRate`)
+
+Key API routes:
+
+- `POST /api/pms/mews/connection` - configure/update host Mews credentials and listing mappings
+- `GET /api/pms/mews/connection` - inspect current Mews connection and listing mapping status
+- `POST /api/pms/mews/requestAriUpdate` - request ARI refresh from Mews
+- `POST /api/pms/mews/channel-manager/updateAvailability` - inbound availability updates from Mews
+- `POST /api/pms/mews/channel-manager/updatePrices` - inbound price updates from Mews
+- `POST /api/pms/mews/channel-manager/updateRestrictions` - inbound restrictions payload logging
+- `POST /api/pms/mews/channel-manager/processGroup` - inbound reservation updates from Mews

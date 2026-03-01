@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getStripe, calculatePricing } from "@/lib/stripe";
+import { getStripe, SERVICE_FEE_PERCENTAGE } from "@/lib/stripe";
+import { syncBookingToMews } from "@/lib/pms/mews-sync";
 import { createBookingSchema } from "@/lib/validators";
 import { differenceInDays, addDays, startOfDay, isBefore } from "date-fns";
 import { z } from "zod";
@@ -80,12 +81,29 @@ export async function createBookingAndCheckout(
     throw new Error("Some of the selected dates are unavailable");
   }
 
-  // Compute pricing
-  const pricing = calculatePricing(
-    listing.pricePerDay,
-    numberOfDays,
-    listing.cleaningFee
+  // Compute pricing (respect PMS-managed daily rate overrides when present)
+  const dailyRates = await db.listingDailyRate.findMany({
+    where: {
+      listingId: listing.id,
+      date: { in: datesToBook },
+    },
+    select: { date: true, pricePerDay: true },
+  });
+  const dailyRateMap = new Map(
+    dailyRates.map((rate) => [rate.date.toISOString().split("T")[0], rate.pricePerDay])
   );
+  const subtotal = datesToBook.reduce((sum, date) => {
+    const key = date.toISOString().split("T")[0];
+    return sum + (dailyRateMap.get(key) ?? listing.pricePerDay);
+  }, 0);
+  const serviceFee = Math.round(subtotal * SERVICE_FEE_PERCENTAGE);
+  const pricing = {
+    subtotal,
+    cleaningFee: listing.cleaningFee,
+    serviceFee,
+    totalPrice: subtotal + listing.cleaningFee + serviceFee,
+    hostPayout: subtotal + listing.cleaningFee,
+  };
 
   // --- DEMO MODE: no Stripe configured ---
   if (!isStripeConfigured()) {
@@ -121,7 +139,8 @@ export async function createBookingAndCheckout(
     }
 
     revalidatePath("/bookings");
-    revalidatePath(`/listings/${listing.slug}`);
+    revalidatePath(`/spaces/${listing.id}`);
+    void syncBookingToMews(booking.id, "UPSERT");
 
     return { url: `/bookings/${booking.id}/confirmation` };
   }
@@ -194,7 +213,7 @@ export async function createBookingAndCheckout(
       attendeeEmails: parsed.attendeeEmails?.join(",") || "",
     },
     success_url: `${appUrl}/bookings/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/listings/${listing.slug}?booking_cancelled=true`,
+    cancel_url: `${appUrl}/spaces/${listing.id}?booking_cancelled=true`,
     ...(listing.host.stripeConnectAccountId
       ? {
           payment_intent_data: {
@@ -261,6 +280,7 @@ export async function confirmBooking(
 
   revalidatePath("/bookings");
   revalidatePath(`/host/bookings`);
+  void syncBookingToMews(bookingId, "UPSERT");
 }
 
 // ============================================================================
@@ -347,6 +367,7 @@ export async function cancelBooking(bookingId: string) {
 
   revalidatePath("/bookings");
   revalidatePath("/host/bookings");
+  void syncBookingToMews(bookingId, "CANCEL");
 }
 
 // ============================================================================
@@ -395,6 +416,7 @@ export async function hostCancelBooking(bookingId: string) {
 
   revalidatePath("/bookings");
   revalidatePath("/host/bookings");
+  void syncBookingToMews(bookingId, "CANCEL");
 }
 
 // ============================================================================

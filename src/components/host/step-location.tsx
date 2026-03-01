@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { ListingFormData } from "@/hooks/use-listing-form";
 
 interface StepLocationProps {
@@ -10,6 +13,41 @@ interface StepLocationProps {
 }
 
 export function StepLocation({ data, onChange }: StepLocationProps) {
+  const [geocoding, setGeocoding] = useState(false);
+
+  const autofillCoordinates = async () => {
+    const query = [data.address, data.city, data.state, data.country]
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .join(", ");
+
+    if (!query) {
+      toast.error("Enter at least an address, city, and country first.");
+      return;
+    }
+
+    setGeocoding(true);
+    try {
+      const response = await fetch(`/api/location/geocode?query=${encodeURIComponent(query)}`);
+      const payload = (await response.json()) as {
+        lat?: number;
+        lng?: number;
+        error?: string;
+      };
+
+      if (!response.ok || !Number.isFinite(payload.lat) || !Number.isFinite(payload.lng)) {
+        throw new Error(payload.error || "Unable to geocode this address.");
+      }
+
+      onChange({ lat: payload.lat, lng: payload.lng });
+      toast.success("Coordinates autofilled from address.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to geocode address.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -105,6 +143,10 @@ export function StepLocation({ data, onChange }: StepLocationProps) {
           Tip: You can find coordinates by searching your address on Google Maps
           and right-clicking the pin.
         </p>
+
+        <Button type="button" variant="outline" onClick={autofillCoordinates} disabled={geocoding}>
+          {geocoding ? "Autofilling..." : "Autofill Coordinates"}
+        </Button>
       </div>
     </div>
   );

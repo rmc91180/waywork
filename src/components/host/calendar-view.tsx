@@ -365,6 +365,12 @@ export function CalendarView({
                 {listingBlocked.filter((bd) => bd.source === "ICAL").length}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">PMS blocked</span>
+              <span className="font-medium">
+                {listingBlocked.filter((bd) => bd.source === "PMS").length}
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>

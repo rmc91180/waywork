@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import type { ListingFormData } from "@/hooks/use-listing-form";
 
 interface StepPhotosProps {
@@ -12,6 +13,8 @@ interface StepPhotosProps {
 
 export function StepPhotos({ data, onChange }: StepPhotosProps) {
   const [uploading, setUploading] = useState(false);
+  const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+  const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -25,6 +28,16 @@ export function StepPhotos({ data, onChange }: StepPhotosProps) {
         const file = files[i];
         const contentType = file.type;
 
+        if (!ALLOWED_TYPES.has(contentType)) {
+          toast.error(`${file.name}: unsupported file type.`);
+          continue;
+        }
+
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+          toast.error(`${file.name}: exceeds 10MB file size limit.`);
+          continue;
+        }
+
         // Get presigned URL
         const presignRes = await fetch("/api/uploads/presign", {
           method: "POST",
@@ -36,38 +49,52 @@ export function StepPhotos({ data, onChange }: StepPhotosProps) {
         });
 
         if (!presignRes.ok) {
-          // Fallback: use a placeholder URL for demo purposes
-          newImages.push({
-            url: `/api/placeholder/${Date.now()}-${i}`,
-            alt: file.name,
-            order: data.images.length + i,
-            isPrimary: data.images.length === 0 && i === 0,
-          });
-          continue;
+          const payload = (await presignRes.json()) as { error?: string };
+          throw new Error(payload.error || `Unable to upload ${file.name}.`);
         }
 
-        const { signedUrl, publicUrl } = await presignRes.json();
+        const { signedUrl, publicUrl } = (await presignRes.json()) as {
+          signedUrl?: string;
+          publicUrl?: string;
+        };
 
-        // Upload to R2
-        await fetch(signedUrl, {
+        if (!signedUrl || !publicUrl) {
+          throw new Error(`Upload URL missing for ${file.name}.`);
+        }
+
+        const uploadRes = await fetch(signedUrl, {
           method: "PUT",
           body: file,
           headers: { "Content-Type": contentType },
         });
 
+        if (!uploadRes.ok) {
+          throw new Error(`Failed to upload ${file.name}.`);
+        }
+
         newImages.push({
           url: publicUrl,
           alt: file.name,
-          order: data.images.length + i,
-          isPrimary: data.images.length === 0 && i === 0,
+          order: data.images.length + newImages.length,
+          isPrimary: data.images.length === 0 && newImages.length === 0,
         });
       }
 
+      if (newImages.length === 0) {
+        toast.error("No files were uploaded.");
+        return;
+      }
+
       onChange({ images: [...data.images, ...newImages] });
+      toast.success(
+        `Uploaded ${newImages.length} photo${newImages.length > 1 ? "s" : ""}.`
+      );
     } catch (error) {
       console.error("Upload failed:", error);
+      toast.error(error instanceof Error ? error.message : "Upload failed");
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -92,11 +119,17 @@ export function StepPhotos({ data, onChange }: StepPhotosProps) {
   const addUrlImage = () => {
     const url = prompt("Enter image URL:");
     if (!url) return;
+    const trimmed = url.trim();
+    const isValidHttpUrl = /^https?:\/\/.+/i.test(trimmed);
+    if (!isValidHttpUrl) {
+      toast.error("Image URL must start with http:// or https://");
+      return;
+    }
     onChange({
       images: [
         ...data.images,
         {
-          url,
+          url: trimmed,
           alt: "",
           order: data.images.length,
           isPrimary: data.images.length === 0,

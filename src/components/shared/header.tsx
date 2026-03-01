@@ -103,7 +103,7 @@ export function Header() {
                 >
                   <Link href="/register">Sign Up Free</Link>
                 </Button>
-                <Button variant="ghost" className="hidden lg:inline-flex text-[var(--ww-secondary-green)]" asChild>
+                <Button variant="ghost" className="hidden md:inline-flex text-[var(--ww-secondary-green)]" asChild>
                   <Link href="/host/listings/new">Become a Host</Link>
                 </Button>
               </div>

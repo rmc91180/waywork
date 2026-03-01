@@ -18,6 +18,12 @@ const envSchema = z.object({
   R2_BUCKET_NAME: z.string().default("waywork"),
   R2_PUBLIC_URL: z.string().optional(),
   NEXT_PUBLIC_MAPBOX_TOKEN: z.string().optional(),
+  MEWS_API_BASE_URL: z.string().url().optional(),
+  MEWS_CLIENT_TOKEN: z.string().optional(),
+  MEWS_CONNECTION_TOKEN: z.string().optional(),
+  MEWS_ACCESS_TOKEN: z.string().optional(),
+  MEWS_ENTERPRISE_ID: z.string().optional(),
+  MEWS_WEBHOOK_SECRET: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
 });
 
