@@ -6,7 +6,7 @@ import { CalendarView } from "@/components/host/calendar-view";
 
 export default async function CalendarPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   // Fetch all host listings
   const listings = await db.listing.findMany({

@@ -25,7 +25,7 @@ const STATUS_BADGES: Record<string, { label: string; variant: "default" | "secon
 
 export default async function HostListingsPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   const listings = await db.listing.findMany({
     where: { hostId: session.user.id },

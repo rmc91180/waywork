@@ -8,7 +8,7 @@ export const metadata = {
 
 export default async function NewListingPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">

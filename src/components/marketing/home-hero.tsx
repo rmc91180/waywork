@@ -166,6 +166,35 @@ export function HomeHero({ images }: HomeHeroProps) {
               </Link>
             </Button>
           </div>
+          <div className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-2xl border border-white/45 bg-white/10 px-3 py-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/85">
+              Hosting on Way Work?
+            </p>
+            <Button
+              size="sm"
+              className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+              asChild
+            >
+              <Link
+                href="/register?callbackUrl=%2Fhost"
+                onClick={() =>
+                  trackEvent({ event: "hero_host_cta_clicked", properties: { cta: "host_signup" } })
+                }
+              >
+                Host Sign Up
+              </Link>
+            </Button>
+            <Button size="sm" variant="outline" className="border-white/60 bg-white/5 text-white hover:bg-white/15" asChild>
+              <Link
+                href="/login?callbackUrl=%2Fhost"
+                onClick={() =>
+                  trackEvent({ event: "hero_host_cta_clicked", properties: { cta: "host_login" } })
+                }
+              >
+                Host Login
+              </Link>
+            </Button>
+          </div>
           <div className="mt-7 flex flex-wrap gap-2">
             <p className="ww-trust-pill border-white/50 bg-white/15 text-white">Verified Internet</p>
             <p className="ww-trust-pill border-white/50 bg-white/15 text-white">Secure Booking</p>

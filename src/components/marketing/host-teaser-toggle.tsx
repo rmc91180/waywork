@@ -61,7 +61,7 @@ export function HostTeaserToggle() {
             asChild
           >
             <Link
-              href="/host/listings/new"
+              href="/register?callbackUrl=%2Fhost"
               onClick={() =>
                 trackEvent({
                   event: "host_teaser_cta_clicked",

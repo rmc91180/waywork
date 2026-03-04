@@ -106,7 +106,7 @@ export default function AboutPage() {
               className="border-slate-400 bg-transparent text-white hover:bg-white/10"
               asChild
             >
-              <Link href="/host/listings/new">Start Hosting Free</Link>
+              <Link href="/register?callbackUrl=%2Fhost">Start Hosting Free</Link>
             </Button>
           </div>
         </div>
@@ -114,4 +114,3 @@ export default function AboutPage() {
     </div>
   );
 }
-

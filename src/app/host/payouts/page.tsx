@@ -15,7 +15,7 @@ interface Props {
 
 export default async function PayoutsPage({ searchParams }: Props) {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   const params = await searchParams;
   const status = await getConnectStatus();

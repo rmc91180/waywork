@@ -2,7 +2,7 @@
 
 import { type ReactNode, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bot, ChevronDown, Filter, RotateCcw, Sparkles } from "lucide-react";
+import { Bot, ChevronDown, Filter, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -765,7 +765,7 @@ export function SearchFilters({ mode, filters, facets, total }: SearchFiltersPro
           Apply filters
         </Button>
         <Button variant="outline" onClick={clearFilters}>
-          <RotateCcw className="size-4" />
+          Clear Filters
         </Button>
       </div>
     </div>

@@ -27,6 +27,7 @@ export default function RegisterPage() {
   const [providerIds, setProviderIds] = useState<string[]>([]);
   const [providersLoaded, setProvidersLoaded] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
+  const [callbackUrl, setCallbackUrl] = useState("/search?welcome=true");
 
   useEffect(() => {
     let mounted = true;
@@ -46,6 +47,13 @@ export default function RegisterPage() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const raw = new URLSearchParams(window.location.search).get("callbackUrl");
+    if (raw && raw.startsWith("/")) {
+      setCallbackUrl(raw);
+    }
   }, []);
 
   const { hasGoogleOAuth, hasMagicLink, hasCredentials } = useMemo(
@@ -72,11 +80,11 @@ export default function RegisterPage() {
 
     try {
       if (hasMagicLink) {
-        await signIn("resend", { email, callbackUrl: "/search?welcome=true" });
+        await signIn("resend", { email, callbackUrl });
         return;
       }
       if (hasCredentials) {
-        await signIn("credentials", { email, callbackUrl: "/search?welcome=true" });
+        await signIn("credentials", { email, callbackUrl });
         return;
       }
       toast.error("No signup provider is currently available.");
@@ -127,11 +135,11 @@ export default function RegisterPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => {
-              trackEvent({ event: "signup_oauth_clicked", properties: { provider: "google" } });
-              void signIn("google", { callbackUrl: "/search?welcome=true" });
-            }}
-          >
+              onClick={() => {
+                trackEvent({ event: "signup_oauth_clicked", properties: { provider: "google" } });
+                void signIn("google", { callbackUrl });
+              }}
+            >
             Continue with Google
           </Button>
         )}

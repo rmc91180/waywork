@@ -76,7 +76,7 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/host/listings">Host Dashboard</Link>
+                    <Link href="/host">Host Dashboard</Link>
                   </DropdownMenuItem>
                   {session.user.role === "ADMIN" && (
                     <DropdownMenuItem asChild>
@@ -104,7 +104,7 @@ export function Header() {
                   <Link href="/register">Sign Up Free</Link>
                 </Button>
                 <Button variant="ghost" className="hidden md:inline-flex text-[var(--ww-secondary-green)]" asChild>
-                  <Link href="/host/listings/new">Become a Host</Link>
+                  <Link href="/register?callbackUrl=%2Fhost">Become a Host</Link>
                 </Button>
               </div>
             )}

@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [providerIds, setProviderIds] = useState<string[]>([]);
   const [providersLoaded, setProvidersLoaded] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
+  const [callbackUrl, setCallbackUrl] = useState("/search");
 
   useEffect(() => {
     let mounted = true;
@@ -42,6 +43,13 @@ export default function LoginPage() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const raw = new URLSearchParams(window.location.search).get("callbackUrl");
+    if (raw && raw.startsWith("/")) {
+      setCallbackUrl(raw);
+    }
   }, []);
 
   const { hasGoogleOAuth, hasMagicLink, hasCredentials, hasAnyEmailMethod, isDemoMode } =
@@ -65,9 +73,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (hasMagicLink) {
-        await signIn("resend", { email, callbackUrl: "/search" });
+        await signIn("resend", { email, callbackUrl });
       } else if (hasCredentials) {
-        await signIn("credentials", { email, callbackUrl: "/search" });
+        await signIn("credentials", { email, callbackUrl });
       } else {
         toast.error("No email sign-in method is enabled.");
       }
@@ -82,7 +90,7 @@ export default function LoginPage() {
     try {
       await signIn("credentials", {
         email: "demo@waywork.com",
-        callbackUrl: "/search",
+        callbackUrl,
       });
     } finally {
       setLoading(false);
@@ -109,7 +117,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => signIn("google", { callbackUrl: "/search" })}
+              onClick={() => signIn("google", { callbackUrl })}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path

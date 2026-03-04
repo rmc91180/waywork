@@ -10,7 +10,7 @@ import {
   serializeSearchFilterParams,
   type SearchFilterState,
 } from "@/lib/search-filters";
-import { searchListingsWithFacets } from "@/lib/search-query";
+import { searchListingsWithFacets, type SearchFacets } from "@/lib/search-query";
 import { getSearchUiVariant } from "@/lib/experiments";
 import { BRAND } from "@/lib/brand";
 
@@ -21,6 +21,26 @@ export const metadata = {
 
 interface SearchPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function createEmptyFacets(): SearchFacets {
+  return {
+    workspaceTypes: {},
+    cancellationPolicies: {},
+    networkTypes: {},
+    bedSizes: {},
+    amenities: [],
+    price: { min: 0, max: 0 },
+    propertySize: { min: 0, max: 0 },
+    bedrooms: { min: 0, max: 0 },
+    pleasure: {
+      jacuzzi: 0,
+      swimmingPool: 0,
+      backyard: 0,
+      pingPongTable: 0,
+      poolTable: 0,
+    },
+  };
 }
 
 const quickSearchLinks = [
@@ -120,7 +140,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const cookieStore = await cookies();
   const searchVariant = getSearchUiVariant(cookieStore);
   const filters = parseSearchFilterParams(params);
-  const { listings, total, facets, locationContext } = await searchListingsWithFacets(filters);
+  let listings = [] as Awaited<ReturnType<typeof searchListingsWithFacets>>["listings"];
+  let total = 0;
+  let facets = createEmptyFacets();
+  let locationContext: Awaited<
+    ReturnType<typeof searchListingsWithFacets>
+  >["locationContext"] = null;
+  let searchLoadFailed = false;
+
+  try {
+    const result = await searchListingsWithFacets(filters);
+    listings = result.listings;
+    total = result.total;
+    facets = result.facets;
+    locationContext = result.locationContext;
+  } catch (error) {
+    searchLoadFailed = true;
+    console.error("[search/page] failed to load search listings", error);
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / filters.limit));
   const initialListings = toListingCardData(listings);
   const filtersKey = serializeSearchFilterParams(filters).toString();
@@ -190,6 +228,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </div>
           </div>
         </section>
+
+        {searchLoadFailed ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            Search is temporarily unavailable. You can still browse pages, and we&apos;re retrying
+            listing data in the background.
+          </div>
+        ) : null}
 
         <div className="mt-6 lg:hidden">
           <SearchFilters key={`mobile-${filtersKey}`} mode="mobile" filters={filters} facets={facets} total={total} />

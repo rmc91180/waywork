@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const HOST_LINKS = [
+  { href: "/host", label: "Dashboard" },
   { href: "/host/listings", label: "Listings" },
   { href: "/host/bookings", label: "Bookings" },
   { href: "/host/calendar", label: "Calendar" },

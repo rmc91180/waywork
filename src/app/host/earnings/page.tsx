@@ -18,7 +18,7 @@ const statusColors: Record<string, string> = {
 
 export default async function EarningsPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   const bookings = await db.booking.findMany({
     where: { listing: { hostId: session.user.id } },
