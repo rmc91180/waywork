@@ -14,7 +14,10 @@ function quoteWindowsArg(arg: string): string {
   return `"${arg.replace(/"/g, '\\"')}"`;
 }
 
-function run(args: string[], extraEnv?: NodeJS.ProcessEnv): RunResult {
+function run(
+  args: string[],
+  extraEnv?: Record<string, string | undefined>
+): RunResult {
   const env = { ...process.env, ...extraEnv };
   const result = IS_WINDOWS
     ? spawnSync(
