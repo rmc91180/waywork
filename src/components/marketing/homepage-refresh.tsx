@@ -169,8 +169,8 @@ export async function HomepageRefresh() {
       <HomeHero images={heroImages} />
 
       <section id="quick-search" className="waywork-shell -mt-12 md:-mt-20 relative z-10">
-        <div className="waywork-elevated rounded-3xl border border-slate-200 bg-[var(--ww-neutral-light)]/35 p-5 md:p-7">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end">
+        <div className="waywork-elevated rounded-3xl border border-slate-200 bg-[var(--ww-neutral-light)]/35 p-6 md:p-8">
+          <div className="grid gap-5 md:gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
                 Quick Search
