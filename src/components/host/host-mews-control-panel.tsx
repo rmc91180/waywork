@@ -192,7 +192,7 @@ export function HostMewsControlPanel({
   };
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+    <section id="pms-sync-control" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">

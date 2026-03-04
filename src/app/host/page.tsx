@@ -16,6 +16,10 @@ import { formatCurrency } from "@/lib/stripe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HostMewsControlPanel } from "@/components/host/host-mews-control-panel";
+import {
+  HostOnboardingChecklist,
+  type HostOnboardingStep,
+} from "@/components/host/host-onboarding-checklist";
 
 const LISTING_STATUS_LABEL: Record<string, string> = {
   DRAFT: "Draft",
@@ -60,6 +64,9 @@ export default async function HostDashboardPage() {
     mewsEnterpriseId: string | null;
     updatedAt: Date;
   } | null = null;
+  let hostPayoutProfile: {
+    stripeConnectAccountId: string | null;
+  } | null = null;
   let recentSyncEvents: Array<{
     id: string;
     direction: string;
@@ -82,6 +89,7 @@ export default async function HostDashboardPage() {
       hostListings,
       connection,
       upcoming,
+      payoutProfile,
       pending,
       allBookings,
       payouts,
@@ -127,6 +135,10 @@ export default async function HostDashboardPage() {
           checkIn: { gte: new Date() },
         },
       }),
+      db.user.findUnique({
+        where: { id: hostId },
+        select: { stripeConnectAccountId: true },
+      }),
       db.booking.count({
         where: {
           listing: { hostId },
@@ -168,6 +180,7 @@ export default async function HostDashboardPage() {
 
     listings = hostListings;
     mewsConnection = connection;
+    hostPayoutProfile = payoutProfile;
     upcomingBookings = upcoming;
     pendingBookings = pending;
     totalBookings = allBookings;
@@ -184,6 +197,61 @@ export default async function HostDashboardPage() {
   const failedSyncListings = listings.filter((listing) => listing.pmsSyncStatus === "FAILED").length;
   const mewsConnected =
     Boolean(mewsConnection?.mewsClientToken) && Boolean(mewsConnection?.mewsConnectionToken);
+  const hasSuccessfulAriRequest = recentSyncEvents.some(
+    (event) => event.action === "REQUEST_ARI_UPDATE" && event.success
+  );
+  const payoutsReady = Boolean(hostPayoutProfile?.stripeConnectAccountId);
+
+  const onboardingSteps: HostOnboardingStep[] = [
+    {
+      id: "create-listing",
+      title: "Create your first listing",
+      description: "Add at least one listing so guests can discover your space.",
+      complete: totalListings > 0,
+      href: "/host/listings/new",
+      ctaLabel: "Create Listing",
+    },
+    {
+      id: "activate-listing",
+      title: "Publish an active listing",
+      description: "Keep at least one listing active to accept bookings.",
+      complete: activeListings > 0,
+      href: "/host/listings",
+      ctaLabel: "Manage Status",
+    },
+    {
+      id: "connect-mews",
+      title: "Connect Mews credentials",
+      description: "Enable channel manager credentials for two-way PMS sync.",
+      complete: mewsConnected && Boolean(mewsConnection?.enabled),
+      href: "/host#pms-sync-control",
+      ctaLabel: "Connect Mews",
+    },
+    {
+      id: "map-listings",
+      title: "Map listings to Mews IDs",
+      description: "Map each listing to Mews SpaceTypeCode and optional RatePlanCode.",
+      complete: mappedListings > 0,
+      href: "/host#pms-sync-control",
+      ctaLabel: "Map Listings",
+    },
+    {
+      id: "request-ari",
+      title: "Request initial ARI sync",
+      description: "Send an ARI update request to align rates and availability.",
+      complete: hasSuccessfulAriRequest,
+      href: "/host#pms-sync-control",
+      ctaLabel: "Request ARI",
+    },
+    {
+      id: "payouts",
+      title: "Prepare payout profile",
+      description: "Connect payouts so host revenue can flow to your account.",
+      complete: payoutsReady,
+      href: "/host/payouts",
+      ctaLabel: "Set Up Payouts",
+    },
+  ];
 
   return (
     <div className="waywork-shell py-8 md:py-10">
@@ -292,6 +360,10 @@ export default async function HostDashboardPage() {
           <h2 className="mt-3 text-lg font-semibold text-[var(--ww-primary-blue)]">Revenue & Payouts</h2>
           <p className="mt-1 text-sm text-slate-600">Track performance and prep your payout setup.</p>
         </Link>
+      </section>
+
+      <section className="mt-6">
+        <HostOnboardingChecklist steps={onboardingSteps} />
       </section>
 
       <section className="mt-6">
