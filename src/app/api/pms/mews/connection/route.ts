@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 interface ListingMappingInput {
   listingId: string;
-  pmsExternalListingId: string;
+  pmsExternalListingId?: string;
   pmsExternalRatePlanId?: string;
 }
 
@@ -119,16 +119,19 @@ export async function POST(request: NextRequest) {
   const mappings = Array.isArray(body.listingMappings) ? body.listingMappings : [];
   if (mappings.length > 0) {
     for (const mapping of mappings) {
-      if (!mapping.listingId || !mapping.pmsExternalListingId) continue;
+      if (!mapping.listingId) continue;
+      const externalListingId = mapping.pmsExternalListingId?.trim() || "";
+      const externalRatePlanId = mapping.pmsExternalRatePlanId?.trim() || null;
+
       await db.listing.updateMany({
         where: {
           id: mapping.listingId,
           hostId: session.user.id,
         },
         data: {
-          pmsConnectionId: connection.id,
-          pmsExternalListingId: mapping.pmsExternalListingId.trim(),
-          pmsExternalRatePlanId: mapping.pmsExternalRatePlanId?.trim() || null,
+          pmsConnectionId: externalListingId ? connection.id : null,
+          pmsExternalListingId: externalListingId || null,
+          pmsExternalRatePlanId: externalListingId ? externalRatePlanId : null,
           pmsSyncStatus: "PENDING",
           pmsSyncError: null,
         },
