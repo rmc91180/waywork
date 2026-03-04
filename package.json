@@ -12,6 +12,7 @@
     "db:deploy": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
+    "db:bootstrap": "npx tsx scripts/db-bootstrap.ts",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:setup": "prisma db push && npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",

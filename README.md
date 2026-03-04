@@ -17,6 +17,10 @@ cp .env.example .env
 npm run db:push
 npm run db:seed
 ```
+Or run one command to start local Prisma Postgres + push schema + seed:
+```bash
+npm run db:bootstrap
+```
 4. Start the app:
 ```bash
 npm run dev
@@ -28,6 +32,7 @@ npm run dev
 - `npm run build` - production build
 - `npm run start` - production server
 - `npm run lint` - eslint
+- `npm run db:bootstrap` - start local Prisma dev DB, push schema, and seed data
 - `npm run db:deploy` - push Prisma schema (safe for first deploys without migrations)
 - `npm run db:seed` - seed demo data
 
