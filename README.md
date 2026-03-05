@@ -14,7 +14,7 @@ cp .env.example .env
 ```
 3. Push schema and seed demo data (optional):
 ```bash
-npm run db:push
+npm run db:deploy
 npm run db:seed
 ```
 Or run one command to start local Prisma Postgres + push schema + seed:
@@ -32,8 +32,11 @@ npm run dev
 - `npm run build` - production build
 - `npm run start` - production server
 - `npm run lint` - eslint
+- `npm run db:prepare` - DB preflight (retries + migrate deploy + critical table verification)
+- `npm run db:check` - DB connectivity/critical table verification without running migrations
 - `npm run db:bootstrap` - start local Prisma dev DB, push schema, and seed data
-- `npm run db:deploy` - push Prisma schema (safe for first deploys without migrations)
+- `npm run db:deploy` - run Prisma migrations (`prisma migrate deploy`)
+- `npm run db:baseline:existing` - baseline an already-existing schema to migration `20260305190000_init`
 - `npm run db:seed` - seed demo data
 - `npm run test:mews-contract` - fixture-backed Mews API contract checks
 - `npm run test:smoke` - Playwright UI smoke tests
@@ -51,6 +54,10 @@ npm run dev
 
 ### Optional env vars (feature flags/integrations)
 
+- `DIRECT_DATABASE_URL` (recommended when using a pooled `DATABASE_URL`; used for migrations)
+- `DB_MIGRATION_FALLBACK_PUSH` (`true` by default, set `false` after migration history is baselined)
+- `DB_STARTUP_MAX_RETRIES` (default `20`)
+- `DB_STARTUP_RETRY_DELAY_MS` (default `3000`)
 - `AUTH_GOOGLE_ID`
 - `AUTH_GOOGLE_SECRET`
 - `NEXT_PUBLIC_HAS_GOOGLE_AUTH` (`true` or `false`)
@@ -84,15 +91,19 @@ npm run dev
 ```bash
 railway up --detach
 ```
-4. Run schema sync:
+4. Run migrations:
 ```bash
 DATABASE_URL="$(railway run -s Postgres -- node -e "process.stdout.write(process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL || '')")" npm run db:deploy
 ```
-5. (Optional) Seed demo data:
+5. If your DB was previously created by `db push`, baseline migration history once:
+```bash
+DATABASE_URL="$(railway run -s Postgres -- node -e "process.stdout.write(process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL || '')")" npm run db:baseline:existing
+```
+6. (Optional) Seed demo data:
 ```bash
 railway run npm run db:seed
 ```
-6. If you create/update domain, set:
+7. If you create/update domain, set:
 ```bash
 railway vars set AUTH_URL=https://<your-domain>
 railway vars set NEXT_PUBLIC_APP_URL=https://<your-domain>
@@ -103,6 +114,15 @@ You can also use the helper script:
 ```bash
 bash scripts/deploy-railway.sh
 ```
+
+## Launch DB Reliability Checklist
+
+1. Enable automated Postgres backups + point-in-time recovery on your provider.
+2. Use pooled `DATABASE_URL` for app traffic and set `DIRECT_DATABASE_URL` for migrations.
+3. Keep `DB_MIGRATION_FALLBACK_PUSH=true` only during transition; set to `false` after baseline.
+4. Monitor `GET /api/health/db` and alert on non-200 responses.
+5. Schedule `POST /api/pms/mews/jobs/process` with `PMS_SYNC_CRON_SECRET` so booking/listing sync jobs do not stall.
+6. Before each release: run `npm run db:check`, `npm run build`, and smoke tests.
 
 ## Mews Two-Way PMS Sync
 

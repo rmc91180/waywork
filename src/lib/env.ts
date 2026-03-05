@@ -2,6 +2,10 @@ import { z } from "zod";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
+  DIRECT_DATABASE_URL: z.string().optional(),
+  DB_MIGRATION_FALLBACK_PUSH: z.string().optional(),
+  DB_STARTUP_MAX_RETRIES: z.string().optional(),
+  DB_STARTUP_RETRY_DELAY_MS: z.string().optional(),
   AUTH_SECRET: z.string().min(1),
   AUTH_URL: z.string().url().optional(),
   AUTH_GOOGLE_ID: z.string().optional(),

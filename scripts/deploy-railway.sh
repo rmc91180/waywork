@@ -66,16 +66,16 @@ railway up --detach
 echo ""
 echo "✅ Deployment initiated!"
 echo ""
-echo "🗄️ Running database schema sync..."
+echo "🗄️ Running database migrations..."
 PUBLIC_DB_URL="$(railway run -s Postgres -- node -e "process.stdout.write(process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL || '')" 2>/dev/null || true)"
 if [ -n "$PUBLIC_DB_URL" ]; then
     if DATABASE_URL="$PUBLIC_DB_URL" npm run db:deploy; then
-        echo "✅ Database schema synced"
+        echo "✅ Database migrations applied"
     else
-        echo "⚠️ Could not sync schema automatically. Run: DATABASE_URL=\"<postgres-public-url>\" npm run db:deploy"
+        echo "⚠️ Could not apply migrations automatically. Run: DATABASE_URL=\"<postgres-public-url>\" npm run db:deploy"
     fi
 else
-    echo "⚠️ Could not resolve Postgres public URL. Run schema sync manually."
+    echo "⚠️ Could not resolve Postgres public URL. Run migrations manually."
 fi
 
 if [ "${SEED_DEMO_DATA:-false}" = "true" ]; then

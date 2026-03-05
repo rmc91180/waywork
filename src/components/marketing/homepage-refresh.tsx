@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import {
   BedDouble,
   CalendarDays,
@@ -146,6 +147,7 @@ async function getHomepageData() {
 }
 
 export async function HomepageRefresh() {
+  noStore();
   const data = await getHomepageData();
 
   const heroImages: HeroImage[] = data.featuredListings
