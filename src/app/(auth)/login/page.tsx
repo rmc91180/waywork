@@ -201,7 +201,10 @@ export default function LoginPage() {
       <CardFooter className="justify-center">
         <p className="text-sm text-slate-600">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-[var(--ww-primary-blue)] hover:underline">
+          <Link
+            href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className="text-[var(--ww-primary-blue)] hover:underline"
+          >
             Sign up
           </Link>
         </p>

@@ -1,6 +1,8 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Header() {
   const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const resolveAuthHref = (basePath: "/login" | "/register") => {
+    if (typeof window === "undefined") return basePath;
+    const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+    if (callbackUrl?.startsWith("/")) {
+      return `${basePath}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+    }
+    return basePath;
+  };
+
+  const handleAuthClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    basePath: "/login" | "/register"
+  ) => {
+    const targetHref = resolveAuthHref(basePath);
+    if (targetHref === basePath) return;
+    event.preventDefault();
+    router.push(targetHref);
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/95 backdrop-blur-xl">
@@ -95,13 +117,17 @@ export function Header() {
             ) : (
               <div className="flex items-center gap-2">
                 <Button variant="ghost" className="hidden sm:inline-flex" asChild>
-                  <Link href="/login">Log In</Link>
+                  <Link href="/login" onClick={(event) => handleAuthClick(event, "/login")}>
+                    Log In
+                  </Link>
                 </Button>
                 <Button
                   className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] shadow-sm shadow-orange-300/40 hover:bg-[var(--ww-neutral-light)]"
                   asChild
                 >
-                  <Link href="/register">Sign Up Free</Link>
+                  <Link href="/register" onClick={(event) => handleAuthClick(event, "/register")}>
+                    Sign Up Free
+                  </Link>
                 </Button>
                 <Button variant="ghost" className="hidden md:inline-flex text-[var(--ww-secondary-green)]" asChild>
                   <Link href="/register?callbackUrl=%2Fhost">Become a Host</Link>

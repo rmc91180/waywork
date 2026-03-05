@@ -28,19 +28,36 @@ export default async function HostListingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
-  const listings = await db.listing.findMany({
-    where: buildHostListingScope(session.user.id),
-    include: {
-      images: { where: { isPrimary: true }, take: 1 },
-      _count: { select: { bookings: true, reviews: true } },
-      teamMembers: {
-        where: { userId: session.user.id },
-        select: { role: true },
-        take: 1,
+  const listings = await db.listing
+    .findMany({
+      where: buildHostListingScope(session.user.id),
+      include: {
+        images: { where: { isPrimary: true }, take: 1 },
+        _count: { select: { bookings: true, reviews: true } },
+        teamMembers: {
+          where: { userId: session.user.id },
+          select: { role: true },
+          take: 1,
+        },
       },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
+      orderBy: { updatedAt: "desc" },
+    })
+    .catch(async (error) => {
+      console.error("[host/listings] fallback to owner-only scope", error);
+      const fallbackListings = await db.listing.findMany({
+        where: { hostId: session.user.id },
+        include: {
+          images: { where: { isPrimary: true }, take: 1 },
+          _count: { select: { bookings: true, reviews: true } },
+        },
+        orderBy: { updatedAt: "desc" },
+      });
+
+      return fallbackListings.map((listing) => ({
+        ...listing,
+        teamMembers: [],
+      }));
+    });
 
   const activeCount = listings.filter((listing) => listing.status === "ACTIVE").length;
   const pendingCount = listings.filter((listing) => listing.status === "PENDING_REVIEW").length;

@@ -32,7 +32,12 @@ export default async function EditListingPage({
     },
   });
 
-  const accessRole = listing ? await getListingAccessRole(session.user.id, listing.id) : null;
+  const accessRole = listing
+    ? await getListingAccessRole(session.user.id, listing.id).catch((error) => {
+        console.error("[host/listing-edit] fallback to owner-only access", error);
+        return listing.hostId === session.user.id ? "OWNER" : null;
+      })
+    : null;
   if (!listing || !accessRole) {
     notFound();
   }

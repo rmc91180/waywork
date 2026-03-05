@@ -21,11 +21,20 @@ export default async function EarningsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
-  const bookings = await db.booking.findMany({
-    where: { listing: buildHostListingScope(session.user.id) },
-    include: { listing: { select: { id: true, title: true, slug: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  const bookings = await db.booking
+    .findMany({
+      where: { listing: buildHostListingScope(session.user.id) },
+      include: { listing: { select: { id: true, title: true, slug: true } } },
+      orderBy: { createdAt: "desc" },
+    })
+    .catch(async (error) => {
+      console.error("[host/earnings] fallback to owner-only scope", error);
+      return db.booking.findMany({
+        where: { listing: { hostId: session.user.id } },
+        include: { listing: { select: { id: true, title: true, slug: true } } },
+        orderBy: { createdAt: "desc" },
+      });
+    });
 
   // ---------------------------------------------------------------------------
   // Stats

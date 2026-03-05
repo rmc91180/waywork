@@ -36,3 +36,43 @@ test("host routes redirect unauthenticated users to login cleanly", async ({ pag
   await page.goto("/host/listings");
   await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fhost/);
 });
+
+test("host auth callback links preserve host redirect path", async ({ page }) => {
+  await page.goto("/login?callbackUrl=%2Fhost");
+  await page.getByRole("link", { name: /^Sign up$/i }).click();
+  await expect(page).toHaveURL(/\/register\?callbackUrl=%2Fhost/);
+
+  await page.getByRole("link", { name: /^Log in$/i }).click();
+  await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fhost/);
+});
+
+test("authenticated host navigation screens load without application errors", async ({ page }) => {
+  await page.goto("/login?callbackUrl=%2Fhost");
+
+  const demoButton = page.getByRole("button", { name: /Sign in as Demo User/i });
+  const hasDemoButton = (await demoButton.count()) > 0;
+  test.skip(!hasDemoButton, "Demo credentials login is unavailable in this environment.");
+
+  await demoButton.click();
+  await page.waitForURL(/\/host/, { timeout: 30_000 });
+
+  const hostScreens: Array<{ label: string; href: RegExp }> = [
+    { label: "Dashboard", href: /\/host$/ },
+    { label: "Listings", href: /\/host\/listings$/ },
+    { label: "Bookings", href: /\/host\/bookings$/ },
+    { label: "Calendar", href: /\/host\/calendar$/ },
+    { label: "Earnings", href: /\/host\/earnings$/ },
+    { label: "Payouts", href: /\/host\/payouts$/ },
+  ];
+
+  for (const screen of hostScreens) {
+    await page.getByRole("link", { name: screen.label }).first().click();
+    await expect(page).toHaveURL(screen.href);
+    await expect(page.getByText(/Application error: a server-side exception/i)).toHaveCount(0);
+  }
+
+  await page.getByRole("link", { name: /Listings/i }).first().click();
+  await page.getByRole("link", { name: /New Listing|Create Your First Listing/i }).first().click();
+  await expect(page).toHaveURL(/\/host\/listings\/new$/);
+  await expect(page.getByText(/Application error: a server-side exception/i)).toHaveCount(0);
+});

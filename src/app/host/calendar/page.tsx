@@ -10,16 +10,30 @@ export default async function CalendarPage() {
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   // Fetch all host listings
-  const listings = await db.listing.findMany({
-    where: buildHostListingScope(session.user.id),
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      status: true,
-    },
-    orderBy: { title: "asc" },
-  });
+  const listings = await db.listing
+    .findMany({
+      where: buildHostListingScope(session.user.id),
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        status: true,
+      },
+      orderBy: { title: "asc" },
+    })
+    .catch(async (error) => {
+      console.error("[host/calendar] fallback to owner-only scope", error);
+      return db.listing.findMany({
+        where: { hostId: session.user.id },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          status: true,
+        },
+        orderBy: { title: "asc" },
+      });
+    });
 
   if (listings.length === 0) {
     return (

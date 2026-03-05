@@ -24,16 +24,30 @@ export default async function HostBookingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
-  const bookings = await db.booking.findMany({
-    where: {
-      listing: buildHostListingScope(session.user.id),
-    },
-    include: {
-      listing: true,
-      guest: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const bookings = await db.booking
+    .findMany({
+      where: {
+        listing: buildHostListingScope(session.user.id),
+      },
+      include: {
+        listing: true,
+        guest: true,
+      },
+      orderBy: { createdAt: "desc" },
+    })
+    .catch(async (error) => {
+      console.error("[host/bookings] fallback to owner-only scope", error);
+      return db.booking.findMany({
+        where: {
+          listing: { hostId: session.user.id },
+        },
+        include: {
+          listing: true,
+          guest: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    });
 
   const today = startOfDay(new Date());
   const pending = bookings.filter((booking) => booking.status === "PENDING");

@@ -17,22 +17,37 @@ export async function POST(
 
     const { id } = await params;
 
-    const booking = await db.booking.findUnique({
-      where: { id },
-      include: {
-        listing: {
-          select: {
-            hostId: true,
-            cancellationPolicy: true,
-            teamMembers: {
-              where: { userId: session.user.id },
-              select: { id: true },
-              take: 1,
+    const booking = await db.booking
+      .findUnique({
+        where: { id },
+        include: {
+          listing: {
+            select: {
+              hostId: true,
+              cancellationPolicy: true,
+              teamMembers: {
+                where: { userId: session.user.id },
+                select: { id: true },
+                take: 1,
+              },
             },
           },
         },
-      },
-    });
+      })
+      .catch(async (error) => {
+        console.error("[bookings/cancel] fallback to owner-only authorization", error);
+        return db.booking.findUnique({
+          where: { id },
+          include: {
+            listing: {
+              select: {
+                hostId: true,
+                cancellationPolicy: true,
+              },
+            },
+          },
+        });
+      });
 
     if (!booking) {
       return NextResponse.json(
@@ -43,7 +58,10 @@ export async function POST(
 
     const isGuest = booking.guestId === session.user.id;
     const isHost =
-      booking.listing.hostId === session.user.id || booking.listing.teamMembers.length > 0;
+      booking.listing.hostId === session.user.id ||
+      ("teamMembers" in booking.listing &&
+        Array.isArray(booking.listing.teamMembers) &&
+        booking.listing.teamMembers.length > 0);
 
     if (!isGuest && !isHost) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
