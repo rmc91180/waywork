@@ -4,6 +4,7 @@ import { format, startOfDay } from "date-fns";
 import { CalendarDays, UserRound } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { buildHostListingScope } from "@/lib/host-access";
 import { formatCurrency } from "@/lib/stripe";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +26,7 @@ export default async function HostBookingsPage() {
 
   const bookings = await db.booking.findMany({
     where: {
-      listing: { hostId: session.user.id },
+      listing: buildHostListingScope(session.user.id),
     },
     include: {
       listing: true,

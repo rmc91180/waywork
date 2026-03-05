@@ -1,11 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
 
-interface ListingMappingInput {
-  listingId: string;
-  pmsExternalListingId?: string;
-  pmsExternalRatePlanId?: string;
+const listingMappingSchema = z.object({
+  listingId: z.string().min(1),
+  pmsExternalListingId: z.string().optional(),
+  pmsExternalRatePlanId: z.string().optional(),
+});
+
+const connectionRequestSchema = z.object({
+  enabled: z.boolean().optional(),
+  mewsApiBaseUrl: z.string().optional(),
+  mewsClientToken: z.string().optional(),
+  mewsConnectionToken: z.string().optional(),
+  mewsAccessToken: z.string().optional(),
+  mewsEnterpriseId: z.string().optional(),
+  mewsClientName: z.string().optional(),
+  listingMappings: z.array(listingMappingSchema).max(500).optional(),
+});
+
+function normalizeApiBaseUrl(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return null;
+    }
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
 }
 
 function redact(value: string | null) {
@@ -68,16 +95,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json()) as {
-    enabled?: boolean;
-    mewsApiBaseUrl?: string;
-    mewsClientToken?: string;
-    mewsConnectionToken?: string;
-    mewsAccessToken?: string;
-    mewsEnterpriseId?: string;
-    mewsClientName?: string;
-    listingMappings?: ListingMappingInput[];
-  };
+  const context = createObservationContext("api.pms.mews.connection", {
+    userId: session.user.id,
+  });
+
+  let rawBody: unknown;
+  try {
+    rawBody = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  const parsedBody = connectionRequestSchema.safeParse(rawBody);
+  if (!parsedBody.success) {
+    return NextResponse.json(
+      { error: "Invalid Mews connection payload.", details: parsedBody.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const body = parsedBody.data;
+
+  const normalizedApiBaseUrl = normalizeApiBaseUrl(body.mewsApiBaseUrl);
+  if (typeof body.mewsApiBaseUrl === "string" && !normalizedApiBaseUrl) {
+    return NextResponse.json(
+      { error: "Mews API Base URL must be a valid http/https URL." },
+      { status: 400 }
+    );
+  }
 
   const connection = await db.pmsConnection.upsert({
     where: {
@@ -90,7 +134,7 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       provider: "MEWS",
       enabled: Boolean(body.enabled),
-      mewsApiBaseUrl: body.mewsApiBaseUrl?.trim() || "https://api.mews.com",
+      mewsApiBaseUrl: normalizedApiBaseUrl || "https://api.mews.com",
       mewsClientToken: body.mewsClientToken?.trim() || null,
       mewsConnectionToken: body.mewsConnectionToken?.trim() || null,
       mewsAccessToken: body.mewsAccessToken?.trim() || null,
@@ -99,7 +143,8 @@ export async function POST(request: NextRequest) {
     },
     update: {
       enabled: typeof body.enabled === "boolean" ? body.enabled : undefined,
-      mewsApiBaseUrl: body.mewsApiBaseUrl?.trim() || undefined,
+      mewsApiBaseUrl:
+        typeof body.mewsApiBaseUrl === "string" ? normalizedApiBaseUrl || undefined : undefined,
       mewsClientToken:
         typeof body.mewsClientToken === "string" ? body.mewsClientToken.trim() || null : undefined,
       mewsConnectionToken:
@@ -117,30 +162,56 @@ export async function POST(request: NextRequest) {
   });
 
   const mappings = Array.isArray(body.listingMappings) ? body.listingMappings : [];
-  if (mappings.length > 0) {
-    for (const mapping of mappings) {
-      if (!mapping.listingId) continue;
-      const externalListingId = mapping.pmsExternalListingId?.trim() || "";
-      const externalRatePlanId = mapping.pmsExternalRatePlanId?.trim() || null;
+  try {
+    if (mappings.length > 0) {
+      await Promise.all(
+        mappings.map(async (mapping) => {
+          const externalListingId = mapping.pmsExternalListingId?.trim() || "";
+          const externalRatePlanId = mapping.pmsExternalRatePlanId?.trim() || null;
 
-      await db.listing.updateMany({
-        where: {
-          id: mapping.listingId,
-          hostId: session.user.id,
-        },
-        data: {
-          pmsConnectionId: externalListingId ? connection.id : null,
-          pmsExternalListingId: externalListingId || null,
-          pmsExternalRatePlanId: externalListingId ? externalRatePlanId : null,
-          pmsSyncStatus: "PENDING",
-          pmsSyncError: null,
-        },
-      });
+          await db.listing.updateMany({
+            where: {
+              id: mapping.listingId,
+              hostId: session.user.id,
+            },
+            data: {
+              pmsConnectionId: externalListingId ? connection.id : null,
+              pmsExternalListingId: externalListingId || null,
+              pmsExternalRatePlanId: externalListingId ? externalRatePlanId : null,
+              pmsSyncStatus: "PENDING",
+              pmsSyncError: null,
+            },
+          });
+        })
+      );
     }
+  } catch (error) {
+    const eventId = captureObservedError({
+      error,
+      message: "Failed applying listing mappings for Mews connection",
+      context: {
+        ...context,
+        connectionId: connection.id,
+        mappingsCount: mappings.length,
+      },
+    });
+
+    return NextResponse.json(
+      { error: "Failed to apply listing mappings.", eventId },
+      { status: 500 }
+    );
   }
+
+  logObservation("info", "Mews connection configuration saved", {
+    ...context,
+    connectionId: connection.id,
+    mappingsApplied: mappings.length,
+    enabled: connection.enabled,
+  });
 
   return NextResponse.json({
     ok: true,
+    eventId: context.eventId,
     connectionId: connection.id,
     mappingsApplied: mappings.length,
   });

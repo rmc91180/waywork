@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { evaluateListingProductionReadiness } from "@/lib/listing-readiness";
 
 // ============================================================================
 // HELPERS
@@ -110,6 +111,20 @@ export async function approveListing(listingId: string) {
 
   const listing = await db.listing.findUnique({
     where: { id: listingId },
+    include: {
+      images: true,
+      amenities: true,
+      availabilityRules: true,
+      connectivityProfile: true,
+      host: { select: { stripeConnectAccountId: true } },
+      pmsConnection: {
+        select: {
+          enabled: true,
+          mewsClientToken: true,
+          mewsConnectionToken: true,
+        },
+      },
+    },
   });
 
   if (!listing) {
@@ -118,6 +133,24 @@ export async function approveListing(listingId: string) {
 
   if (listing.status !== "PENDING_REVIEW") {
     throw new Error("Listing is not pending review");
+  }
+
+  const readiness = evaluateListingProductionReadiness({
+    imageCount: listing.images.length,
+    amenityCount: listing.amenities.length,
+    hasConnectivityProfile: Boolean(listing.connectivityProfile),
+    availabilityRuleCount: listing.availabilityRules.length,
+    descriptionLength: listing.description.trim().length,
+    hasPayoutSetup: Boolean(listing.host.stripeConnectAccountId),
+    mewsConnectionEnabled: Boolean(listing.pmsConnection?.enabled),
+    mewsHasRequiredTokens:
+      Boolean(listing.pmsConnection?.mewsClientToken) &&
+      Boolean(listing.pmsConnection?.mewsConnectionToken),
+    hasPmsListingMapping: Boolean(listing.pmsExternalListingId),
+  });
+
+  if (!readiness.ready) {
+    throw new Error(`Listing is not production-ready: ${readiness.reasons.join(" ")}`);
   }
 
   await db.listing.update({

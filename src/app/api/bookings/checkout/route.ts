@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@/generated/prisma";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { syncBookingToMews } from "@/lib/pms/mews-sync";
+import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import { getStripe, SERVICE_FEE_PERCENTAGE } from "@/lib/stripe";
 import { createBookingSchema } from "@/lib/validators";
 
@@ -224,7 +224,8 @@ export async function POST(request: NextRequest) {
         where: { id: bookingId },
         data: { status: "CONFIRMED" },
       });
-      void syncBookingToMews(bookingId, "UPSERT");
+      await enqueueBookingSyncJob(bookingId, "UPSERT");
+      void processPendingMewsSyncJobs(5);
       return NextResponse.json({ bookingId });
     }
 

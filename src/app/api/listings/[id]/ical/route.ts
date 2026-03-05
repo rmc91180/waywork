@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { assertListingAccess } from "@/lib/host-access";
 import { syncIcalForListing } from "@/lib/ical";
 
 export async function POST(
@@ -14,11 +15,9 @@ export async function POST(
 
   const { id } = await params;
 
-  const listing = await db.listing.findUnique({
-    where: { id },
-  });
-
-  if (!listing || listing.hostId !== session.user.id) {
+  try {
+    await assertListingAccess(session.user.id, id, ["OWNER", "MANAGER"]);
+  } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

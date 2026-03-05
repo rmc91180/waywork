@@ -8,6 +8,7 @@ import {
   findMewsConnection,
   parseDateRange,
 } from "@/lib/pms/mews-inbound";
+import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
 
 interface AvailabilityUpdate {
   spaceTypeCode: string;
@@ -85,6 +86,10 @@ export async function POST(request: NextRequest) {
   if (!connection) {
     return NextResponse.json({ error: "Unauthorized Mews connection" }, { status: 401 });
   }
+  const routeContext = createObservationContext("api.pms.mews.inbound.updateAvailability", {
+    connectionId: connection.id,
+    messageId,
+  });
 
   const updates = normalizeAvailabilityUpdates(payload);
   if (updates.length === 0) {
@@ -96,6 +101,7 @@ export async function POST(request: NextRequest) {
       requestPayload: payload,
       responsePayload: { processed: 0, skipped: 0 },
     });
+    logObservation("info", "Inbound availability update received with no updates", routeContext);
     return NextResponse.json({ ok: true, processed: 0, skipped: 0 });
   }
 
@@ -161,12 +167,21 @@ export async function POST(request: NextRequest) {
       });
 
       processed += 1;
-    } catch {
+    } catch (error) {
       await db.listing.update({
         where: { id: listing.id },
         data: {
           pmsSyncStatus: "FAILED",
           pmsSyncError: "Failed to apply inbound availability update.",
+        },
+      });
+      captureObservedError({
+        error,
+        message: "Failed applying inbound availability update",
+        context: {
+          ...routeContext,
+          listingId: listing.id,
+          spaceTypeCode: update.spaceTypeCode,
         },
       });
       skipped += 1;
@@ -181,6 +196,11 @@ export async function POST(request: NextRequest) {
     messageId,
     requestPayload: payload,
     responsePayload,
+  });
+  logObservation("info", "Inbound availability updates processed", {
+    ...routeContext,
+    processed,
+    skipped,
   });
 
   return NextResponse.json({ ok: true, ...responsePayload });

@@ -24,6 +24,9 @@ const envSchema = z.object({
   MEWS_ACCESS_TOKEN: z.string().optional(),
   MEWS_ENTERPRISE_ID: z.string().optional(),
   MEWS_WEBHOOK_SECRET: z.string().optional(),
+  PMS_SYNC_CRON_SECRET: z.string().optional(),
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
 });
 

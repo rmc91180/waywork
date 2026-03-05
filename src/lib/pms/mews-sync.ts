@@ -4,6 +4,12 @@ import { MewsClient } from "@/lib/pms/mews-client";
 
 type BookingSyncAction = "UPSERT" | "CANCEL";
 
+export interface BookingSyncResult {
+  ok: boolean;
+  skipped?: boolean;
+  error?: string;
+}
+
 function formatDate(value: Date) {
   return value.toISOString().split("T")[0];
 }
@@ -52,7 +58,10 @@ function buildBookingProcessGroupPayload(
   };
 }
 
-export async function syncBookingToMews(bookingId: string, action: BookingSyncAction) {
+export async function syncBookingToMews(
+  bookingId: string,
+  action: BookingSyncAction
+): Promise<BookingSyncResult> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -67,11 +76,11 @@ export async function syncBookingToMews(bookingId: string, action: BookingSyncAc
     },
   });
 
-  if (!booking) return;
+  if (!booking) return { ok: false, error: "Booking not found." };
 
   const connection = booking.listing.pmsConnection;
   if (!connection || !connection.enabled || connection.provider !== "MEWS") {
-    return;
+    return { ok: true, skipped: true };
   }
 
   if (!connection.mewsClientToken || !connection.mewsConnectionToken) {
@@ -81,9 +90,9 @@ export async function syncBookingToMews(bookingId: string, action: BookingSyncAc
       data: {
         pmsSyncStatus: "FAILED",
         pmsSyncError: message,
-      },
-    });
-    return;
+        },
+      });
+    return { ok: false, error: message };
   }
 
   const client = new MewsClient({
@@ -124,6 +133,7 @@ export async function syncBookingToMews(bookingId: string, action: BookingSyncAc
         },
       }),
     ]);
+    return { ok: true };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown Mews sync error";
     await db.$transaction([
@@ -148,6 +158,7 @@ export async function syncBookingToMews(bookingId: string, action: BookingSyncAc
         },
       }),
     ]);
+    return { ok: false, error: errorMessage };
   }
 }
 
@@ -188,6 +199,9 @@ export async function requestAriSyncForConnection(connectionId: string) {
       .map((listing) => listing.pmsExternalListingId)
       .filter((value): value is string => Boolean(value)),
   };
+  if (requestPayload.SpaceTypeCodes.length === 0) {
+    throw new Error("Map at least one active listing to a Mews SpaceTypeCode before requesting ARI.");
+  }
 
   try {
     const response = await client.requestAriUpdate(requestPayload);

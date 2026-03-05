@@ -57,6 +57,11 @@ enum UserRole {
   ADMIN
 }
 
+enum HostTeamRole {
+  OWNER
+  MANAGER
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -87,6 +92,8 @@ model User {
   hostThreads    MessageThread[]  @relation("ThreadHost")
   favorites      Favorite[]
   pmsConnections PmsConnection[]
+  listingTeamMemberships ListingTeamMember[] @relation("ListingTeamMembership")
+  listingTeamInvitesCreated ListingTeamMember[] @relation("ListingTeamInviteCreator")
 }
 
 // ============================================================================
@@ -225,6 +232,8 @@ model Listing {
   dailyRates          ListingDailyRate[]
   pmsSyncEvents       PmsSyncEvent[]
   pmsConnection       PmsConnection?        @relation(fields: [pmsConnectionId], references: [id], onDelete: SetNull)
+  teamMembers         ListingTeamMember[]
+  pmsSyncJobs         PmsSyncJob[]
 
   @@index([status])
   @@index([city])
@@ -235,6 +244,25 @@ model Listing {
   @@index([lat, lng])
   @@index([pmsConnectionId])
   @@index([pmsExternalListingId])
+}
+
+model ListingTeamMember {
+  id String @id @default(cuid())
+
+  listingId    String
+  userId       String
+  role         HostTeamRole @default(MANAGER)
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user      User    @relation("ListingTeamMembership", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User?   @relation("ListingTeamInviteCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([listingId, userId])
+  @@index([userId])
+  @@index([listingId])
 }
 
 model ListingActivity {
@@ -410,6 +438,7 @@ model Booking {
   review    Review?
   messages  MessageThread[]
   pmsSyncEvents PmsSyncEvent[]
+  pmsSyncJobs   PmsSyncJob[]
 
   @@index([guestId])
   @@index([listingId])
@@ -440,9 +469,24 @@ model PmsConnection {
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   listings  Listing[]
   syncEvents PmsSyncEvent[]
+  syncJobs  PmsSyncJob[]
 
   @@unique([userId, provider])
   @@index([provider, enabled])
+}
+
+enum PmsSyncJobType {
+  BOOKING_UPSERT
+  BOOKING_CANCEL
+  REQUEST_ARI_UPDATE
+}
+
+enum PmsSyncJobStatus {
+  PENDING
+  PROCESSING
+  FAILED
+  DEAD_LETTER
+  COMPLETED
 }
 
 model ListingDailyRate {
@@ -487,6 +531,37 @@ model PmsSyncEvent {
   @@index([connectionId, createdAt])
   @@index([listingId, createdAt])
   @@index([bookingId, createdAt])
+}
+
+model PmsSyncJob {
+  id String @id @default(cuid())
+
+  connectionId String
+  listingId    String?
+  bookingId    String?
+
+  type   PmsSyncJobType
+  status PmsSyncJobStatus @default(PENDING)
+
+  attemptCount Int      @default(0)
+  nextAttemptAt DateTime @default(now())
+  lastAttemptAt DateTime?
+  processedAt   DateTime?
+  lockedAt      DateTime?
+  lastError     String?  @db.Text
+  payload       Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  connection PmsConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  listing    Listing?      @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  booking    Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([status, nextAttemptAt])
+  @@index([connectionId, status])
+  @@index([listingId, status])
+  @@index([bookingId, status])
 }
 
 enum AttendeeStatus {

@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getStripe, SERVICE_FEE_PERCENTAGE } from "@/lib/stripe";
-import { syncBookingToMews } from "@/lib/pms/mews-sync";
+import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
+import { assertListingAccess, buildHostListingScope } from "@/lib/host-access";
 import { createBookingSchema } from "@/lib/validators";
 import { differenceInDays, addDays, startOfDay, isBefore } from "date-fns";
 import { z } from "zod";
@@ -27,6 +28,11 @@ function getDateRange(checkIn: Date, checkOut: Date): Date[] {
     current = addDays(current, 1);
   }
   return dates;
+}
+
+async function scheduleMewsBookingSync(bookingId: string, action: "UPSERT" | "CANCEL") {
+  await enqueueBookingSyncJob(bookingId, action);
+  void processPendingMewsSyncJobs(5);
 }
 
 // ============================================================================
@@ -140,7 +146,7 @@ export async function createBookingAndCheckout(
 
     revalidatePath("/bookings");
     revalidatePath(`/spaces/${listing.id}`);
-    void syncBookingToMews(booking.id, "UPSERT");
+    await scheduleMewsBookingSync(booking.id, "UPSERT");
 
     return { url: `/bookings/${booking.id}/confirmation` };
   }
@@ -280,7 +286,7 @@ export async function confirmBooking(
 
   revalidatePath("/bookings");
   revalidatePath(`/host/bookings`);
-  void syncBookingToMews(bookingId, "UPSERT");
+  await scheduleMewsBookingSync(bookingId, "UPSERT");
 }
 
 // ============================================================================
@@ -367,7 +373,7 @@ export async function cancelBooking(bookingId: string) {
 
   revalidatePath("/bookings");
   revalidatePath("/host/bookings");
-  void syncBookingToMews(bookingId, "CANCEL");
+  await scheduleMewsBookingSync(bookingId, "CANCEL");
 }
 
 // ============================================================================
@@ -380,13 +386,11 @@ export async function hostCancelBooking(bookingId: string) {
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: { listing: true },
+    include: { listing: { select: { id: true } } },
   });
 
   if (!booking) throw new Error("Booking not found");
-  if (booking.listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, booking.listing.id, ["OWNER", "MANAGER"]);
   if (
     booking.status !== "CONFIRMED" &&
     booking.status !== "PENDING"
@@ -416,7 +420,7 @@ export async function hostCancelBooking(bookingId: string) {
 
   revalidatePath("/bookings");
   revalidatePath("/host/bookings");
-  void syncBookingToMews(bookingId, "CANCEL");
+  await scheduleMewsBookingSync(bookingId, "CANCEL");
 }
 
 // ============================================================================
@@ -441,6 +445,11 @@ export async function getBookingDetails(bookingId: string) {
             },
           },
           images: { where: { isPrimary: true }, take: 1 },
+          teamMembers: {
+            where: { userId: session.user.id },
+            select: { id: true },
+            take: 1,
+          },
         },
       },
       guest: {
@@ -459,7 +468,8 @@ export async function getBookingDetails(bookingId: string) {
 
   // Auth check: only guest, host, or admin can view
   const isGuest = booking.guestId === session.user.id;
-  const isHost = booking.listing.hostId === session.user.id;
+  const isHost =
+    booking.listing.hostId === session.user.id || booking.listing.teamMembers.length > 0;
   const isAdmin = session.user.role === "ADMIN";
 
   if (!isGuest && !isHost && !isAdmin) {
@@ -532,7 +542,7 @@ export async function getHostBookings() {
 
   const bookings = await db.booking.findMany({
     where: {
-      listing: { hostId: session.user.id },
+      listing: buildHostListingScope(session.user.id),
     },
     include: {
       listing: {

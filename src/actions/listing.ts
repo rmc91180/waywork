@@ -15,6 +15,8 @@ import {
   blockedDateSchema,
 } from "@/lib/validators";
 import { computeWorkScore } from "@/lib/work-score";
+import { assertListingAccess } from "@/lib/host-access";
+import { evaluateListingProductionReadiness } from "@/lib/listing-readiness";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -62,13 +64,7 @@ export async function updateListing(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Listing not found or unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const parsed = updateListingSchema.parse(data);
 
@@ -92,12 +88,7 @@ export async function upsertConnectivityProfile(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const parsed = connectivityProfileSchema.parse(data);
 
@@ -135,12 +126,7 @@ export async function setListingAmenities(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const parsed = amenities.map((a) => listingAmenitySchema.parse(a));
 
@@ -168,12 +154,7 @@ export async function setListingActivities(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const parsed = activities
     .map((activity) => listingActivitySchema.parse(activity))
@@ -210,12 +191,7 @@ export async function addListingImages(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const parsed = images.map((img) => listingImageSchema.parse(img));
 
@@ -230,12 +206,7 @@ export async function deleteListingImage(listingId: string, imageId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   await db.listingImage.delete({
     where: { id: imageId, listingId },
@@ -251,12 +222,7 @@ export async function reorderListingImages(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   // Update order for each image
   await Promise.all(
@@ -282,12 +248,7 @@ export async function setAvailabilityRules(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const parsed = rules.map((r) => availabilityRuleSchema.parse(r));
 
@@ -314,12 +275,7 @@ export async function addBlockedDates(
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const parsed = dates.map((d) => blockedDateSchema.parse(d));
 
@@ -346,12 +302,7 @@ export async function removeBlockedDate(listingId: string, dateStr: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const listing = await db.listing.findUnique({
-    where: { id: listingId },
-  });
-  if (!listing || listing.hostId !== session.user.id) {
-    throw new Error("Unauthorized");
-  }
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   await db.blockedDate.delete({
     where: {
@@ -370,13 +321,27 @@ export async function removeBlockedDate(listingId: string, dateStr: string) {
 export async function submitListingForReview(listingId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+  await assertListingAccess(session.user.id, listingId, ["OWNER"]);
 
   const listing = await db.listing.findUnique({
     where: { id: listingId },
-    include: { images: true, amenities: true, connectivityProfile: true },
+    include: {
+      images: true,
+      amenities: true,
+      connectivityProfile: true,
+      availabilityRules: true,
+      host: { select: { stripeConnectAccountId: true } },
+      pmsConnection: {
+        select: {
+          enabled: true,
+          mewsClientToken: true,
+          mewsConnectionToken: true,
+        },
+      },
+    },
   });
 
-  if (!listing || listing.hostId !== session.user.id) {
+  if (!listing) {
     throw new Error("Unauthorized");
   }
 
@@ -391,6 +356,24 @@ export async function submitListingForReview(listingId: string) {
     throw new Error("At least one amenity is required");
   }
 
+  const readiness = evaluateListingProductionReadiness({
+    imageCount: listing.images.length,
+    amenityCount: listing.amenities.length,
+    hasConnectivityProfile: Boolean(listing.connectivityProfile),
+    availabilityRuleCount: listing.availabilityRules.length,
+    descriptionLength: listing.description.trim().length,
+    hasPayoutSetup: Boolean(listing.host.stripeConnectAccountId),
+    mewsConnectionEnabled: Boolean(listing.pmsConnection?.enabled),
+    mewsHasRequiredTokens:
+      Boolean(listing.pmsConnection?.mewsClientToken) &&
+      Boolean(listing.pmsConnection?.mewsConnectionToken),
+    hasPmsListingMapping: Boolean(listing.pmsExternalListingId),
+  });
+
+  if (!readiness.ready) {
+    throw new Error(`Listing is not production-ready: ${readiness.reasons.join(" ")}`);
+  }
+
   await db.listing.update({
     where: { id: listingId },
     data: { status: "PENDING_REVIEW" },
@@ -402,11 +385,12 @@ export async function submitListingForReview(listingId: string) {
 export async function pauseListing(listingId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+  await assertListingAccess(session.user.id, listingId, ["OWNER"]);
 
   const listing = await db.listing.findUnique({
     where: { id: listingId },
   });
-  if (!listing || listing.hostId !== session.user.id) {
+  if (!listing) {
     throw new Error("Unauthorized");
   }
 
@@ -421,16 +405,49 @@ export async function pauseListing(listingId: string) {
 export async function unpauseListing(listingId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+  await assertListingAccess(session.user.id, listingId, ["OWNER"]);
 
   const listing = await db.listing.findUnique({
     where: { id: listingId },
+    include: {
+      images: true,
+      amenities: true,
+      connectivityProfile: true,
+      availabilityRules: true,
+      host: { select: { stripeConnectAccountId: true } },
+      pmsConnection: {
+        select: {
+          enabled: true,
+          mewsClientToken: true,
+          mewsConnectionToken: true,
+        },
+      },
+    },
   });
-  if (!listing || listing.hostId !== session.user.id) {
+  if (!listing) {
     throw new Error("Unauthorized");
   }
 
   if (listing.status !== "PAUSED") {
     throw new Error("Listing is not paused");
+  }
+
+  const readiness = evaluateListingProductionReadiness({
+    imageCount: listing.images.length,
+    amenityCount: listing.amenities.length,
+    hasConnectivityProfile: Boolean(listing.connectivityProfile),
+    availabilityRuleCount: listing.availabilityRules.length,
+    descriptionLength: listing.description.trim().length,
+    hasPayoutSetup: Boolean(listing.host.stripeConnectAccountId),
+    mewsConnectionEnabled: Boolean(listing.pmsConnection?.enabled),
+    mewsHasRequiredTokens:
+      Boolean(listing.pmsConnection?.mewsClientToken) &&
+      Boolean(listing.pmsConnection?.mewsConnectionToken),
+    hasPmsListingMapping: Boolean(listing.pmsExternalListingId),
+  });
+
+  if (!readiness.ready) {
+    throw new Error(`Listing is not production-ready: ${readiness.reasons.join(" ")}`);
   }
 
   await db.listing.update({
@@ -546,6 +563,7 @@ export async function updateCompleteListing(
 ) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+  await assertListingAccess(session.user.id, listingId, ["OWNER", "MANAGER"]);
 
   const {
     listing: listingData,

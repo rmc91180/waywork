@@ -16,7 +16,11 @@
     "db:seed": "npx tsx prisma/seed.ts",
     "db:setup": "prisma db push && npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "mews:sandbox": "npx tsx scripts/mews-sandbox-cycle.ts"
+    "mews:sandbox": "npx tsx scripts/mews-sandbox-cycle.ts",
+    "test:smoke": "playwright test",
+    "test:mews-contract": "npx tsx scripts/mews-contract-test.ts",
+    "pms:jobs": "node --env-file=.env --import tsx scripts/process-pms-jobs.ts",
+    "test:ops": "npm run test:mews-contract && npm run test:smoke"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -30,6 +34,7 @@
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "@stripe/stripe-js": "^8.7.0",
+    "@sentry/node": "^10.22.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -61,6 +66,7 @@
     "node": ">=22.12.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
     "@types/leaflet": "^1.9.21",
     "@types/mapbox__mapbox-gl-geocoder": "^5.1.0",

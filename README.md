@@ -35,6 +35,9 @@ npm run dev
 - `npm run db:bootstrap` - start local Prisma dev DB, push schema, and seed data
 - `npm run db:deploy` - push Prisma schema (safe for first deploys without migrations)
 - `npm run db:seed` - seed demo data
+- `npm run test:mews-contract` - fixture-backed Mews API contract checks
+- `npm run test:smoke` - Playwright UI smoke tests
+- `npm run pms:jobs` - process queued PMS sync jobs (retry/dead-letter pipeline)
 
 ## Railway deployment
 
@@ -69,6 +72,9 @@ npm run dev
 - `MEWS_ACCESS_TOKEN`
 - `MEWS_ENTERPRISE_ID`
 - `MEWS_WEBHOOK_SECRET`
+- `PMS_SYNC_CRON_SECRET`
+- `SENTRY_DSN`
+- `SENTRY_TRACES_SAMPLE_RATE`
 
 ### Deploy flow
 
@@ -102,15 +108,19 @@ bash scripts/deploy-railway.sh
 
 WayWork includes a Mews channel manager integration foundation with:
 
-- outbound booking sync to Mews `processGroup` after booking confirmation/cancellation
+- outbound booking sync queued with retry/dead-letter handling
 - inbound ARI and reservation updates from Mews channel manager operations
 - persistent sync state and event logging in Prisma (`PmsConnection`, `PmsSyncEvent`, `ListingDailyRate`)
+- sync job queue persistence (`PmsSyncJob`) for robust retry processing
+- host diagnostics (health score, queue stats, retry failed sync action)
 
 Key API routes:
 
 - `POST /api/pms/mews/connection` - configure/update host Mews credentials and listing mappings
 - `GET /api/pms/mews/connection` - inspect current Mews connection and listing mapping status
 - `POST /api/pms/mews/requestAriUpdate` - request ARI refresh from Mews
+- `POST /api/pms/mews/retryFailed` - retry failed/dead-letter jobs for current host connection
+- `POST /api/pms/mews/jobs/process` - cron endpoint to process queued jobs (`Authorization: Bearer <PMS_SYNC_CRON_SECRET>`)
 - `POST /api/pms/mews/channel-manager/updateAvailability` - inbound availability updates from Mews
 - `POST /api/pms/mews/channel-manager/updatePrices` - inbound price updates from Mews
 - `POST /api/pms/mews/channel-manager/updateRestrictions` - inbound restrictions payload logging

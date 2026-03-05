@@ -4,6 +4,7 @@ import {
   extractMewsTokens,
   findMewsConnection,
 } from "@/lib/pms/mews-inbound";
+import { createObservationContext, logObservation } from "@/lib/observability";
 
 function asRecord(value: unknown) {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -23,6 +24,10 @@ export async function POST(request: NextRequest) {
   if (!connection) {
     return NextResponse.json({ error: "Unauthorized Mews connection" }, { status: 401 });
   }
+  const routeContext = createObservationContext("api.pms.mews.inbound.updateRestrictions", {
+    connectionId: connection.id,
+    messageId,
+  });
 
   await createInboundSyncEvent({
     connectionId: connection.id,
@@ -35,6 +40,7 @@ export async function POST(request: NextRequest) {
       note: "Restrictions updates are logged and can be mapped to local policy rules.",
     },
   });
+  logObservation("info", "Inbound restrictions payload recorded", routeContext);
 
   return NextResponse.json({
     ok: true,

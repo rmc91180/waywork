@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { buildHostListingScope } from "@/lib/host-access";
 import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { CalendarView } from "@/components/host/calendar-view";
 
@@ -10,7 +11,7 @@ export default async function CalendarPage() {
 
   // Fetch all host listings
   const listings = await db.listing.findMany({
-    where: { hostId: session.user.id },
+    where: buildHostListingScope(session.user.id),
     select: {
       id: true,
       title: true,

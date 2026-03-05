@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
-import { syncBookingToMews } from "@/lib/pms/mews-sync";
+import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import type Stripe from "stripe";
 
 async function releaseBookingInventory(bookingId: string) {
@@ -100,7 +100,8 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        void syncBookingToMews(bookingId, "UPSERT");
+        await enqueueBookingSyncJob(bookingId, "UPSERT");
+        void processPendingMewsSyncJobs(5);
         console.log(`Booking ${bookingId} confirmed via Stripe`);
         break;
       }
@@ -146,7 +147,8 @@ export async function POST(request: NextRequest) {
             });
 
             console.log(`Booking ${booking.id} refunded`);
-            void syncBookingToMews(booking.id, "CANCEL");
+            await enqueueBookingSyncJob(booking.id, "CANCEL");
+            void processPendingMewsSyncJobs(5);
           }
         }
         break;

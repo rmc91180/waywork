@@ -9,6 +9,7 @@ import {
   findMewsConnection,
   parseDateRange,
 } from "@/lib/pms/mews-inbound";
+import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
 
 interface ReservationMessage {
   externalReservationId: string;
@@ -131,6 +132,10 @@ export async function POST(request: NextRequest) {
   if (!connection) {
     return NextResponse.json({ error: "Unauthorized Mews connection" }, { status: 401 });
   }
+  const routeContext = createObservationContext("api.pms.mews.inbound.processGroup", {
+    connectionId: connection.id,
+    messageId,
+  });
 
   const reservations = normalizeReservations(payload);
   if (reservations.length === 0) {
@@ -142,6 +147,7 @@ export async function POST(request: NextRequest) {
       requestPayload: payload,
       responsePayload: { processed: 0, skipped: 0 },
     });
+    logObservation("info", "Inbound processGroup received with no reservations", routeContext);
     return NextResponse.json({ ok: true, processed: 0, skipped: 0 });
   }
 
@@ -332,7 +338,16 @@ export async function POST(request: NextRequest) {
       });
 
       processed += 1;
-    } catch {
+    } catch (error) {
+      captureObservedError({
+        error,
+        message: "Failed processing inbound processGroup reservation",
+        context: {
+          ...routeContext,
+          externalReservationId: reservation.externalReservationId,
+          spaceTypeCode: reservation.spaceTypeCode,
+        },
+      });
       skipped += 1;
     }
   }
@@ -345,6 +360,11 @@ export async function POST(request: NextRequest) {
     messageId,
     requestPayload: payload,
     responsePayload,
+  });
+  logObservation("info", "Inbound processGroup processed", {
+    ...routeContext,
+    processed,
+    skipped,
   });
 
   return NextResponse.json({ ok: true, ...responsePayload });

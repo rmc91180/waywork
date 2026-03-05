@@ -14,11 +14,13 @@ import { toast } from "sonner";
 interface HostListingActionsProps {
   listingId: string;
   status: string;
+  accessRole?: "OWNER" | "MANAGER";
 }
 
 export function HostListingActions({
   listingId,
   status,
+  accessRole = "OWNER",
 }: HostListingActionsProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -43,7 +45,7 @@ export function HostListingActions({
         <Link href={`/host/listings/${listingId}`}>Edit</Link>
       </Button>
 
-      {status === "DRAFT" && (
+      {accessRole === "OWNER" && status === "DRAFT" && (
         <Button
           size="sm"
           disabled={isPending}
@@ -58,7 +60,7 @@ export function HostListingActions({
         </Button>
       )}
 
-      {status === "ACTIVE" && (
+      {accessRole === "OWNER" && status === "ACTIVE" && (
         <Button
           variant="outline"
           size="sm"
@@ -74,7 +76,7 @@ export function HostListingActions({
         </Button>
       )}
 
-      {status === "PAUSED" && (
+      {accessRole === "OWNER" && status === "PAUSED" && (
         <Button
           size="sm"
           disabled={isPending}

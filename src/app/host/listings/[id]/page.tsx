@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getListingAccessRole } from "@/lib/host-access";
 import { ListingWizard } from "@/components/host/listing-wizard";
 import { Button } from "@/components/ui/button";
 
@@ -31,7 +32,8 @@ export default async function EditListingPage({
     },
   });
 
-  if (!listing || listing.hostId !== session.user.id) {
+  const accessRole = listing ? await getListingAccessRole(session.user.id, listing.id) : null;
+  if (!listing || !accessRole) {
     notFound();
   }
 

@@ -13,9 +13,13 @@ import {
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
+import { buildHostListingScope } from "@/lib/host-access";
+import { computeMewsConnectionHealth, type MewsHealthSnapshot } from "@/lib/pms/mews-health";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HostMewsControlPanel } from "@/components/host/host-mews-control-panel";
+import { HostSyncDiagnostics } from "@/components/host/host-sync-diagnostics";
+import { HostTeamAccessPanel } from "@/components/host/host-team-access-panel";
 import {
   HostOnboardingChecklist,
   type HostOnboardingStep,
@@ -67,6 +71,16 @@ export default async function HostDashboardPage() {
   let hostPayoutProfile: {
     stripeConnectAccountId: string | null;
   } | null = null;
+  let mewsHealth: MewsHealthSnapshot | null = null;
+  let ownerListingsForTeamAccess: Array<{
+    id: string;
+    title: string;
+    host: { name: string | null };
+    teamMembers: Array<{
+      role: "OWNER" | "MANAGER";
+      user: { id: string; name: string | null; email: string };
+    }>;
+  }> = [];
   let recentSyncEvents: Array<{
     id: string;
     direction: string;
@@ -94,9 +108,10 @@ export default async function HostDashboardPage() {
       allBookings,
       payouts,
       syncEvents,
+      ownerListings,
     ] = await Promise.all([
       db.listing.findMany({
-        where: { hostId },
+        where: buildHostListingScope(hostId),
         select: {
           id: true,
           title: true,
@@ -176,23 +191,56 @@ export default async function HostDashboardPage() {
         orderBy: { createdAt: "desc" },
         take: 10,
       }),
+      db.listing.findMany({
+        where: { hostId },
+        select: {
+          id: true,
+          title: true,
+          host: { select: { name: true } },
+          teamMembers: {
+            where: { role: "MANAGER" },
+            select: {
+              role: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+      }),
     ]);
 
     listings = hostListings;
     mewsConnection = connection;
     hostPayoutProfile = payoutProfile;
+    ownerListingsForTeamAccess = ownerListings;
     upcomingBookings = upcoming;
     pendingBookings = pending;
     totalBookings = allBookings;
     grossRevenue = payouts._sum.hostPayout ?? 0;
     recentSyncEvents = syncEvents;
+    if (connection) {
+      mewsHealth = await computeMewsConnectionHealth(connection.id);
+    }
   } catch (error) {
     console.error("[host/dashboard] failed to load host metrics", error);
   }
 
   const totalListings = listings.length;
   const activeListings = listings.filter((listing) => listing.status === "ACTIVE").length;
+  const syncManagedListings = listings.filter((listing) =>
+    ["ACTIVE", "PAUSED"].includes(listing.status)
+  );
   const mappedListings = listings.filter((listing) => Boolean(listing.pmsExternalListingId)).length;
+  const mappedSyncManagedListings = syncManagedListings.filter((listing) =>
+    Boolean(listing.pmsExternalListingId)
+  ).length;
   const syncedListings = listings.filter((listing) => listing.pmsSyncStatus === "SYNCED").length;
   const failedSyncListings = listings.filter((listing) => listing.pmsSyncStatus === "FAILED").length;
   const mewsConnected =
@@ -231,7 +279,9 @@ export default async function HostDashboardPage() {
       id: "map-listings",
       title: "Map listings to Mews IDs",
       description: "Map each listing to Mews SpaceTypeCode and optional RatePlanCode.",
-      complete: mappedListings > 0,
+      complete:
+        syncManagedListings.length > 0 &&
+        mappedSyncManagedListings === syncManagedListings.length,
       href: "/host#pms-sync-control",
       ctaLabel: "Map Listings",
     },
@@ -367,6 +417,29 @@ export default async function HostDashboardPage() {
       </section>
 
       <section className="mt-6">
+        <HostSyncDiagnostics
+          connectionId={mewsConnection?.id ?? null}
+          connectionEnabled={Boolean(mewsConnection?.enabled)}
+          hasClientToken={Boolean(mewsConnection?.mewsClientToken)}
+          hasConnectionToken={Boolean(mewsConnection?.mewsConnectionToken)}
+          hasAccessToken={Boolean(mewsConnection?.mewsAccessToken)}
+          hasEnterpriseId={Boolean(mewsConnection?.mewsEnterpriseId)}
+          healthScore={mewsHealth?.score ?? 0}
+          mappedManagedListings={mewsHealth?.mappedManagedListings ?? 0}
+          managedListings={mewsHealth?.managedListings ?? 0}
+          outboundSuccessCount={mewsHealth?.outboundSuccessCount ?? 0}
+          outboundFailureCount={mewsHealth?.outboundFailureCount ?? 0}
+          inboundSuccessCount={mewsHealth?.inboundSuccessCount ?? 0}
+          inboundFailureCount={mewsHealth?.inboundFailureCount ?? 0}
+          pendingJobs={mewsHealth?.pendingJobCount ?? 0}
+          failedJobs={mewsHealth?.failedJobCount ?? 0}
+          deadLetterJobs={mewsHealth?.deadLetterJobCount ?? 0}
+          lastSuccessAt={mewsHealth?.lastSuccessAt?.toISOString() ?? null}
+          lastFailureAt={mewsHealth?.lastFailureAt?.toISOString() ?? null}
+        />
+      </section>
+
+      <section className="mt-6">
         <HostMewsControlPanel
           connection={{
             id: mewsConnection?.id ?? null,
@@ -388,6 +461,22 @@ export default async function HostDashboardPage() {
             pmsSyncStatus: listing.pmsSyncStatus,
             pmsSyncError: listing.pmsSyncError,
             pmsLastSyncedAt: listing.pmsLastSyncedAt?.toISOString() ?? null,
+          }))}
+        />
+      </section>
+
+      <section className="mt-6">
+        <HostTeamAccessPanel
+          listings={ownerListingsForTeamAccess.map((listing) => ({
+            listingId: listing.id,
+            title: listing.title,
+            ownerName: listing.host.name,
+            managers: listing.teamMembers.map((teamMember) => ({
+              userId: teamMember.user.id,
+              name: teamMember.user.name,
+              email: teamMember.user.email,
+              role: teamMember.role,
+            })),
           }))}
         />
       </section>

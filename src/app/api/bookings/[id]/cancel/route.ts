@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { syncBookingToMews } from "@/lib/pms/mews-sync";
+import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import { getStripe } from "@/lib/stripe";
 import { differenceInHours } from "date-fns";
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -19,7 +19,19 @@ export async function POST(
 
     const booking = await db.booking.findUnique({
       where: { id },
-      include: { listing: true },
+      include: {
+        listing: {
+          select: {
+            hostId: true,
+            cancellationPolicy: true,
+            teamMembers: {
+              where: { userId: session.user.id },
+              select: { id: true },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
     if (!booking) {
@@ -30,7 +42,8 @@ export async function POST(
     }
 
     const isGuest = booking.guestId === session.user.id;
-    const isHost = booking.listing.hostId === session.user.id;
+    const isHost =
+      booking.listing.hostId === session.user.id || booking.listing.teamMembers.length > 0;
 
     if (!isGuest && !isHost) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -124,7 +137,8 @@ export async function POST(
       },
     });
 
-    void syncBookingToMews(id, "CANCEL");
+    await enqueueBookingSyncJob(id, "CANCEL");
+    void processPendingMewsSyncJobs(5);
 
     return NextResponse.json({
       success: true,

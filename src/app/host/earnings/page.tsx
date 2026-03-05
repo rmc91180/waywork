@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { buildHostListingScope } from "@/lib/host-access";
 import { formatCurrency } from "@/lib/stripe";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,7 @@ export default async function EarningsPage() {
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   const bookings = await db.booking.findMany({
-    where: { listing: { hostId: session.user.id } },
+    where: { listing: buildHostListingScope(session.user.id) },
     include: { listing: { select: { id: true, title: true, slug: true } } },
     orderBy: { createdAt: "desc" },
   });

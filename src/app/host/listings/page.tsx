@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ChartNoAxesCombined, CircleCheck, Clock3, Plus } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { buildHostListingScope } from "@/lib/host-access";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,10 +29,15 @@ export default async function HostListingsPage() {
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
   const listings = await db.listing.findMany({
-    where: { hostId: session.user.id },
+    where: buildHostListingScope(session.user.id),
     include: {
       images: { where: { isPrimary: true }, take: 1 },
       _count: { select: { bookings: true, reviews: true } },
+      teamMembers: {
+        where: { userId: session.user.id },
+        select: { role: true },
+        take: 1,
+      },
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -132,6 +138,13 @@ export default async function HostListingsPage() {
                             <Badge variant={status.variant}>{status.label}</Badge>
                             <Badge variant="outline">{workspaceType?.label || listing.workspaceType}</Badge>
                             <Badge variant="outline">
+                              {listing.hostId === session.user.id
+                                ? "Owner"
+                                : listing.teamMembers[0]?.role === "MANAGER"
+                                  ? "Manager"
+                                  : "Viewer"}
+                            </Badge>
+                            <Badge variant="outline">
                               {(listing.pricePerDay / 100).toFixed(0)} / day
                             </Badge>
                           </div>
@@ -163,7 +176,11 @@ export default async function HostListingsPage() {
                       </div>
 
                       <div className="mt-3">
-                        <HostListingActions listingId={listing.id} status={listing.status} />
+                        <HostListingActions
+                          listingId={listing.id}
+                          status={listing.status}
+                          accessRole={listing.hostId === session.user.id ? "OWNER" : "MANAGER"}
+                        />
                       </div>
                     </div>
                   </div>
