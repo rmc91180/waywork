@@ -7,10 +7,8 @@ const REQUIRED_TABLES = [
   "User",
   "Listing",
   "Booking",
-  "PmsConnection",
-  "PmsSyncEvent",
-  "PmsSyncJob",
 ] as const;
+const RECOMMENDED_TABLES = ["PmsConnection", "PmsSyncEvent", "PmsSyncJob"] as const;
 
 function quoteWindowsArg(arg: string): string {
   if (/^[a-zA-Z0-9_./:-]+$/.test(arg)) return arg;
@@ -98,13 +96,20 @@ async function verifyCriticalTables(databaseUrl: string) {
         WHERE schemaname = 'public'
           AND tablename = ANY($1::text[])
       `,
-      [REQUIRED_TABLES]
+      [[...REQUIRED_TABLES, ...RECOMMENDED_TABLES]]
     );
 
     const existing = new Set(result.rows.map((row) => row.tablename));
     const missing = REQUIRED_TABLES.filter((table) => !existing.has(table));
     if (missing.length > 0) {
       throw new Error(`[db-prepare] missing required tables: ${missing.join(", ")}`);
+    }
+
+    const missingRecommended = RECOMMENDED_TABLES.filter((table) => !existing.has(table));
+    if (missingRecommended.length > 0) {
+      console.warn(
+        `[db-prepare] warning: missing recommended PMS tables: ${missingRecommended.join(", ")}`
+      );
     }
   } finally {
     await client.end().catch(() => undefined);

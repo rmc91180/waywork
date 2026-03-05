@@ -1,0 +1,44 @@
+name: PMS Jobs Cron
+
+on:
+  schedule:
+    - cron: "*/2 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: pms-jobs-cron
+  cancel-in-progress: false
+
+jobs:
+  process-pms-jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger PMS job processor endpoint
+        env:
+          APP_URL: ${{ vars.WAYWORK_APP_URL }}
+          PMS_SYNC_CRON_SECRET: ${{ secrets.PMS_SYNC_CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "WAYWORK_APP_URL variable is not configured."
+            exit 1
+          fi
+          if [ -z "$PMS_SYNC_CRON_SECRET" ]; then
+            echo "PMS_SYNC_CRON_SECRET secret is not configured."
+            exit 1
+          fi
+
+          endpoint="${APP_URL%/}/api/pms/mews/jobs/process"
+          body_file="$(mktemp)"
+          status_code=$(curl -sS -L -o "$body_file" -w "%{http_code}" \
+            -X POST "$endpoint" \
+            -H "Authorization: Bearer $PMS_SYNC_CRON_SECRET")
+
+          echo "PMS processor response:"
+          cat "$body_file"
+          echo
+
+          if [ "$status_code" != "200" ]; then
+            echo "Expected HTTP 200 from $endpoint, got $status_code"
+            exit 1
+          fi
