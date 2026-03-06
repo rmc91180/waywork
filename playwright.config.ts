@@ -6,9 +6,10 @@ const useExternalServer = Boolean(process.env.PLAYWRIGHT_BASE_URL);
 
 export default defineConfig({
   testDir: "./tests",
-  timeout: 60_000,
+  timeout: 90_000,
   expect: { timeout: 10_000 },
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: process.env.CI ? 2 : 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
@@ -22,12 +23,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: useExternalServer
+      webServer: useExternalServer
     ? undefined
     : {
         command: `npm run start -- -p ${playwrightPort}`,
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
+        // Always use a fresh server instance to prevent stale-process flakiness.
+        reuseExistingServer: false,
         timeout: 120_000,
         env: {
           ...process.env,

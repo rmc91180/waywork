@@ -9,6 +9,7 @@ import {
   parseDateRange,
 } from "@/lib/pms/mews-inbound";
 import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
+import { isMewsProviderActive } from "@/lib/pms/provider-mode";
 
 interface AvailabilityUpdate {
   spaceTypeCode: string;
@@ -73,6 +74,13 @@ function normalizeAvailabilityUpdates(payload: Record<string, unknown>): Availab
 }
 
 export async function POST(request: NextRequest) {
+  if (!isMewsProviderActive()) {
+    return NextResponse.json(
+      { error: "Mews integration is disabled. SiteMinder inbound endpoints should be used." },
+      { status: 410 }
+    );
+  }
+
   let payload: Record<string, unknown> = {};
   try {
     const json = (await request.json()) as unknown;

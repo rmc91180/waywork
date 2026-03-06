@@ -131,6 +131,7 @@ enum BedSize {
 
 enum PmsProvider {
   MEWS
+  SITEMINDER
 }
 
 enum PmsSyncStatus {
@@ -410,9 +411,9 @@ model Booking {
   // Pricing (in cents)
   subtotal   Int // pricePerDay * numberOfDays
   cleaningFee Int @default(0)
-  serviceFee Int // 12% of subtotal
+  serviceFee Int // Way Work booking fee / commission amount
   totalPrice Int // subtotal + cleaningFee + serviceFee
-  hostPayout Int // subtotal + cleaningFee - stripe fees
+  hostPayout Int // amount remitted to host after platform commission
 
   // Stripe
   stripePaymentIntentId String? @unique
@@ -462,6 +463,13 @@ model PmsConnection {
   mewsAccessToken  String?
   mewsEnterpriseId String?
   mewsClientName   String  @default("WayWork PMS Sync/1.0")
+
+  // SiteMinder API (planned OTA integration)
+  siteminderApiBaseUrl  String  @default("https://api.siteminder.com")
+  siteminderClientId    String?
+  siteminderClientSecret String?
+  siteminderPropertyId  String?
+  siteminderWebhookSecret String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

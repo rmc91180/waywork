@@ -229,7 +229,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
                   </div>
                 )}
                 <div className="flex justify-between text-slate-600">
-                  <span>Service fee</span>
+                  <span>Way Work commission</span>
                   <span>{formatCurrency(booking.serviceFee)}</span>
                 </div>
                 <Separator />

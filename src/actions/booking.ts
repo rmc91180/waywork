@@ -102,13 +102,14 @@ export async function createBookingAndCheckout(
     const key = date.toISOString().split("T")[0];
     return sum + (dailyRateMap.get(key) ?? listing.pricePerDay);
   }, 0);
-  const serviceFee = Math.round(subtotal * SERVICE_FEE_PERCENTAGE);
+  const grossBookingAmount = subtotal + listing.cleaningFee;
+  const serviceFee = Math.round(grossBookingAmount * SERVICE_FEE_PERCENTAGE);
   const pricing = {
     subtotal,
     cleaningFee: listing.cleaningFee,
     serviceFee,
-    totalPrice: subtotal + listing.cleaningFee + serviceFee,
-    hostPayout: subtotal + listing.cleaningFee,
+    totalPrice: grossBookingAmount,
+    hostPayout: Math.max(0, grossBookingAmount - serviceFee),
   };
 
   // --- DEMO MODE: no Stripe configured ---
@@ -198,14 +199,6 @@ export async function createBookingAndCheckout(
           },
         ]
       : []),
-    {
-      price_data: {
-        currency: listing.currency.toLowerCase(),
-        product_data: { name: "Service fee" },
-        unit_amount: pricing.serviceFee,
-      },
-      quantity: 1,
-    },
   ];
 
   const checkoutSession = await stripe.checkout.sessions.create({

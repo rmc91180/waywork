@@ -129,9 +129,10 @@ export async function POST(request: NextRequest) {
       const rate = overrideMap.get(key) ?? listing.pricePerDay;
       return sum + rate;
     }, 0);
-    const serviceFee = Math.round(subtotal * SERVICE_FEE_PERCENTAGE);
-    const totalPrice = subtotal + listing.cleaningFee + serviceFee;
-    const hostPayout = subtotal + listing.cleaningFee;
+    const grossBookingAmount = subtotal + listing.cleaningFee;
+    const serviceFee = Math.round(grossBookingAmount * SERVICE_FEE_PERCENTAGE);
+    const totalPrice = grossBookingAmount;
+    const hostPayout = Math.max(0, totalPrice - serviceFee);
     const pricing = {
       subtotal,
       cleaningFee: listing.cleaningFee,

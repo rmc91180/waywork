@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
+import { isMewsProviderActive } from "@/lib/pms/provider-mode";
 
 const listingMappingSchema = z.object({
   listingId: z.string().min(1),
@@ -42,6 +43,13 @@ function redact(value: string | null) {
 }
 
 export async function GET() {
+  if (!isMewsProviderActive()) {
+    return NextResponse.json(
+      { error: "Mews integration is disabled. Use SiteMinder endpoints." },
+      { status: 410 }
+    );
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -90,6 +98,13 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isMewsProviderActive()) {
+    return NextResponse.json(
+      { error: "Mews integration is disabled. Use SiteMinder endpoints." },
+      { status: 410 }
+    );
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -45,11 +45,11 @@ export function evaluateListingProductionReadiness(
   }
 
   if (!input.mewsConnectionEnabled || !input.mewsHasRequiredTokens) {
-    reasons.push("Connect and enable Mews channel manager credentials.");
+    reasons.push("Connect and enable SiteMinder channel manager credentials.");
   }
 
   if (!input.hasPmsListingMapping) {
-    reasons.push("Map this listing to a Mews SpaceTypeCode.");
+    reasons.push("Map this listing to your external channel manager listing ID.");
   }
 
   return {

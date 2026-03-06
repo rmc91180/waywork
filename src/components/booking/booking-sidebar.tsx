@@ -48,8 +48,9 @@ export function BookingSidebar({
   const pricing = useMemo(() => {
     if (numberOfDays === 0) return null;
     const subtotal = pricePerDay * numberOfDays;
-    const serviceFee = Math.round(subtotal * 0.12);
-    const total = subtotal + cleaningFee + serviceFee;
+    const grossBookingAmount = subtotal + cleaningFee;
+    const serviceFee = Math.round(grossBookingAmount * 0.15);
+    const total = grossBookingAmount;
     return { subtotal, cleaningFee, serviceFee, total };
   }, [numberOfDays, pricePerDay, cleaningFee]);
 
@@ -228,7 +229,7 @@ export function BookingSidebar({
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-slate-600">Service fee (12%)</span>
+              <span className="text-slate-600">Way Work commission (15%)</span>
               <span>{formatCurrency(pricing.serviceFee)}</span>
             </div>
             <Separator />

@@ -2,17 +2,41 @@ import { addMinutes } from "date-fns";
 import { db } from "@/lib/db";
 import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
 import { requestAriSyncForConnection, syncBookingToMews } from "@/lib/pms/mews-sync";
+import { syncBookingToSiteMinder } from "@/lib/pms/siteminder-sync";
+import {
+  getActivePmsProviderMode,
+  isMewsProviderActive,
+  isSiteMinderProviderActive,
+} from "@/lib/pms/provider-mode";
 
 const MAX_SYNC_ATTEMPTS = 5;
+type ActivePmsProvider = "MEWS" | "SITEMINDER";
 
 function nextRetryDelayMinutes(attemptCount: number) {
   return Math.min(60, Math.pow(2, Math.max(0, attemptCount - 1)));
+}
+
+function getRoutableProvider(): ActivePmsProvider | null {
+  const mode = getActivePmsProviderMode();
+  if (mode === "MEWS") return "MEWS";
+  if (mode === "SITEMINDER") return "SITEMINDER";
+  return null;
+}
+
+function isProviderEnabled(provider: ActivePmsProvider) {
+  if (provider === "MEWS") return isMewsProviderActive();
+  return isSiteMinderProviderActive();
 }
 
 export async function enqueueBookingSyncJob(
   bookingId: string,
   action: "UPSERT" | "CANCEL"
 ): Promise<string | null> {
+  const activeProvider = getRoutableProvider();
+  if (!activeProvider || !isProviderEnabled(activeProvider)) {
+    return null;
+  }
+
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     select: {
@@ -34,7 +58,12 @@ export async function enqueueBookingSyncJob(
   });
 
   const connection = booking?.listing.pmsConnection;
-  if (!booking || !connection || !connection.enabled || connection.provider !== "MEWS") {
+  if (
+    !booking ||
+    !connection ||
+    !connection.enabled ||
+    connection.provider !== activeProvider
+  ) {
     return null;
   }
 
@@ -55,6 +84,19 @@ export async function enqueueBookingSyncJob(
 }
 
 export async function enqueueAriSyncJob(connectionId: string): Promise<string> {
+  if (!isMewsProviderActive()) {
+    throw new Error("Mews sync is disabled in this environment.");
+  }
+
+  const connection = await db.pmsConnection.findUnique({
+    where: { id: connectionId },
+    select: { provider: true, enabled: true },
+  });
+
+  if (!connection || !connection.enabled || connection.provider !== "MEWS") {
+    throw new Error("Mews connection not found or not enabled.");
+  }
+
   const job = await db.pmsSyncJob.create({
     data: {
       connectionId,
@@ -69,12 +111,27 @@ export async function enqueueAriSyncJob(connectionId: string): Promise<string> {
   return job.id;
 }
 
-export async function processPendingMewsSyncJobs(limit = 25) {
+export async function processPendingPmsSyncJobs(limit = 25) {
+  const activeProvider = getRoutableProvider();
+  if (!activeProvider || !isProviderEnabled(activeProvider)) {
+    return {
+      scanned: 0,
+      completed: 0,
+      failed: 0,
+      deadLetter: 0,
+      skipped: 0,
+    };
+  }
+
   const now = new Date();
   const dueJobs = await db.pmsSyncJob.findMany({
     where: {
       status: { in: ["PENDING", "FAILED"] },
       nextAttemptAt: { lte: now },
+      connection: {
+        provider: activeProvider,
+        enabled: true,
+      },
     },
     select: {
       id: true,
@@ -116,10 +173,30 @@ export async function processPendingMewsSyncJobs(limit = 25) {
         listingId: true,
         bookingId: true,
         attemptCount: true,
+        connection: {
+          select: {
+            provider: true,
+            enabled: true,
+          },
+        },
       },
     });
 
     if (!job) {
+      skipped += 1;
+      continue;
+    }
+
+    if (!job.connection.enabled || job.connection.provider !== activeProvider) {
+      await db.pmsSyncJob.update({
+        where: { id: job.id },
+        data: {
+          status: "PENDING",
+          nextAttemptAt: addMinutes(new Date(), 5),
+          lockedAt: null,
+          lastError: "Skipped: connection provider is not active.",
+        },
+      });
       skipped += 1;
       continue;
     }
@@ -131,18 +208,28 @@ export async function processPendingMewsSyncJobs(limit = 25) {
       listingId: job.listingId,
       bookingId: job.bookingId,
       attemptCount: job.attemptCount,
+      provider: job.connection.provider,
     });
 
     try {
       if (job.type === "BOOKING_UPSERT") {
         if (!job.bookingId) throw new Error("Booking sync job is missing bookingId.");
-        const result = await syncBookingToMews(job.bookingId, "UPSERT");
+        const result =
+          job.connection.provider === "MEWS"
+            ? await syncBookingToMews(job.bookingId, "UPSERT")
+            : await syncBookingToSiteMinder(job.bookingId, "UPSERT");
         if (!result.ok) throw new Error(result.error || "Booking UPSERT sync failed.");
       } else if (job.type === "BOOKING_CANCEL") {
         if (!job.bookingId) throw new Error("Booking sync job is missing bookingId.");
-        const result = await syncBookingToMews(job.bookingId, "CANCEL");
+        const result =
+          job.connection.provider === "MEWS"
+            ? await syncBookingToMews(job.bookingId, "CANCEL")
+            : await syncBookingToSiteMinder(job.bookingId, "CANCEL");
         if (!result.ok) throw new Error(result.error || "Booking CANCEL sync failed.");
       } else if (job.type === "REQUEST_ARI_UPDATE") {
+        if (job.connection.provider !== "MEWS") {
+          throw new Error("ARI update jobs are only supported for Mews provider.");
+        }
         await requestAriSyncForConnection(job.connectionId);
       }
 
@@ -216,11 +303,29 @@ export async function processPendingMewsSyncJobs(limit = 25) {
   };
 }
 
+export async function processPendingMewsSyncJobs(limit = 25) {
+  return processPendingPmsSyncJobs(limit);
+}
+
 export async function retryFailedMewsSyncJobs(input: {
   connectionId: string;
   listingId?: string;
   bookingId?: string;
 }) {
+  const activeProvider = getRoutableProvider();
+  if (!activeProvider || !isProviderEnabled(activeProvider)) {
+    return 0;
+  }
+
+  const connection = await db.pmsConnection.findUnique({
+    where: { id: input.connectionId },
+    select: { provider: true },
+  });
+
+  if (!connection || connection.provider !== activeProvider) {
+    return 0;
+  }
+
   const updated = await db.pmsSyncJob.updateMany({
     where: {
       connectionId: input.connectionId,
@@ -240,6 +345,20 @@ export async function retryFailedMewsSyncJobs(input: {
 }
 
 export async function getMewsSyncQueueCounts(connectionId: string) {
+  const activeProvider = getRoutableProvider();
+  if (!activeProvider || !isProviderEnabled(activeProvider)) {
+    return { pending: 0, failed: 0, deadLetter: 0 };
+  }
+
+  const connection = await db.pmsConnection.findUnique({
+    where: { id: connectionId },
+    select: { provider: true },
+  });
+
+  if (!connection || connection.provider !== activeProvider) {
+    return { pending: 0, failed: 0, deadLetter: 0 };
+  }
+
   const [pending, failed, deadLetter] = await Promise.all([
     db.pmsSyncJob.count({ where: { connectionId, status: "PENDING" } }),
     db.pmsSyncJob.count({ where: { connectionId, status: "FAILED" } }),

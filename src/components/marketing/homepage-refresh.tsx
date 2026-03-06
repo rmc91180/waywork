@@ -170,7 +170,7 @@ export async function HomepageRefresh() {
     <div className="pb-16">
       <HomeHero images={heroImages} />
 
-      <section id="quick-search" className="waywork-shell -mt-12 md:-mt-20 relative z-10">
+      <section id="quick-search" className="waywork-shell -mt-4 md:-mt-10 relative z-10">
         <div className="waywork-elevated rounded-3xl border border-slate-200 bg-[var(--ww-neutral-light)]/35 p-6 md:p-8">
           <div className="grid gap-5 md:gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
             <div>

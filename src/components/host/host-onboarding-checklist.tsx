@@ -33,7 +33,7 @@ export function HostOnboardingChecklist({ steps }: HostOnboardingChecklistProps)
             Launch Checklist
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Complete these steps to go live with direct host controls and full Mews sync coverage.
+            Complete these steps to go live with direct host controls and full channel manager readiness.
           </p>
         </div>
         <Badge variant={completed === total ? "default" : "secondary"}>

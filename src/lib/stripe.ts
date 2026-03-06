@@ -11,8 +11,8 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
-// Service fee percentage charged to guests
-export const SERVICE_FEE_PERCENTAGE = 0.12;
+// Way Work platform commission on booking gross (subtotal + cleaning fee)
+export const SERVICE_FEE_PERCENTAGE = 0.15;
 
 export function calculatePricing(
   pricePerDay: number,
@@ -20,10 +20,10 @@ export function calculatePricing(
   cleaningFee: number
 ) {
   const subtotal = pricePerDay * numberOfDays;
-  const serviceFee = Math.round(subtotal * SERVICE_FEE_PERCENTAGE);
-  const totalPrice = subtotal + cleaningFee + serviceFee;
-  // Host receives subtotal + cleaning fee (Stripe processing fees deducted by Stripe)
-  const hostPayout = subtotal + cleaningFee;
+  const grossBookingAmount = subtotal + cleaningFee;
+  const serviceFee = Math.round(grossBookingAmount * SERVICE_FEE_PERCENTAGE);
+  const totalPrice = grossBookingAmount;
+  const hostPayout = Math.max(0, grossBookingAmount - serviceFee);
 
   return {
     subtotal,

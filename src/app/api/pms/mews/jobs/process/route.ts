@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
+import { isMewsProviderActive } from "@/lib/pms/provider-mode";
 
 export async function POST(request: NextRequest) {
+  if (!isMewsProviderActive()) {
+    return NextResponse.json(
+      { error: "Mews integration is disabled. Switch to SiteMinder processing route." },
+      { status: 410 }
+    );
+  }
+
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.PMS_SYNC_CRON_SECRET;
 

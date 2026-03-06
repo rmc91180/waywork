@@ -10,11 +10,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check-db-health:
+  check-platform-health:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Validate db health endpoint
+      - name: Validate DB health endpoint
         env:
           APP_URL: ${{ vars.WAYWORK_APP_URL }}
         run: |
@@ -37,3 +37,27 @@ jobs:
           fi
 
           node -e "const fs=require('fs'); const f=process.argv[1]; const payload=JSON.parse(fs.readFileSync(f,'utf8')); if(!payload.ok){console.error('Health payload is not ok=true'); process.exit(1);} console.log('Health endpoint is green.');" "$body_file"
+
+      - name: Validate PMS health endpoint
+        env:
+          APP_URL: ${{ vars.WAYWORK_APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "WAYWORK_APP_URL variable is not configured."
+            exit 1
+          fi
+
+          endpoint="${APP_URL%/}/api/health/pms"
+          body_file="$(mktemp)"
+          status_code=$(curl -sS -L -o "$body_file" -w "%{http_code}" "$endpoint")
+
+          echo "PMS health response:"
+          cat "$body_file"
+          echo
+
+          if [ "$status_code" != "200" ]; then
+            echo "Expected HTTP 200 from $endpoint, got $status_code"
+            exit 1
+          fi
+
+          node -e "const fs=require('fs'); const f=process.argv[1]; const payload=JSON.parse(fs.readFileSync(f,'utf8')); if(!payload.ok){console.error('PMS health payload is not ok=true'); process.exit(1);} console.log('PMS health endpoint is green.');" "$body_file"

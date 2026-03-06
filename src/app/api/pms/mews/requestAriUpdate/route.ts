@@ -4,12 +4,20 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { enqueueAriSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import { createObservationContext, captureObservedError, logObservation } from "@/lib/observability";
+import { isMewsProviderActive } from "@/lib/pms/provider-mode";
 
 const requestAriBodySchema = z.object({
   connectionId: z.string().min(1).optional(),
 });
 
 export async function POST(request: NextRequest) {
+  if (!isMewsProviderActive()) {
+    return NextResponse.json(
+      { error: "Mews integration is disabled. Use SiteMinder endpoints." },
+      { status: 410 }
+    );
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

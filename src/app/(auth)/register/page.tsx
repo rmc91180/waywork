@@ -51,8 +51,20 @@ export default function RegisterPage() {
 
   useEffect(() => {
     const raw = new URLSearchParams(window.location.search).get("callbackUrl");
-    if (raw && raw.startsWith("/")) {
-      setCallbackUrl(raw);
+    if (!raw) return;
+
+    try {
+      const parsed = raw.startsWith("/")
+        ? new URL(raw, window.location.origin)
+        : new URL(raw);
+      const normalized = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+      if (normalized.startsWith("/")) {
+        setCallbackUrl(normalized);
+      }
+    } catch {
+      if (raw.startsWith("/")) {
+        setCallbackUrl(raw);
+      }
     }
   }, []);
 

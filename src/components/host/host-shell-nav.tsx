@@ -9,6 +9,7 @@ const HOST_LINKS = [
   { href: "/host/listings", label: "Listings" },
   { href: "/host/bookings", label: "Bookings" },
   { href: "/host/calendar", label: "Calendar" },
+  { href: "/host/channel-manager", label: "Channel Manager" },
   { href: "/host/earnings", label: "Earnings" },
   { href: "/host/payouts", label: "Payouts" },
 ];

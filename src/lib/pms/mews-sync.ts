@@ -1,6 +1,7 @@
 import { addDays, formatISO } from "date-fns";
 import { db } from "@/lib/db";
 import { MewsClient } from "@/lib/pms/mews-client";
+import { isMewsProviderActive } from "@/lib/pms/provider-mode";
 
 type BookingSyncAction = "UPSERT" | "CANCEL";
 
@@ -62,6 +63,10 @@ export async function syncBookingToMews(
   bookingId: string,
   action: BookingSyncAction
 ): Promise<BookingSyncResult> {
+  if (!isMewsProviderActive()) {
+    return { ok: true, skipped: true };
+  }
+
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -163,6 +168,10 @@ export async function syncBookingToMews(
 }
 
 export async function requestAriSyncForConnection(connectionId: string) {
+  if (!isMewsProviderActive()) {
+    throw new Error("Mews sync is disabled in this environment.");
+  }
+
   const connection = await db.pmsConnection.findUnique({
     where: { id: connectionId },
     include: {

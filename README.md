@@ -38,9 +38,11 @@ npm run dev
 - `npm run db:deploy` - run Prisma migrations (`prisma migrate deploy`)
 - `npm run db:baseline:existing` - baseline an already-existing schema to migration `20260305190000_init`
 - `npm run db:seed` - seed demo data
+- `npm run siteminder:sandbox` - create a full local sandbox booking cycle with SiteMinder-ready mappings
 - `npm run test:mews-contract` - fixture-backed Mews API contract checks
 - `npm run test:smoke` - Playwright UI smoke tests
 - `npm run pms:jobs` - process queued PMS sync jobs (retry/dead-letter pipeline)
+- `npm run launch:healthcheck` - launch readiness check against DB + PMS health endpoints
 
 ## Railway deployment
 
@@ -73,12 +75,18 @@ npm run dev
 - `R2_BUCKET_NAME`
 - `R2_PUBLIC_URL`
 - `NEXT_PUBLIC_MAPBOX_TOKEN`
+- `PMS_ACTIVE_PROVIDER` (`SITEMINDER` default, supports `MEWS` and `NONE`)
 - `MEWS_API_BASE_URL`
 - `MEWS_CLIENT_TOKEN`
 - `MEWS_CONNECTION_TOKEN`
 - `MEWS_ACCESS_TOKEN`
 - `MEWS_ENTERPRISE_ID`
 - `MEWS_WEBHOOK_SECRET`
+- `SITEMINDER_API_BASE_URL`
+- `SITEMINDER_CLIENT_ID`
+- `SITEMINDER_CLIENT_SECRET`
+- `SITEMINDER_PROPERTY_ID`
+- `SITEMINDER_WEBHOOK_SECRET`
 - `PMS_SYNC_CRON_SECRET`
 - `SENTRY_DSN`
 - `SENTRY_TRACES_SAMPLE_RATE`
@@ -121,27 +129,27 @@ bash scripts/deploy-railway.sh
 2. Use pooled `DATABASE_URL` for app traffic and set `DIRECT_DATABASE_URL` for migrations.
 3. Keep `DB_MIGRATION_FALLBACK_PUSH=true` only during transition; set to `false` after baseline.
 4. Monitor `GET /api/health/db` and alert on non-200 responses.
-5. Schedule `POST /api/pms/mews/jobs/process` with `PMS_SYNC_CRON_SECRET` so booking/listing sync jobs do not stall.
-6. Before each release: run `npm run db:check`, `npm run build`, and smoke tests.
+5. Monitor `GET /api/health/pms` and alert on non-200 responses.
+6. Schedule `POST /api/pms/siteminder/jobs/process` with `PMS_SYNC_CRON_SECRET` so booking/listing sync jobs do not stall.
+7. Before each release: run `npm run db:check`, `npm run build`, and smoke tests.
 
-## Mews Two-Way PMS Sync
+## SiteMinder OTA Sync Rollout
 
-WayWork includes a Mews channel manager integration foundation with:
+WayWork now targets SiteMinder as the active channel manager integration path:
 
-- outbound booking sync queued with retry/dead-letter handling
-- inbound ARI and reservation updates from Mews channel manager operations
+- host credential + mapping management on `/host/channel-manager`
+- `PMS_ACTIVE_PROVIDER` guardrails to explicitly disable legacy MEWS endpoints
 - persistent sync state and event logging in Prisma (`PmsConnection`, `PmsSyncEvent`, `ListingDailyRate`)
 - sync job queue persistence (`PmsSyncJob`) for robust retry processing
-- host diagnostics (health score, queue stats, retry failed sync action)
+- sandbox booking-cycle script (`npm run siteminder:sandbox`)
 
 Key API routes:
 
-- `POST /api/pms/mews/connection` - configure/update host Mews credentials and listing mappings
-- `GET /api/pms/mews/connection` - inspect current Mews connection and listing mapping status
-- `POST /api/pms/mews/requestAriUpdate` - request ARI refresh from Mews
-- `POST /api/pms/mews/retryFailed` - retry failed/dead-letter jobs for current host connection
-- `POST /api/pms/mews/jobs/process` - cron endpoint to process queued jobs (`Authorization: Bearer <PMS_SYNC_CRON_SECRET>`)
-- `POST /api/pms/mews/channel-manager/updateAvailability` - inbound availability updates from Mews
-- `POST /api/pms/mews/channel-manager/updatePrices` - inbound price updates from Mews
-- `POST /api/pms/mews/channel-manager/updateRestrictions` - inbound restrictions payload logging
-- `POST /api/pms/mews/channel-manager/processGroup` - inbound reservation updates from Mews
+- `POST /api/pms/siteminder/connection` - configure/update host SiteMinder credentials and listing mappings
+- `GET /api/pms/siteminder/connection` - inspect current SiteMinder connection and listing mapping status
+- `POST /api/pms/siteminder/jobs/process` - process pending SiteMinder PMS sync jobs
+- `POST /api/pms/siteminder/channel-manager/processGroup` - inbound reservation updates from SiteMinder
+- `POST /api/pms/siteminder/channel-manager/updateAvailability` - inbound availability updates from SiteMinder
+- `POST /api/pms/siteminder/channel-manager/updatePrices` - inbound rate updates from SiteMinder
+- `GET /api/health/pms` - PMS queue and connection health status
+- `POST /api/pms/mews/*` - returns HTTP `410` when `PMS_ACTIVE_PROVIDER` is not `MEWS`

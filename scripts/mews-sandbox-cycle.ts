@@ -12,6 +12,12 @@ type ReceivedRequest = {
   body: Record<string, unknown>;
 };
 
+function isDatabaseUnavailable(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: string; message?: string };
+  return candidate.code === "P1001" || candidate.message?.includes("Can't reach database server");
+}
+
 function ensureDatabaseUrl() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is required.");
@@ -150,9 +156,10 @@ async function main() {
     const checkOut = parseDate(checkOutStr);
     const numberOfDays = differenceInDays(checkOut, checkIn);
     const subtotal = listing.pricePerDay * numberOfDays;
-    const serviceFee = Math.round(subtotal * SERVICE_FEE_PERCENTAGE);
-    const totalPrice = subtotal + listing.cleaningFee + serviceFee;
-    const hostPayout = subtotal + listing.cleaningFee;
+    const grossBookingAmount = subtotal + listing.cleaningFee;
+    const serviceFee = Math.round(grossBookingAmount * SERVICE_FEE_PERCENTAGE);
+    const totalPrice = grossBookingAmount;
+    const hostPayout = Math.max(0, grossBookingAmount - serviceFee);
 
     const booking = await prisma.booking.create({
       data: {
@@ -283,6 +290,11 @@ async function main() {
 }
 
 main().catch((error) => {
+  if (isDatabaseUnavailable(error)) {
+    console.error(
+      "[sandbox] database unavailable. Start a local DB first (example: `npm run db:bootstrap -- --skip-seed`) or set a reachable DATABASE_URL."
+    );
+  }
   console.error("[sandbox] failed:", error);
   process.exit(1);
 });

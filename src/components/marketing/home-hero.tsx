@@ -65,7 +65,7 @@ export function HomeHero({ images }: HomeHeroProps) {
 
   return (
     <section
-      className="relative h-[clamp(560px,82svh,780px)] overflow-hidden"
+      className="relative h-[clamp(540px,78svh,760px)] overflow-hidden"
       aria-roledescription="carousel"
       aria-label="Featured workspace destinations"
     >
@@ -121,19 +121,19 @@ export function HomeHero({ images }: HomeHeroProps) {
         Slide {active + 1} of {slides.length}
       </p>
 
-      <div className="waywork-shell relative flex h-full items-center py-16 md:py-20">
-        <div className="max-w-4xl text-white">
+      <div className="waywork-shell relative flex h-full items-start py-12 md:py-16">
+        <div className="max-w-3xl text-white">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.14em]">
-            Work Wonders Worldwide
+            Residential Workspaces, Global Reach
           </p>
-          <h1 className="mt-5 text-5xl font-bold leading-[1.05] md:text-6xl lg:text-7xl">
+          <h1 className="mt-4 text-4xl font-bold leading-[1.06] md:text-5xl lg:text-6xl">
             Work Wonders Worldwide
           </h1>
-          <p className="mt-5 max-w-3xl text-lg text-white/90 md:text-xl lg:text-2xl">
+          <p className="mt-4 max-w-2xl text-lg text-white/90 md:text-xl">
             Escape the office, embrace the adventure. Book fun, high-speed workspaces in
             residential gems for your next workation or team offsite.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-7 flex flex-wrap gap-3">
             <Button
               size="lg"
               className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
@@ -166,7 +166,7 @@ export function HomeHero({ images }: HomeHeroProps) {
               </Link>
             </Button>
           </div>
-          <div className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-2xl border border-white/45 bg-white/10 px-3 py-2">
+          <div className="mt-5 inline-flex flex-wrap items-center gap-2 rounded-2xl border border-white/45 bg-white/10 px-3 py-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/85">
               Hosting on Way Work?
             </p>
@@ -195,7 +195,7 @@ export function HomeHero({ images }: HomeHeroProps) {
               </Link>
             </Button>
           </div>
-          <div className="mt-7 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2">
             <p className="ww-trust-pill border-white/50 bg-white/15 text-white">Verified Internet</p>
             <p className="ww-trust-pill border-white/50 bg-white/15 text-white">Secure Booking</p>
             <p className="ww-trust-pill border-white/50 bg-white/15 text-white">No Hidden Fees</p>

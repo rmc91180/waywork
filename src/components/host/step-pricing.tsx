@@ -103,9 +103,9 @@ export function StepPricing({ data, onChange }: StepPricingProps) {
               </div>
             )}
             <div className="flex justify-between text-xs text-gray-400">
-              <span>Guest service fee (12%)</span>
+              <span>Way Work commission (15%)</span>
               <span>
-                ${((data.pricePerDay * 0.12) / 100).toFixed(2)}/day
+                ${(((data.pricePerDay + data.cleaningFee) * 0.15) / 100).toFixed(2)} / 1-day booking
               </span>
             </div>
             <div className="border-t pt-1 flex justify-between font-medium text-gray-900">
@@ -114,8 +114,17 @@ export function StepPricing({ data, onChange }: StepPricingProps) {
                 $
                 {(
                   (data.pricePerDay +
-                    data.cleaningFee +
-                    Math.round(data.pricePerDay * 0.12)) /
+                    data.cleaningFee) /
+                  100
+                ).toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Estimated host payout</span>
+              <span>
+                $
+                {(
+                  (data.pricePerDay + data.cleaningFee - Math.round((data.pricePerDay + data.cleaningFee) * 0.15)) /
                   100
                 ).toFixed(2)}
               </span>

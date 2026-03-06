@@ -6,6 +6,7 @@ import {
   CalendarCheck2,
   CircleDollarSign,
   LayoutDashboard,
+  Network,
   PlusCircle,
   Wallet,
   Wrench,
@@ -14,16 +15,15 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
 import { buildHostListingScope } from "@/lib/host-access";
-import { computeMewsConnectionHealth, type MewsHealthSnapshot } from "@/lib/pms/mews-health";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { HostMewsControlPanel } from "@/components/host/host-mews-control-panel";
-import { HostSyncDiagnostics } from "@/components/host/host-sync-diagnostics";
 import { HostTeamAccessPanel } from "@/components/host/host-team-access-panel";
 import {
   HostOnboardingChecklist,
   type HostOnboardingStep,
 } from "@/components/host/host-onboarding-checklist";
+import { HostAirbnbImportCard } from "@/components/host/host-airbnb-import-card";
+import { isSiteMinderProviderActive } from "@/lib/pms/provider-mode";
 
 const LISTING_STATUS_LABEL: Record<string, string> = {
   DRAFT: "Draft",
@@ -57,21 +57,16 @@ export default async function HostDashboardPage() {
     pmsLastSyncedAt: Date | null;
     _count: { bookings: number };
   }> = [];
-  let mewsConnection: {
+  let siteMinderConnection: {
     id: string;
     enabled: boolean;
-    mewsApiBaseUrl: string;
-    mewsClientName: string;
-    mewsClientToken: string | null;
-    mewsConnectionToken: string | null;
-    mewsAccessToken: string | null;
-    mewsEnterpriseId: string | null;
-    updatedAt: Date;
+    siteminderClientId: string | null;
+    siteminderClientSecret: string | null;
+    siteminderWebhookSecret: string | null;
   } | null = null;
   let hostPayoutProfile: {
     stripeConnectAccountId: string | null;
   } | null = null;
-  let mewsHealth: MewsHealthSnapshot | null = null;
   let ownerListingsForTeamAccess: Array<{
     id: string;
     title: string;
@@ -129,18 +124,14 @@ export default async function HostDashboardPage() {
       db.pmsConnection.findFirst({
         where: {
           userId: hostId,
-          provider: "MEWS",
+          provider: "SITEMINDER",
         },
         select: {
           id: true,
           enabled: true,
-          mewsApiBaseUrl: true,
-          mewsClientName: true,
-          mewsClientToken: true,
-          mewsConnectionToken: true,
-          mewsAccessToken: true,
-          mewsEnterpriseId: true,
-          updatedAt: true,
+          siteminderClientId: true,
+          siteminderClientSecret: true,
+          siteminderWebhookSecret: true,
         },
       }),
       db.booking.count({
@@ -174,7 +165,6 @@ export default async function HostDashboardPage() {
         where: {
           connection: {
             userId: hostId,
-            provider: "MEWS",
           },
         },
         select: {
@@ -217,7 +207,7 @@ export default async function HostDashboardPage() {
     ]);
 
     listings = hostListings;
-    mewsConnection = connection;
+    siteMinderConnection = connection;
     hostPayoutProfile = payoutProfile;
     ownerListingsForTeamAccess = ownerListings;
     upcomingBookings = upcoming;
@@ -225,30 +215,23 @@ export default async function HostDashboardPage() {
     totalBookings = allBookings;
     grossRevenue = payouts._sum.hostPayout ?? 0;
     recentSyncEvents = syncEvents;
-    if (connection) {
-      mewsHealth = await computeMewsConnectionHealth(connection.id);
-    }
   } catch (error) {
     console.error("[host/dashboard] failed to load host metrics", error);
   }
 
   const totalListings = listings.length;
   const activeListings = listings.filter((listing) => listing.status === "ACTIVE").length;
-  const syncManagedListings = listings.filter((listing) =>
-    ["ACTIVE", "PAUSED"].includes(listing.status)
-  );
+  const syncManagedListings = listings.filter((listing) => ["ACTIVE", "PAUSED"].includes(listing.status));
   const mappedListings = listings.filter((listing) => Boolean(listing.pmsExternalListingId)).length;
-  const mappedSyncManagedListings = syncManagedListings.filter((listing) =>
-    Boolean(listing.pmsExternalListingId)
-  ).length;
+  const mappedSyncManagedListings = syncManagedListings.filter((listing) => Boolean(listing.pmsExternalListingId)).length;
   const syncedListings = listings.filter((listing) => listing.pmsSyncStatus === "SYNCED").length;
   const failedSyncListings = listings.filter((listing) => listing.pmsSyncStatus === "FAILED").length;
-  const mewsConnected =
-    Boolean(mewsConnection?.mewsClientToken) && Boolean(mewsConnection?.mewsConnectionToken);
-  const hasSuccessfulAriRequest = recentSyncEvents.some(
-    (event) => event.action === "REQUEST_ARI_UPDATE" && event.success
-  );
+  const siteminderConnected =
+    Boolean(siteMinderConnection?.siteminderClientId) &&
+    Boolean(siteMinderConnection?.siteminderClientSecret);
+  const webhookConfigured = Boolean(siteMinderConnection?.siteminderWebhookSecret);
   const payoutsReady = Boolean(hostPayoutProfile?.stripeConnectAccountId);
+  const providerActive = isSiteMinderProviderActive();
 
   const onboardingSteps: HostOnboardingStep[] = [
     {
@@ -268,30 +251,30 @@ export default async function HostDashboardPage() {
       ctaLabel: "Manage Status",
     },
     {
-      id: "connect-mews",
-      title: "Connect Mews credentials",
-      description: "Enable channel manager credentials for two-way PMS sync.",
-      complete: mewsConnected && Boolean(mewsConnection?.enabled),
-      href: "/host#pms-sync-control",
-      ctaLabel: "Connect Mews",
+      id: "connect-siteminder",
+      title: "Connect SiteMinder credentials",
+      description: "Attach SiteMinder credentials for upcoming two-way channel sync.",
+      complete: siteminderConnected && Boolean(siteMinderConnection?.enabled),
+      href: "/host/channel-manager",
+      ctaLabel: "Connect SiteMinder",
     },
     {
       id: "map-listings",
-      title: "Map listings to Mews IDs",
-      description: "Map each listing to Mews SpaceTypeCode and optional RatePlanCode.",
+      title: "Map listings to external IDs",
+      description: "Map active listings to channel manager listing and rate plan IDs.",
       complete:
         syncManagedListings.length > 0 &&
         mappedSyncManagedListings === syncManagedListings.length,
-      href: "/host#pms-sync-control",
+      href: "/host/channel-manager",
       ctaLabel: "Map Listings",
     },
     {
-      id: "request-ari",
-      title: "Request initial ARI sync",
-      description: "Send an ARI update request to align rates and availability.",
-      complete: hasSuccessfulAriRequest,
-      href: "/host#pms-sync-control",
-      ctaLabel: "Request ARI",
+      id: "configure-webhook",
+      title: "Configure webhook secret",
+      description: "Store webhook secret so inbound availability and booking updates can verify.",
+      complete: webhookConfigured,
+      href: "/host/channel-manager",
+      ctaLabel: "Add Webhook Secret",
     },
     {
       id: "payouts",
@@ -313,8 +296,8 @@ export default async function HostDashboardPage() {
           Welcome back, {session.user.name || "Host"}
         </h1>
         <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
-          Create, monitor, and optimize listings from one control center. Mews channel manager sync
-          runs two-way, while direct host controls remain available for every listing.
+          Create, monitor, and optimize listings from one control center. SiteMinder rollout is
+          active with direct listing controls always available.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Button asChild className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]">
@@ -327,6 +310,12 @@ export default async function HostDashboardPage() {
             <Link href="/host/listings">
               <LayoutDashboard className="size-4" />
               Manage Listings
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/host/channel-manager">
+              <Network className="size-4" />
+              Channel Manager
             </Link>
           </Button>
           <Button variant="outline" asChild>
@@ -343,10 +332,13 @@ export default async function HostDashboardPage() {
           </Button>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Badge variant={mewsConnected && mewsConnection?.enabled ? "default" : "secondary"}>
-            {mewsConnected && mewsConnection?.enabled
-              ? "Mews Two-Way Sync Active"
-              : "Mews Setup Required"}
+          <Badge variant={providerActive ? "default" : "secondary"}>
+            {providerActive ? "SiteMinder Migration Active" : "PMS Mode Not Set"}
+          </Badge>
+          <Badge variant={siteminderConnected && siteMinderConnection?.enabled ? "default" : "secondary"}>
+            {siteminderConnected && siteMinderConnection?.enabled
+              ? "SiteMinder Credentials Connected"
+              : "SiteMinder Setup Required"}
           </Badge>
           <Badge variant="outline">
             {mappedListings}/{totalListings} listings mapped
@@ -379,7 +371,7 @@ export default async function HostDashboardPage() {
           <p className="mt-1 text-sm text-slate-600">confirmed + completed payouts</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Mews Sync Failures</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Sync Failures</p>
           <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{failedSyncListings}</p>
           <p className="mt-1 text-sm text-slate-600">listings requiring attention</p>
         </article>
@@ -395,12 +387,12 @@ export default async function HostDashboardPage() {
           <p className="mt-1 text-sm text-slate-600">Confirm, review, and manage guest reservations.</p>
         </Link>
         <Link
-          href="/host/calendar"
+          href="/host/channel-manager"
           className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
-          <CalendarCheck2 className="size-5 text-[var(--ww-secondary-green)]" />
-          <h2 className="mt-3 text-lg font-semibold text-[var(--ww-primary-blue)]">Availability Calendar</h2>
-          <p className="mt-1 text-sm text-slate-600">Block dates and keep availability accurate.</p>
+          <Network className="size-5 text-[var(--ww-secondary-green)]" />
+          <h2 className="mt-3 text-lg font-semibold text-[var(--ww-primary-blue)]">SiteMinder Setup</h2>
+          <p className="mt-1 text-sm text-slate-600">Manage credentials and listing mapping for channel sync.</p>
         </Link>
         <Link
           href="/host/earnings"
@@ -417,52 +409,30 @@ export default async function HostDashboardPage() {
       </section>
 
       <section className="mt-6">
-        <HostSyncDiagnostics
-          connectionId={mewsConnection?.id ?? null}
-          connectionEnabled={Boolean(mewsConnection?.enabled)}
-          hasClientToken={Boolean(mewsConnection?.mewsClientToken)}
-          hasConnectionToken={Boolean(mewsConnection?.mewsConnectionToken)}
-          hasAccessToken={Boolean(mewsConnection?.mewsAccessToken)}
-          hasEnterpriseId={Boolean(mewsConnection?.mewsEnterpriseId)}
-          healthScore={mewsHealth?.score ?? 0}
-          mappedManagedListings={mewsHealth?.mappedManagedListings ?? 0}
-          managedListings={mewsHealth?.managedListings ?? 0}
-          outboundSuccessCount={mewsHealth?.outboundSuccessCount ?? 0}
-          outboundFailureCount={mewsHealth?.outboundFailureCount ?? 0}
-          inboundSuccessCount={mewsHealth?.inboundSuccessCount ?? 0}
-          inboundFailureCount={mewsHealth?.inboundFailureCount ?? 0}
-          pendingJobs={mewsHealth?.pendingJobCount ?? 0}
-          failedJobs={mewsHealth?.failedJobCount ?? 0}
-          deadLetterJobs={mewsHealth?.deadLetterJobCount ?? 0}
-          lastSuccessAt={mewsHealth?.lastSuccessAt?.toISOString() ?? null}
-          lastFailureAt={mewsHealth?.lastFailureAt?.toISOString() ?? null}
-        />
+        <HostAirbnbImportCard />
       </section>
 
-      <section className="mt-6">
-        <HostMewsControlPanel
-          connection={{
-            id: mewsConnection?.id ?? null,
-            enabled: mewsConnection?.enabled ?? false,
-            mewsApiBaseUrl: mewsConnection?.mewsApiBaseUrl ?? "https://api.mews.com",
-            mewsClientName: mewsConnection?.mewsClientName ?? "WayWork PMS Sync/1.0",
-            hasClientToken: Boolean(mewsConnection?.mewsClientToken),
-            hasConnectionToken: Boolean(mewsConnection?.mewsConnectionToken),
-            hasAccessToken: Boolean(mewsConnection?.mewsAccessToken),
-            hasEnterpriseId: Boolean(mewsConnection?.mewsEnterpriseId),
-            updatedAt: mewsConnection?.updatedAt?.toISOString() ?? null,
-          }}
-          listings={listings.map((listing) => ({
-            id: listing.id,
-            title: listing.title,
-            status: listing.status,
-            pmsExternalListingId: listing.pmsExternalListingId,
-            pmsExternalRatePlanId: listing.pmsExternalRatePlanId,
-            pmsSyncStatus: listing.pmsSyncStatus,
-            pmsSyncError: listing.pmsSyncError,
-            pmsLastSyncedAt: listing.pmsLastSyncedAt?.toISOString() ?? null,
-          }))}
-        />
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
+              PMS Migration
+            </p>
+            <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+              SiteMinder Rollout Status
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Host credentials and mapping are available. Two-way reservation + ARI adapters are staged
+              and will run through this channel manager path.
+            </p>
+          </div>
+          <Button variant="outline" asChild>
+            <Link href="/host/channel-manager">
+              <Network className="size-4" />
+              Open Channel Manager
+            </Link>
+          </Button>
+        </div>
       </section>
 
       <section className="mt-6">
@@ -484,14 +454,12 @@ export default async function HostDashboardPage() {
       <section className="mt-6 grid gap-4 xl:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-[var(--ww-primary-blue)]">
-              Listing Monitor
-            </h2>
+            <h2 className="text-lg font-semibold text-[var(--ww-primary-blue)]">Listing Monitor</h2>
             <Badge variant="outline">{totalListings} listings</Badge>
           </div>
           {listings.length === 0 ? (
             <p className="text-sm text-slate-600">
-              No listings yet. Create one to start host operations and PMS mapping.
+              No listings yet. Create one to start host operations and channel manager mapping.
             </p>
           ) : (
             <div className="space-y-3">
@@ -535,14 +503,13 @@ export default async function HostDashboardPage() {
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--ww-primary-blue)]">
               <Activity className="size-4" />
-              Recent PMS Sync Events
+              Recent Sync Events
             </h2>
             <Badge variant="outline">{recentSyncEvents.length}</Badge>
           </div>
           {recentSyncEvents.length === 0 ? (
             <p className="text-sm text-slate-600">
-              No PMS sync events yet. Save Mews settings and request ARI updates to begin two-way
-              synchronization.
+              No PMS sync events yet. Complete channel manager setup to start event tracking.
             </p>
           ) : (
             <div className="space-y-3">

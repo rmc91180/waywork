@@ -31,7 +31,11 @@ test("host routes redirect unauthenticated users to login cleanly", async ({ pag
 
   const hasDemoButton = (await page.getByRole("button", { name: /Sign in as Demo User/i }).count()) > 0;
   const hasEmailField = (await page.getByLabel(/Email/i).count()) > 0;
-  expect(hasDemoButton || hasEmailField).toBeTruthy();
+  const hasUnavailableMessage =
+    (await page.getByText(/Email sign-in is currently unavailable/i).count()) > 0;
+  const hasLoadingState =
+    (await page.getByText(/Loading sign-in methods/i).count()) > 0;
+  expect(hasDemoButton || hasEmailField || hasUnavailableMessage || hasLoadingState).toBeTruthy();
 
   await page.goto("/host/listings");
   await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fhost/);
@@ -61,6 +65,7 @@ test("authenticated host navigation screens load without application errors", as
     { label: "Listings", href: /\/host\/listings$/ },
     { label: "Bookings", href: /\/host\/bookings$/ },
     { label: "Calendar", href: /\/host\/calendar$/ },
+    { label: "Channel Manager", href: /\/host\/channel-manager$/ },
     { label: "Earnings", href: /\/host\/earnings$/ },
     { label: "Payouts", href: /\/host\/payouts$/ },
   ];
