@@ -4,13 +4,19 @@
     "name": "Limehome Madrid Centro",
     "city": "Madrid",
     "countryCode": "ES",
-    "addressLine1": "Calle de Atocha 18"
+    "addressLine1": "Calle de Atocha 18",
+    "postalCode": "28012",
+    "lat": 40.4122,
+    "lng": -3.6994
   },
   {
     "id": "MADRID-CHAMARTIN",
     "name": "Limehome Madrid Chamartin",
     "city": "Madrid",
     "countryCode": "ES",
-    "addressLine1": "Calle de Matilde Diez 8"
+    "addressLine1": "Calle de Matilde Diez 8",
+    "postalCode": "28002",
+    "lat": 40.4468,
+    "lng": -3.6752
   }
 ]

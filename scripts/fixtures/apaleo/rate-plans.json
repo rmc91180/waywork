@@ -4,13 +4,19 @@
     "propertyId": "MADRID-CENTRO",
     "unitGroupId": "UG-CENTRO-STUDIO",
     "code": "FLEX",
-    "name": "Flexible Rate"
+    "name": "Flexible Rate",
+    "currency": "EUR",
+    "pricePerDayCents": 14900,
+    "cancellationPolicy": "FLEXIBLE"
   },
   {
     "id": "RP-CHAMARTIN-STD",
     "propertyId": "MADRID-CHAMARTIN",
     "unitGroupId": "UG-CHAMARTIN-APT",
     "code": "STD",
-    "name": "Standard Rate"
+    "name": "Standard Rate",
+    "currency": "EUR",
+    "pricePerDayCents": 21900,
+    "cancellationPolicy": "MODERATE"
   }
 ]

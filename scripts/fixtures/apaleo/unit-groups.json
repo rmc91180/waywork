@@ -3,12 +3,44 @@
     "id": "UG-CENTRO-STUDIO",
     "propertyId": "MADRID-CENTRO",
     "name": "Studio with Kitchen",
-    "maxPersons": 2
+    "description": "Compact apartment with a table suitable for focused work and short offsite stays.",
+    "maxPersons": 2,
+    "bedroomCount": 1,
+    "propertySizeSqm": 34,
+    "workspaceType": "STUDIO",
+    "connectivity": {
+      "declaredDownloadMbps": 120,
+      "declaredUploadMbps": 40,
+      "networkType": "WIFI"
+    },
+    "amenities": [
+      { "category": "DESK", "name": "Dedicated Desk", "quantity": 1 },
+      { "category": "ERGONOMICS", "name": "Ergonomic Chair", "quantity": 1 },
+      { "category": "KITCHEN", "name": "Kitchen Access", "quantity": 1 },
+      { "category": "CONNECTIVITY", "name": "High-Speed WiFi", "quantity": 1 },
+      { "category": "QUIET", "name": "Private Room", "quantity": 1 }
+    ]
   },
   {
     "id": "UG-CHAMARTIN-APT",
     "propertyId": "MADRID-CHAMARTIN",
     "name": "One Bedroom Apartment",
-    "maxPersons": 4
+    "description": "Residential apartment with room for solo work or a compact team stay.",
+    "maxPersons": 4,
+    "bedroomCount": 1,
+    "propertySizeSqm": 52,
+    "workspaceType": "HOME_OFFICE",
+    "connectivity": {
+      "declaredDownloadMbps": 250,
+      "declaredUploadMbps": 80,
+      "networkType": "WIFI"
+    },
+    "amenities": [
+      { "category": "DESK", "name": "Large Work Surface", "quantity": 2 },
+      { "category": "ERGONOMICS", "name": "Ergonomic Chair", "quantity": 2 },
+      { "category": "KITCHEN", "name": "Kitchen Access", "quantity": 1 },
+      { "category": "CONNECTIVITY", "name": "High-Speed WiFi", "quantity": 1 },
+      { "category": "QUIET", "name": "Quiet Zone", "quantity": 1 }
+    ]
   }
 ]

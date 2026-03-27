@@ -23,13 +23,30 @@ export interface ApaleoProperty {
   city?: string;
   countryCode?: string;
   addressLine1?: string;
+  postalCode?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface ApaleoUnitGroup {
   id: string;
   propertyId: string;
   name: string;
+  description?: string;
   maxPersons?: number;
+  bedroomCount?: number;
+  propertySizeSqm?: number;
+  workspaceType?: "PRIVATE_OFFICE" | "STUDIO" | "MEETING_ROOM" | "HOME_OFFICE" | "HYBRID_SPACE";
+  connectivity?: {
+    declaredDownloadMbps: number;
+    declaredUploadMbps: number;
+    networkType?: "WIFI" | "WIRED" | "BOTH";
+  };
+  amenities?: Array<{
+    category: string;
+    name: string;
+    quantity?: number;
+  }>;
 }
 
 export interface ApaleoRatePlan {
@@ -38,6 +55,9 @@ export interface ApaleoRatePlan {
   unitGroupId?: string;
   code?: string;
   name: string;
+  currency?: string;
+  pricePerDayCents?: number;
+  cancellationPolicy?: "FLEXIBLE" | "MODERATE" | "STRICT";
 }
 
 export interface ApaleoCredentials {

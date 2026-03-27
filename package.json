@@ -25,6 +25,7 @@
     "test:smoke": "playwright test",
     "test:mews-contract": "npx tsx scripts/mews-contract-test.ts",
     "test:apaleo-contract": "npx tsx scripts/apaleo-contract-test.ts",
+    "test:apaleo-madrid-import": "npx tsx scripts/apaleo-madrid-import-test.ts",
     "pms:jobs": "node --env-file=.env --import tsx scripts/process-pms-jobs.ts",
     "launch:healthcheck": "node --env-file=.env --import tsx scripts/launch-healthcheck.ts",
     "test:ops": "npm run test:mews-contract && npm run test:smoke"
