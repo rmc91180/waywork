@@ -21,14 +21,12 @@ const SearchMap = dynamic(() => import("./search-map"), {
 interface SearchLayoutProps {
   listings: MapListing[];
   children: React.ReactNode;
-  total: number;
   experimentVariant?: SearchUiVariant;
 }
 
 export function SearchLayout({
   listings,
   children,
-  total,
   experimentVariant = "control",
 }: SearchLayoutProps) {
   const [view, setView] = useState<"grid" | "map">(
@@ -47,10 +45,7 @@ export function SearchLayout({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-        <p className="pl-2 text-sm text-[var(--ww-text-primary)]">
-          {total} result{total === 1 ? "" : "s"}
-        </p>
+      <div className="flex items-center justify-end rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
         <div className="flex items-center rounded-lg border bg-slate-50 p-1">
           <Button
             type="button"

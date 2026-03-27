@@ -16,7 +16,6 @@ import type { SearchUiVariant } from "@/lib/experiments";
 
 interface SearchResultsClientProps {
   initialListings: ListingCardData[];
-  total: number;
   totalPages: number;
   initialPage: number;
   filters: SearchFilterState;
@@ -48,7 +47,6 @@ function toMapListings(listings: ListingCardData[]) {
 
 export function SearchResultsClient({
   initialListings,
-  total,
   totalPages,
   initialPage,
   filters,
@@ -149,7 +147,7 @@ export function SearchResultsClient({
   const mapListings = useMemo(() => toMapListings(listings), [listings]);
 
   return (
-    <SearchLayout listings={mapListings} total={total} experimentVariant={searchVariant}>
+    <SearchLayout listings={mapListings} experimentVariant={searchVariant}>
       <SearchExperimentTracker variant={searchVariant} />
       {listings.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
