@@ -63,7 +63,24 @@ async function main() {
   console.log("[healthcheck] PMS endpoint is healthy.");
 
   const mode = typeof pms.json?.mode === "string" ? pms.json.mode : "UNKNOWN";
-  if (mode === "SITEMINDER" && cronSecret) {
+  if (mode === "APALEO") {
+    const provider =
+      pms.json && typeof pms.json.provider === "object" && pms.json.provider
+        ? (pms.json.provider as Record<string, unknown>)
+        : null;
+    const readiness = typeof provider?.readiness === "string" ? provider.readiness : "UNKNOWN";
+    const blockers = Array.isArray(provider?.blockers) ? provider.blockers : [];
+
+    console.log(`[healthcheck] Apaleo readiness: ${readiness}.`);
+
+    if (blockers.length > 0) {
+      throw new Error(
+        `[healthcheck] Apaleo launch blockers detected: ${JSON.stringify(blockers)}`
+      );
+    }
+
+    console.log("[healthcheck] Apaleo launch blockers clear.");
+  } else if (mode === "SITEMINDER" && cronSecret) {
     const processor = await requestJson(`${appUrl}/api/pms/siteminder/jobs/process?limit=5`, {
       method: "POST",
       headers: { Authorization: `Bearer ${cronSecret}` },

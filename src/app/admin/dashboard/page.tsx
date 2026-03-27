@@ -97,7 +97,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Listings</CardTitle>
@@ -125,6 +125,16 @@ export default async function AdminDashboardPage() {
           <CardContent className="space-y-2">
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/admin/bookings">View All Bookings</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Apaleo Pilot</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/admin/pms/apaleo">Open Control Room</Link>
             </Button>
           </CardContent>
         </Card>

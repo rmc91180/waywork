@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getApaleoPilotReadinessSummary } from "@/lib/pms/apaleo-pilot-readiness";
 import { getActivePmsProviderMode } from "@/lib/pms/provider-mode";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,7 @@ export async function GET() {
 
   try {
     await db.$queryRaw`SELECT 1`;
+    const apaleoReadiness = mode === "APALEO" ? await getApaleoPilotReadinessSummary() : null;
 
     if (mode === "NONE") {
       return NextResponse.json(
@@ -144,7 +146,8 @@ export async function GET() {
       (requireEnabledConnection && enabledConnections === 0) ||
       failed > maxFailedJobs ||
       deadLetter > maxDeadLetterJobs ||
-      stale > 0;
+      stale > 0 ||
+      apaleoReadiness?.readiness === "RED";
 
     return NextResponse.json(
       {
@@ -170,6 +173,7 @@ export async function GET() {
         },
         recentErrors24h: recentErrors,
         lastSuccess,
+        provider: apaleoReadiness,
         warnings,
         checkedAt: new Date().toISOString(),
       },
