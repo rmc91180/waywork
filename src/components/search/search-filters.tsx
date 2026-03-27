@@ -807,6 +807,7 @@ export function SearchFilters({
       page: 1,
     });
     router.push(`/search?${params.toString()}`);
+    router.refresh();
     closeAll();
   };
 
@@ -816,6 +817,7 @@ export function SearchFilters({
     setSmartPrompt("");
     setSmartHighlights([]);
     router.push("/search");
+    router.refresh();
     closeAll();
   };
 

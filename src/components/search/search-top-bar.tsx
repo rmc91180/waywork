@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { format, isValid, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { CalendarIcon, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { SearchFilters } from "@/components/search/search-filters";
 import {
   SEARCH_SORT_OPTIONS,
@@ -34,6 +41,17 @@ function resolveLocationMode(filters: SearchFilterState): LocationMode {
 
 function resolveLocationValue(filters: SearchFilterState) {
   return filters.nearQuery || filters.city || filters.query;
+}
+
+function parseDateValue(value: string) {
+  if (!value) return undefined;
+  const parsed = parseISO(value);
+  return isValid(parsed) ? parsed : undefined;
+}
+
+function formatDateValue(value: string, placeholder: string) {
+  const parsed = parseDateValue(value);
+  return parsed ? format(parsed, "MMM d, yyyy") : placeholder;
 }
 
 function buildLocationPayload(
@@ -74,6 +92,73 @@ function buildLocationPayload(
   return next;
 }
 
+interface SearchDateFieldProps {
+  label: string;
+  value: string;
+  placeholder: string;
+  minDate?: Date;
+  onChange: (nextValue: string) => void;
+}
+
+function SearchDateField({
+  label,
+  value,
+  placeholder,
+  minDate,
+  onChange,
+}: SearchDateFieldProps) {
+  const [open, setOpen] = useState(false);
+  const selectedDate = parseDateValue(value);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        {label}
+      </p>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="mt-2 flex w-full items-center justify-between gap-3 text-left"
+          >
+            <span className="text-sm text-slate-800">
+              {formatDateValue(value, placeholder)}
+            </span>
+            <CalendarIcon className="size-4 text-slate-500" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              onChange(date ? format(date, "yyyy-MM-dd") : "");
+              setOpen(false);
+            }}
+            disabled={minDate ? { before: minDate } : undefined}
+          />
+          <div className="flex items-center justify-between border-t border-slate-200 px-3 py-2">
+            <button
+              type="button"
+              className="text-xs font-medium text-slate-500 transition hover:text-slate-900"
+              onClick={() => onChange("")}
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              className="text-xs font-medium text-[var(--ww-primary-blue)] transition hover:text-[var(--ww-secondary-green)]"
+              onClick={() => setOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
 export function SearchTopBar({
   filters,
   facets,
@@ -101,11 +186,23 @@ export function SearchTopBar({
     () => serializeSearchFilterParams(filters).toString(),
     [filters]
   );
+  const today = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
+  const checkInDate = parseDateValue(checkIn);
 
   const submitSearch = () => {
     const next = buildLocationPayload(filters, locationValue, locationMode);
     next.checkIn = checkIn;
-    next.checkOut = checkOut;
+    next.checkOut =
+      checkIn &&
+      checkOut &&
+      parseDateValue(checkOut) &&
+      checkInDate &&
+      parseDateValue(checkOut)! <= checkInDate
+        ? ""
+        : checkOut;
     next.guests = guests;
 
     trackEvent({
@@ -121,6 +218,7 @@ export function SearchTopBar({
 
     const params = serializeSearchFilterParams(next);
     router.push(`/search?${params.toString()}`);
+    router.refresh();
   };
 
   const onSortChange = (sortBy: SearchFilterState["sortBy"]) => {
@@ -135,6 +233,7 @@ export function SearchTopBar({
       page: 1,
     });
     router.push(`/search?${params.toString()}`);
+    router.refresh();
   };
 
   return (
@@ -158,29 +257,31 @@ export function SearchTopBar({
           />
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Check In
-          </p>
-          <Input
-            type="date"
-            value={checkIn}
-            onChange={(event) => setCheckIn(event.target.value)}
-            className="mt-2 h-auto border-0 px-0 py-0 text-sm shadow-none focus-visible:ring-0"
-          />
-        </div>
+        <SearchDateField
+          label="Check In"
+          value={checkIn}
+          placeholder="Add dates"
+          minDate={today}
+          onChange={(nextValue) => {
+            setCheckIn(nextValue);
+            if (
+              checkOut &&
+              parseDateValue(checkOut) &&
+              nextValue &&
+              parseDateValue(checkOut)! <= parseDateValue(nextValue)!
+            ) {
+              setCheckOut("");
+            }
+          }}
+        />
 
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Check Out
-          </p>
-          <Input
-            type="date"
-            value={checkOut}
-            onChange={(event) => setCheckOut(event.target.value)}
-            className="mt-2 h-auto border-0 px-0 py-0 text-sm shadow-none focus-visible:ring-0"
-          />
-        </div>
+        <SearchDateField
+          label="Check Out"
+          value={checkOut}
+          placeholder="Add dates"
+          minDate={checkInDate || today}
+          onChange={setCheckOut}
+        />
 
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
