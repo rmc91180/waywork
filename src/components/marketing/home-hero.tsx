@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Building2, ChevronLeft, ChevronRight, MapPinned, Pause, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 
@@ -13,6 +13,7 @@ export interface HeroImage {
 
 interface HomeHeroProps {
   images: HeroImage[];
+  searchPanel?: ReactNode;
 }
 
 const fallbackImages: HeroImage[] = [
@@ -30,10 +31,10 @@ const fallbackImages: HeroImage[] = [
   },
 ];
 
-export function HomeHero({ images }: HomeHeroProps) {
+export function HomeHero({ images, searchPanel }: HomeHeroProps) {
   const slides = useMemo(() => (images.length >= 3 ? images : fallbackImages), [images]);
   const [active, setActive] = useState(0);
-  const [autoplay, setAutoplay] = useState(() => {
+  const [autoplay] = useState(() => {
     if (typeof window === "undefined") return true;
     return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   });
@@ -53,22 +54,8 @@ export function HomeHero({ images }: HomeHeroProps) {
     return () => clearInterval(timer);
   }, [autoplay, slides.length]);
 
-  const previousSlide = () => {
-    setActive((current) => (current - 1 + slides.length) % slides.length);
-    trackEvent({ event: "hero_slide_navigated", properties: { direction: "previous" } });
-  };
-
-  const nextSlide = () => {
-    setActive((current) => (current + 1) % slides.length);
-    trackEvent({ event: "hero_slide_navigated", properties: { direction: "next" } });
-  };
-
   return (
-    <section
-      className="relative h-[clamp(540px,78svh,760px)] overflow-hidden"
-      aria-roledescription="carousel"
-      aria-label="Featured workspace destinations"
-    >
+    <section className="relative overflow-hidden pb-18 pt-10 md:pb-22 md:pt-14">
       <div className="absolute inset-0">
         {slides.map((slide, index) => (
           <div key={`${slide.url}-${index}`}>
@@ -76,135 +63,56 @@ export function HomeHero({ images }: HomeHeroProps) {
             <img
               src={slide.url}
               alt={slide.alt}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
                 index === active ? "opacity-100" : "opacity-0"
               }`}
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-br from-[rgba(3,63,99,0.72)] via-[rgba(3,63,99,0.55)] to-[rgba(40,102,110,0.48)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(3,63,99,0.78),rgba(3,63,99,0.52)_48%,rgba(40,102,110,0.3))]" />
       </div>
 
-      <div className="absolute bottom-6 right-6 z-10 flex items-center gap-1 rounded-full border border-white/40 bg-black/25 p-1 backdrop-blur-md">
-        <button
-          type="button"
-          aria-label="Previous slide"
-          onClick={previousSlide}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white transition hover:bg-white/15"
-        >
-          <ChevronLeft className="size-4" />
-        </button>
-        <button
-          type="button"
-          aria-label={autoplay ? "Pause slide rotation" : "Resume slide rotation"}
-          onClick={() => {
-            setAutoplay((current) => !current);
-            trackEvent({
-              event: "hero_autoplay_toggled",
-              properties: { autoplayEnabled: !autoplay },
-            });
-          }}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white transition hover:bg-white/15"
-        >
-          {autoplay ? <Pause className="size-4" /> : <Play className="size-4" />}
-        </button>
-        <button
-          type="button"
-          aria-label="Next slide"
-          onClick={nextSlide}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white transition hover:bg-white/15"
-        >
-          <ChevronRight className="size-4" />
-        </button>
-      </div>
-      <p className="sr-only" aria-live="polite">
-        Slide {active + 1} of {slides.length}
-      </p>
-
-      <div className="waywork-shell relative flex h-full items-start py-12 md:py-16">
+      <div className="waywork-shell relative z-10">
         <div className="max-w-3xl text-white">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.14em]">
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/92">
             Residential Workspaces, Global Reach
           </p>
-          <h1 className="mt-4 text-4xl font-bold leading-[1.06] md:text-5xl lg:text-6xl">
-            Work Wonders Worldwide
+          <h1 className="mt-5 text-4xl font-bold leading-[1.02] md:text-5xl lg:text-6xl">
+            Find work-ready homes for productive escapes.
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-white/90 md:text-xl">
-            Escape the office, embrace the adventure. Book fun, high-speed workspaces in
-            residential gems for your next workation or team offsite.
+          <p className="mt-4 max-w-2xl text-base text-white/88 md:text-xl">
+            Book clean, high-speed residential spaces for focused solo stays and small-team
+            offsites without the clutter of a hotel-first experience.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button
               size="lg"
               className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
               asChild
             >
               <Link
-                href="#quick-search"
+                href="/search"
                 onClick={() =>
                   trackEvent({ event: "hero_cta_clicked", properties: { cta: "search_spaces" } })
                 }
               >
-                Search Spaces
+                Explore spaces
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white/60 bg-white/5 text-white hover:bg-white/15"
-              asChild
+            <Link
+              href="#host-teaser"
+              className="text-sm font-semibold text-white/88 underline decoration-white/30 underline-offset-4 transition hover:text-white"
+              onClick={() =>
+                trackEvent({ event: "hero_cta_clicked", properties: { cta: "host_teaser" } })
+              }
             >
-              <Link
-                href="#host-teaser"
-                onClick={() =>
-                  trackEvent({ event: "hero_cta_clicked", properties: { cta: "see_host_perks" } })
-                }
-              >
-                See Host Perks
-                <Building2 className="size-4" />
-              </Link>
-            </Button>
-          </div>
-          <div className="mt-5 inline-flex flex-wrap items-center gap-2 rounded-2xl border border-white/45 bg-white/10 px-3 py-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/85">
-              Hosting on Way Work?
-            </p>
-            <Button
-              size="sm"
-              className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
-              asChild
-            >
-              <Link
-                href="/register?callbackUrl=%2Fhost"
-                onClick={() =>
-                  trackEvent({ event: "hero_host_cta_clicked", properties: { cta: "host_signup" } })
-                }
-              >
-                Host Sign Up
-              </Link>
-            </Button>
-            <Button size="sm" variant="outline" className="border-white/60 bg-white/5 text-white hover:bg-white/15" asChild>
-              <Link
-                href="/login?callbackUrl=%2Fhost"
-                onClick={() =>
-                  trackEvent({ event: "hero_host_cta_clicked", properties: { cta: "host_login" } })
-                }
-              >
-                Host Login
-              </Link>
-            </Button>
-          </div>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <p className="ww-trust-pill border-white/50 bg-white/15 text-white">Verified Internet</p>
-            <p className="ww-trust-pill border-white/50 bg-white/15 text-white">Secure Booking</p>
-            <p className="ww-trust-pill border-white/50 bg-white/15 text-white">No Hidden Fees</p>
-            <p className="ww-trust-pill border-white/50 bg-white/15 text-white inline-flex items-center gap-1.5">
-              <MapPinned className="size-3.5" />
-              Global Locations
-            </p>
+              Hosting with Way Work?
+            </Link>
           </div>
         </div>
+
+        {searchPanel ? <div className="mt-8 max-w-6xl">{searchPanel}</div> : null}
       </div>
     </section>
   );

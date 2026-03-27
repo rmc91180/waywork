@@ -3,8 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function ReturningGuestBanner() {
+interface ReturningGuestBannerProps {
+  className?: string;
+}
+
+export function ReturningGuestBanner({ className }: ReturningGuestBannerProps) {
   const [isReturning] = useState(() => {
     if (typeof window === "undefined") return false;
     return Boolean(window.localStorage.getItem("ww-returning-guest"));
@@ -17,19 +22,24 @@ export function ReturningGuestBanner() {
   if (!isReturning) return null;
 
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
-      <p className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-900">
+    <div
+      className={cn(
+        "rounded-2xl border border-white/35 bg-white/16 p-4 text-white backdrop-blur-sm",
+        className
+      )}
+    >
+      <p className="inline-flex items-center gap-2 text-sm font-semibold text-white">
         <Sparkles className="size-4" />
-        Welcome back. Ready for another work wonder?
+        Welcome back. Ready for another productive escape?
       </p>
-      <p className="mt-1 text-sm text-emerald-800">
-        Personalized picks are waiting. Explore trending hubs in Bangkok, Lisbon, and Amsterdam.
+      <p className="mt-1 text-sm text-white/82">
+        Your recommended spaces are ready whenever you are.
       </p>
       <Link
         href="/search?sortBy=recommended&verifiedInternet=true"
-        className="mt-2 inline-flex text-sm font-semibold text-emerald-900 underline decoration-emerald-400 underline-offset-4"
+        className="mt-2 inline-flex text-sm font-semibold text-white underline decoration-white/35 underline-offset-4"
       >
-        Show my recommended spaces
+        Show recommended spaces
       </Link>
     </div>
   );

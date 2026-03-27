@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 
@@ -7,7 +8,7 @@ export function HomeQuickSearchForm() {
   return (
     <form
       action="/search"
-      className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5"
+      className="grid gap-3 rounded-[28px] border border-white/45 bg-white/94 p-3 shadow-xl shadow-slate-900/10 md:grid-cols-[minmax(0,1.9fr)_180px_140px_190px_auto] md:items-stretch md:p-4"
       onSubmit={() =>
         trackEvent({
           event: "homepage_quick_search_submitted",
@@ -15,36 +16,38 @@ export function HomeQuickSearchForm() {
         })
       }
     >
-      <label className="space-y-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ww-secondary-green)]">
-          Where to
+      <label className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Where
         </span>
         <input
           name="nearQuery"
-          placeholder="City, Landmark, or Team Hub"
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+          placeholder="City, landmark, or team hub"
+          className="mt-2 h-auto w-full border-0 p-0 text-sm text-slate-900 outline-none placeholder:text-slate-400"
           aria-label="Destination, landmark, or team hub"
         />
       </label>
-      <label className="space-y-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ww-secondary-green)]">
-          Dates
+
+      <label className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Check In
         </span>
         <input
           type="date"
           name="checkIn"
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+          className="mt-2 h-auto w-full border-0 bg-transparent p-0 text-sm text-slate-900 outline-none"
           aria-label="Check-in date"
         />
       </label>
-      <label className="space-y-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ww-secondary-green)]">
+
+      <label className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
           Guests
         </span>
         <select
           name="guests"
           defaultValue="2"
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+          className="mt-2 h-auto w-full border-0 bg-transparent p-0 text-sm text-slate-900 outline-none"
           aria-label="Number of guests"
         >
           {Array.from({ length: 10 }, (_, index) => index + 1).map((count) => (
@@ -54,29 +57,31 @@ export function HomeQuickSearchForm() {
           ))}
         </select>
       </label>
-      <label className="space-y-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ww-secondary-green)]">
-          Amenities
+
+      <label className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Verified Internet
         </span>
         <select
           name="minSpeed"
-          defaultValue="500"
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+          defaultValue="250"
+          className="mt-2 h-auto w-full border-0 bg-transparent p-0 text-sm text-slate-900 outline-none"
           aria-label="Minimum internet speed"
         >
-          <option value="500">WiFi 500+ Mbps</option>
-          <option value="250">WiFi 250+ Mbps</option>
-          <option value="100">WiFi 100+ Mbps</option>
+          <option value="500">500+ Mbps</option>
+          <option value="250">250+ Mbps</option>
+          <option value="100">100+ Mbps</option>
         </select>
       </label>
+
       <Button
         type="submit"
         size="lg"
-        className="h-11 self-end bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+        className="h-full min-h-14 rounded-2xl bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
       >
-        Explore Now
+        <Search className="size-4" />
+        Search
       </Button>
     </form>
   );
 }
-
