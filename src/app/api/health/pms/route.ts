@@ -19,6 +19,7 @@ function parseBooleanEnv(value: string | undefined, fallback: boolean) {
 export async function GET() {
   const startedAt = Date.now();
   const mode = getActivePmsProviderMode();
+  const dbBackedProvider = mode === "MEWS" || mode === "SITEMINDER" ? mode : null;
 
   const staleMinutes = parseIntegerEnv(process.env.PMS_HEALTH_STALE_JOB_MINUTES, 15);
   const maxFailedJobs = parseIntegerEnv(process.env.PMS_HEALTH_MAX_FAILED_JOBS, 25);
@@ -55,11 +56,35 @@ export async function GET() {
       );
     }
 
+    if (!dbBackedProvider) {
+      return NextResponse.json(
+        {
+          ok: true,
+          service: "waywork-pms",
+          mode,
+          latencyMs: Date.now() - startedAt,
+          queue: {
+            pending: 0,
+            processing: 0,
+            failed: 0,
+            deadLetter: 0,
+            stale: 0,
+          },
+          connections: {
+            enabled: 0,
+          },
+          warning: `PMS provider ${mode} is reserved in config, but database-backed sync support is not enabled yet.`,
+          checkedAt: new Date().toISOString(),
+        },
+        { status: 200 }
+      );
+    }
+
     const staleCutoff = new Date(Date.now() - staleMinutes * 60_000);
     const recentWindowStart = new Date(Date.now() - 24 * 60 * 60_000);
     const queueWhere = {
       connection: {
-        provider: mode,
+        provider: dbBackedProvider,
         enabled: true,
       },
     } as const;
@@ -68,7 +93,7 @@ export async function GET() {
       await db.$transaction([
         db.pmsConnection.count({
           where: {
-            provider: mode,
+            provider: dbBackedProvider,
             enabled: true,
           },
         }),
@@ -85,14 +110,14 @@ export async function GET() {
         }),
         db.pmsSyncEvent.count({
           where: {
-            connection: { provider: mode },
+            connection: { provider: dbBackedProvider },
             success: false,
             createdAt: { gte: recentWindowStart },
           },
         }),
         db.pmsSyncEvent.findFirst({
           where: {
-            connection: { provider: mode },
+            connection: { provider: dbBackedProvider },
             success: true,
           },
           orderBy: { createdAt: "desc" },

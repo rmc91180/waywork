@@ -1,4 +1,4 @@
-export type PmsProviderMode = "NONE" | "MEWS" | "SITEMINDER";
+export type PmsProviderMode = "NONE" | "MEWS" | "SITEMINDER" | "APALEO";
 
 const DEFAULT_PROVIDER_MODE: PmsProviderMode = "SITEMINDER";
 
@@ -6,6 +6,7 @@ function normalizeMode(rawValue: string | undefined): PmsProviderMode {
   const value = (rawValue || "").trim().toUpperCase();
   if (value === "MEWS") return "MEWS";
   if (value === "SITEMINDER") return "SITEMINDER";
+  if (value === "APALEO") return "APALEO";
   if (value === "NONE" || value === "OFF" || value === "DISABLED") return "NONE";
   return DEFAULT_PROVIDER_MODE;
 }
@@ -20,4 +21,8 @@ export function isMewsProviderActive() {
 
 export function isSiteMinderProviderActive() {
   return getActivePmsProviderMode() === "SITEMINDER";
+}
+
+export function isApaleoProviderActive() {
+  return getActivePmsProviderMode() === "APALEO";
 }
