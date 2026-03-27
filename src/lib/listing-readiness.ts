@@ -5,14 +5,57 @@ export interface ListingReadinessInput {
   availabilityRuleCount: number;
   descriptionLength: number;
   hasPayoutSetup: boolean;
-  mewsConnectionEnabled: boolean;
-  mewsHasRequiredTokens: boolean;
+  pmsConnectionEnabled: boolean;
+  pmsHasRequiredCredentials: boolean;
+  pmsProviderLabel?: string;
   hasPmsListingMapping: boolean;
 }
 
 export interface ListingReadinessResult {
   ready: boolean;
   reasons: string[];
+}
+
+export interface ListingPmsReadinessInput {
+  provider?: "MEWS" | "SITEMINDER" | "APALEO" | null;
+  enabled?: boolean | null;
+  mewsClientToken?: string | null;
+  mewsConnectionToken?: string | null;
+  siteminderClientId?: string | null;
+  siteminderClientSecret?: string | null;
+  apaleoClientId?: string | null;
+  apaleoClientSecret?: string | null;
+  apaleoRefreshToken?: string | null;
+}
+
+export function getListingPmsReadiness(input: ListingPmsReadinessInput) {
+  const provider = input.provider || "SITEMINDER";
+  if (provider === "MEWS") {
+    return {
+      pmsConnectionEnabled: Boolean(input.enabled),
+      pmsHasRequiredCredentials:
+        Boolean(input.mewsClientToken) && Boolean(input.mewsConnectionToken),
+      pmsProviderLabel: "Mews PMS",
+    };
+  }
+
+  if (provider === "APALEO") {
+    return {
+      pmsConnectionEnabled: Boolean(input.enabled),
+      pmsHasRequiredCredentials:
+        Boolean(input.apaleoClientId) &&
+        Boolean(input.apaleoClientSecret) &&
+        Boolean(input.apaleoRefreshToken),
+      pmsProviderLabel: "apaleo PMS",
+    };
+  }
+
+  return {
+    pmsConnectionEnabled: Boolean(input.enabled),
+    pmsHasRequiredCredentials:
+      Boolean(input.siteminderClientId) && Boolean(input.siteminderClientSecret),
+    pmsProviderLabel: "SiteMinder channel manager",
+  };
 }
 
 export function evaluateListingProductionReadiness(
@@ -44,8 +87,9 @@ export function evaluateListingProductionReadiness(
     reasons.push("Connect Stripe payouts before publishing.");
   }
 
-  if (!input.mewsConnectionEnabled || !input.mewsHasRequiredTokens) {
-    reasons.push("Connect and enable SiteMinder channel manager credentials.");
+  const providerLabel = input.pmsProviderLabel || "channel manager";
+  if (!input.pmsConnectionEnabled || !input.pmsHasRequiredCredentials) {
+    reasons.push(`Connect and enable ${providerLabel} credentials.`);
   }
 
   if (!input.hasPmsListingMapping) {

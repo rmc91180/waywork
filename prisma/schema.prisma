@@ -108,6 +108,12 @@ enum ListingStatus {
   REJECTED
 }
 
+enum ListingCurationStatus {
+  NEEDS_REVIEW
+  PUBLISHABLE
+  REJECTED
+}
+
 enum WorkspaceType {
   PRIVATE_OFFICE
   STUDIO
@@ -155,6 +161,7 @@ model Listing {
   id     String @id @default(cuid())
   hostId String
   status ListingStatus @default(DRAFT)
+  curationStatus ListingCurationStatus @default(NEEDS_REVIEW)
 
   // Core info
   title       String
@@ -216,6 +223,7 @@ model Listing {
   pmsSyncError          String?       @db.Text
 
   // Admin
+  curationNotes   String? @db.Text
   rejectionReason String? @db.Text
 
   createdAt DateTime @default(now())

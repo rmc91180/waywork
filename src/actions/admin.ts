@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { evaluateListingProductionReadiness } from "@/lib/listing-readiness";
+import { evaluateListingProductionReadiness, getListingPmsReadiness } from "@/lib/listing-readiness";
 
 // ============================================================================
 // HELPERS
@@ -119,9 +119,15 @@ export async function approveListing(listingId: string) {
       host: { select: { stripeConnectAccountId: true } },
       pmsConnection: {
         select: {
+          provider: true,
           enabled: true,
           mewsClientToken: true,
           mewsConnectionToken: true,
+          siteminderClientId: true,
+          siteminderClientSecret: true,
+          apaleoClientId: true,
+          apaleoClientSecret: true,
+          apaleoRefreshToken: true,
         },
       },
     },
@@ -135,6 +141,7 @@ export async function approveListing(listingId: string) {
     throw new Error("Listing is not pending review");
   }
 
+  const pmsReadiness = getListingPmsReadiness(listing.pmsConnection || {});
   const readiness = evaluateListingProductionReadiness({
     imageCount: listing.images.length,
     amenityCount: listing.amenities.length,
@@ -142,10 +149,7 @@ export async function approveListing(listingId: string) {
     availabilityRuleCount: listing.availabilityRules.length,
     descriptionLength: listing.description.trim().length,
     hasPayoutSetup: Boolean(listing.host.stripeConnectAccountId),
-    mewsConnectionEnabled: Boolean(listing.pmsConnection?.enabled),
-    mewsHasRequiredTokens:
-      Boolean(listing.pmsConnection?.mewsClientToken) &&
-      Boolean(listing.pmsConnection?.mewsConnectionToken),
+    ...pmsReadiness,
     hasPmsListingMapping: Boolean(listing.pmsExternalListingId),
   });
 

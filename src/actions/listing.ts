@@ -16,7 +16,7 @@ import {
 } from "@/lib/validators";
 import { computeWorkScore } from "@/lib/work-score";
 import { assertListingAccess } from "@/lib/host-access";
-import { evaluateListingProductionReadiness } from "@/lib/listing-readiness";
+import { evaluateListingProductionReadiness, getListingPmsReadiness } from "@/lib/listing-readiness";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -333,9 +333,15 @@ export async function submitListingForReview(listingId: string) {
       host: { select: { stripeConnectAccountId: true } },
       pmsConnection: {
         select: {
+          provider: true,
           enabled: true,
           mewsClientToken: true,
           mewsConnectionToken: true,
+          siteminderClientId: true,
+          siteminderClientSecret: true,
+          apaleoClientId: true,
+          apaleoClientSecret: true,
+          apaleoRefreshToken: true,
         },
       },
     },
@@ -356,6 +362,7 @@ export async function submitListingForReview(listingId: string) {
     throw new Error("At least one amenity is required");
   }
 
+  const pmsReadiness = getListingPmsReadiness(listing.pmsConnection || {});
   const readiness = evaluateListingProductionReadiness({
     imageCount: listing.images.length,
     amenityCount: listing.amenities.length,
@@ -363,10 +370,7 @@ export async function submitListingForReview(listingId: string) {
     availabilityRuleCount: listing.availabilityRules.length,
     descriptionLength: listing.description.trim().length,
     hasPayoutSetup: Boolean(listing.host.stripeConnectAccountId),
-    mewsConnectionEnabled: Boolean(listing.pmsConnection?.enabled),
-    mewsHasRequiredTokens:
-      Boolean(listing.pmsConnection?.mewsClientToken) &&
-      Boolean(listing.pmsConnection?.mewsConnectionToken),
+    ...pmsReadiness,
     hasPmsListingMapping: Boolean(listing.pmsExternalListingId),
   });
 
@@ -417,9 +421,15 @@ export async function unpauseListing(listingId: string) {
       host: { select: { stripeConnectAccountId: true } },
       pmsConnection: {
         select: {
+          provider: true,
           enabled: true,
           mewsClientToken: true,
           mewsConnectionToken: true,
+          siteminderClientId: true,
+          siteminderClientSecret: true,
+          apaleoClientId: true,
+          apaleoClientSecret: true,
+          apaleoRefreshToken: true,
         },
       },
     },
@@ -432,6 +442,7 @@ export async function unpauseListing(listingId: string) {
     throw new Error("Listing is not paused");
   }
 
+  const pmsReadiness = getListingPmsReadiness(listing.pmsConnection || {});
   const readiness = evaluateListingProductionReadiness({
     imageCount: listing.images.length,
     amenityCount: listing.amenities.length,
@@ -439,10 +450,7 @@ export async function unpauseListing(listingId: string) {
     availabilityRuleCount: listing.availabilityRules.length,
     descriptionLength: listing.description.trim().length,
     hasPayoutSetup: Boolean(listing.host.stripeConnectAccountId),
-    mewsConnectionEnabled: Boolean(listing.pmsConnection?.enabled),
-    mewsHasRequiredTokens:
-      Boolean(listing.pmsConnection?.mewsClientToken) &&
-      Boolean(listing.pmsConnection?.mewsConnectionToken),
+    ...pmsReadiness,
     hasPmsListingMapping: Boolean(listing.pmsExternalListingId),
   });
 

@@ -1,0 +1,10 @@
+DO $$
+BEGIN
+  CREATE TYPE "ListingCurationStatus" AS ENUM ('NEEDS_REVIEW', 'PUBLISHABLE', 'REJECTED');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+ALTER TABLE "Listing"
+  ADD COLUMN IF NOT EXISTS "curationStatus" "ListingCurationStatus" NOT NULL DEFAULT 'NEEDS_REVIEW',
+  ADD COLUMN IF NOT EXISTS "curationNotes" TEXT;

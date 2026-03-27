@@ -1,0 +1,48 @@
+[
+  {
+    "unitGroupId": "UG-CENTRO-STUDIO",
+    "description": "A compact Madrid apartment set up for focused solo work weeks. The living area includes a proper desk setup, strong WiFi, a kitchen for longer stays, and enough quiet separation for video calls. Best for independent workers or pairs who need a central city base without giving up practical work comfort.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
+        "alt": "Bright Limehome-style Madrid studio living space",
+        "isPrimary": true
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1600&q=80",
+        "alt": "Kitchenette and dining area for work stays"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80",
+        "alt": "Desk setup suitable for focused remote work"
+      }
+    ],
+    "amenities": [
+      { "category": "MONITOR", "name": "External Monitor", "quantity": 1 },
+      { "category": "AV", "name": "Video Conference Setup", "quantity": 1 }
+    ]
+  },
+  {
+    "unitGroupId": "UG-CHAMARTIN-APT",
+    "description": "A one-bedroom Madrid apartment suited to solo stays or small-team offsites that need residential comfort. It offers room for two workstations, reliable high-speed internet, a full kitchen, and enough separation between living and sleeping space to support longer collaborative stays.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
+        "alt": "Warm residential apartment living room",
+        "isPrimary": true
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
+        "alt": "Apartment lounge with table for team planning"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80",
+        "alt": "Dedicated work area with quiet setup"
+      }
+    ],
+    "amenities": [
+      { "category": "MEETING", "name": "Meeting Table", "quantity": 1 },
+      { "category": "MONITOR", "name": "External Monitor", "quantity": 2 }
+    ]
+  }
+]

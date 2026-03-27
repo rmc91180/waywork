@@ -18,6 +18,12 @@ const statusColors: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-800",
 };
 
+const curationColors: Record<string, string> = {
+  NEEDS_REVIEW: "bg-slate-100 text-slate-800",
+  PUBLISHABLE: "bg-blue-100 text-blue-800",
+  REJECTED: "bg-rose-100 text-rose-800",
+};
+
 export default async function AdminListingsPage() {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "ADMIN") redirect("/");
@@ -126,6 +132,18 @@ export default async function AdminListingsPage() {
                           )}
                         </div>
 
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <Badge
+                            variant="outline"
+                            className={curationColors[listing.curationStatus] || ""}
+                          >
+                            {listing.curationStatus.replace(/_/g, " ")}
+                          </Badge>
+                          {listing.pmsConnectionId && (
+                            <Badge variant="outline">PMS Imported</Badge>
+                          )}
+                        </div>
+
                         {/* Host info */}
                         <div className="flex items-center gap-2 mt-3">
                           <Avatar className="h-6 w-6">
@@ -145,6 +163,12 @@ export default async function AdminListingsPage() {
                         {listing.rejectionReason && (
                           <div className="mt-2 p-2 bg-red-50 rounded text-xs text-red-700">
                             Rejection reason: {listing.rejectionReason}
+                          </div>
+                        )}
+
+                        {listing.curationNotes && (
+                          <div className="mt-2 p-2 bg-slate-50 rounded text-xs text-slate-700">
+                            Curation notes: {listing.curationNotes}
                           </div>
                         )}
                       </div>
