@@ -132,6 +132,7 @@ enum BedSize {
 enum PmsProvider {
   MEWS
   SITEMINDER
+  APALEO
 }
 
 enum PmsSyncStatus {
@@ -206,7 +207,9 @@ model Listing {
 
   // PMS sync
   pmsConnectionId       String?
+  pmsExternalPropertyId String?
   pmsExternalListingId  String?
+  pmsExternalUnitGroupId String?
   pmsExternalRatePlanId String?
   pmsLastSyncedAt       DateTime?
   pmsSyncStatus         PmsSyncStatus @default(PENDING)
@@ -244,7 +247,9 @@ model Listing {
   @@index([pricePerDay])
   @@index([lat, lng])
   @@index([pmsConnectionId])
+  @@index([pmsExternalPropertyId])
   @@index([pmsExternalListingId])
+  @@index([pmsExternalUnitGroupId])
 }
 
 model ListingTeamMember {
@@ -470,6 +475,20 @@ model PmsConnection {
   siteminderClientSecret String?
   siteminderPropertyId  String?
   siteminderWebhookSecret String?
+
+  // apaleo OAuth / Distribution API
+  apaleoApiBaseUrl        String   @default("https://api.apaleo.com")
+  apaleoIdentityBaseUrl   String   @default("https://identity.apaleo.com")
+  apaleoClientId          String?
+  apaleoClientSecret      String?
+  apaleoAccountCode       String?
+  apaleoRefreshToken      String?  @db.Text
+  apaleoAccessTokenExpiresAt DateTime?
+  apaleoConnectedAt       DateTime?
+  apaleoLastTokenRefreshAt DateTime?
+  apaleoWebhookSecret     String?
+  apaleoWebhookSubscriptionId String?
+  apaleoAriSubscriptionId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

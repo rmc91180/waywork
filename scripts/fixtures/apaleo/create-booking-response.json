@@ -1,0 +1,10 @@
+{
+  "id": "booking-123",
+  "status": "Confirmed",
+  "reservations": [
+    {
+      "id": "reservation-123",
+      "unitGroupId": "UG-CENTRO-STUDIO"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "RP-CENTRO-FLEX",
+    "propertyId": "MADRID-CENTRO",
+    "unitGroupId": "UG-CENTRO-STUDIO",
+    "code": "FLEX",
+    "name": "Flexible Rate"
+  },
+  {
+    "id": "RP-CHAMARTIN-STD",
+    "propertyId": "MADRID-CHAMARTIN",
+    "unitGroupId": "UG-CHAMARTIN-APT",
+    "code": "STD",
+    "name": "Standard Rate"
+  }
+]

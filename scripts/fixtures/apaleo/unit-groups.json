@@ -1,0 +1,14 @@
+[
+  {
+    "id": "UG-CENTRO-STUDIO",
+    "propertyId": "MADRID-CENTRO",
+    "name": "Studio with Kitchen",
+    "maxPersons": 2
+  },
+  {
+    "id": "UG-CHAMARTIN-APT",
+    "propertyId": "MADRID-CHAMARTIN",
+    "name": "One Bedroom Apartment",
+    "maxPersons": 4
+  }
+]

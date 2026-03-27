@@ -1,0 +1,4 @@
+{
+  "id": "webhook-subscription-123",
+  "endpointUrl": "https://waywork.example/api/pms/apaleo/webhooks"
+}
