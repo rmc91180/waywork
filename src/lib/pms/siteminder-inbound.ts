@@ -2,6 +2,10 @@ import { addDays, differenceInDays, isBefore, startOfDay } from "date-fns";
 import { Prisma } from "@/generated/prisma";
 import { db } from "@/lib/db";
 import {
+  calculateBookingPricingFromGross,
+  resolveBookingCommissionBps,
+} from "@/lib/payout-config";
+import {
   extractWsseCredentials,
   parseSoapEnvelope,
   readAttr,
@@ -411,6 +415,16 @@ export async function applyInboundSiteMinderReservation(
       pricePerDay: true,
       cleaningFee: true,
       currency: true,
+      host: {
+        select: {
+          defaultBookingCommissionBps: true,
+        },
+      },
+      pmsConnection: {
+        select: {
+          bookingCommissionBps: true,
+        },
+      },
     },
   });
 
@@ -494,8 +508,12 @@ export async function applyInboundSiteMinderReservation(
   const guestId = await findOrCreateGuest(connectionId, reservation);
   const fallbackSubtotal = listing.pricePerDay * numberOfDays;
   const subtotal = totalPrice > 0 ? Math.max(0, totalPrice - listing.cleaningFee) : fallbackSubtotal;
-  const serviceFee = totalPrice > 0 ? Math.round(totalPrice * 0.15) : Math.round((subtotal + listing.cleaningFee) * 0.15);
-  const hostPayout = Math.max(0, (totalPrice > 0 ? totalPrice : subtotal + listing.cleaningFee) - serviceFee);
+  const grossAmount = totalPrice > 0 ? totalPrice : subtotal + listing.cleaningFee;
+  const commissionBps = resolveBookingCommissionBps({
+    hostDefaultBookingCommissionBps: listing.host.defaultBookingCommissionBps,
+    connectionBookingCommissionBps: listing.pmsConnection?.bookingCommissionBps,
+  });
+  const { serviceFee, hostPayout } = calculateBookingPricingFromGross(grossAmount, commissionBps);
 
   let bookingId = existingBooking?.id || null;
 
@@ -521,7 +539,7 @@ export async function applyInboundSiteMinderReservation(
           subtotal,
           cleaningFee: listing.cleaningFee,
           serviceFee,
-          totalPrice: totalPrice > 0 ? totalPrice : subtotal + listing.cleaningFee,
+          totalPrice: grossAmount,
           hostPayout,
           pmsExternalReservationId: reservation.externalReservationId,
           pmsSyncStatus: "SYNCED",
@@ -557,7 +575,7 @@ export async function applyInboundSiteMinderReservation(
         subtotal,
         cleaningFee: listing.cleaningFee,
         serviceFee,
-        totalPrice: totalPrice > 0 ? totalPrice : subtotal + listing.cleaningFee,
+        totalPrice: grossAmount,
         hostPayout,
         pmsExternalReservationId: reservation.externalReservationId,
         pmsSyncStatus: "SYNCED",

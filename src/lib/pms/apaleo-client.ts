@@ -148,7 +148,7 @@ export class ApaleoClient {
     this.apiBaseUrl = normalizeBaseUrl(credentials.apiBaseUrl);
     this.identityBaseUrl = normalizeBaseUrl(credentials.identityBaseUrl);
     this.distributionBaseUrl = normalizeBaseUrl(
-      credentials.distributionBaseUrl || "https://api.apaleo.com"
+      credentials.distributionBaseUrl || "https://distribution.apaleo.com"
     );
     this.webhookBaseUrl = normalizeBaseUrl(
       credentials.webhookBaseUrl || "https://webhook.apaleo.com"
@@ -274,7 +274,7 @@ export class ApaleoClient {
     }
 
     return this.requestJson<Record<string, JsonValue>>(
-      `${this.distributionBaseUrl}/booking/v1/bookings`,
+      `${this.distributionBaseUrl}/v1/bookings`,
       {
         method: "POST",
         headers: {
@@ -311,13 +311,29 @@ export class ApaleoClient {
     }
 
     return this.requestJson<Record<string, JsonValue>>(
-      `${this.distributionBaseUrl}/channel/v1/subscriptions`,
+      `${this.distributionBaseUrl}/v1/subscriptions`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
+      }
+    );
+  }
+
+  async cancelReservation(reservationId: string) {
+    if (this.fixtureDir) {
+      return readFixture<Record<string, JsonValue>>(
+        this.fixtureDir,
+        "cancel-reservation-response.json"
+      );
+    }
+
+    return this.requestJson<Record<string, JsonValue>>(
+      `${this.distributionBaseUrl}/v1/reservations/${encodeURIComponent(reservationId)}/cancel`,
+      {
+        method: "PUT",
       }
     );
   }

@@ -20,6 +20,7 @@ interface BookingSidebarProps {
   cleaningFee: number;
   maxGuests: number;
   cancellationPolicy: string;
+  bookingCommissionPercent: number;
 }
 
 export function BookingSidebar({
@@ -28,6 +29,7 @@ export function BookingSidebar({
   cleaningFee,
   maxGuests,
   cancellationPolicy,
+  bookingCommissionPercent,
 }: BookingSidebarProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -49,10 +51,10 @@ export function BookingSidebar({
     if (numberOfDays === 0) return null;
     const subtotal = pricePerDay * numberOfDays;
     const grossBookingAmount = subtotal + cleaningFee;
-    const serviceFee = Math.round(grossBookingAmount * 0.15);
+    const serviceFee = Math.round(grossBookingAmount * (bookingCommissionPercent / 100));
     const total = grossBookingAmount;
     return { subtotal, cleaningFee, serviceFee, total };
-  }, [numberOfDays, pricePerDay, cleaningFee]);
+  }, [bookingCommissionPercent, numberOfDays, pricePerDay, cleaningFee]);
 
   const policyLabel =
     cancellationPolicy === "FLEXIBLE"
@@ -229,9 +231,11 @@ export function BookingSidebar({
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-slate-600">Way Work commission (15%)</span>
-              <span>{formatCurrency(pricing.serviceFee)}</span>
-            </div>
+                <span className="text-slate-600">
+                  Way Work commission ({bookingCommissionPercent.toFixed(2)}%)
+                </span>
+                <span>{formatCurrency(pricing.serviceFee)}</span>
+              </div>
             <Separator />
             <div className="flex justify-between font-semibold">
               <span>Total</span>

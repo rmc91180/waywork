@@ -29,12 +29,14 @@ interface ListingWizardProps {
   mode: "create" | "edit";
   listingId?: string;
   initialData?: Partial<ListingFormData>;
+  bookingCommissionBps: number;
 }
 
 export function ListingWizard({
   mode,
   listingId,
   initialData,
+  bookingCommissionBps,
 }: ListingWizardProps) {
   const {
     step,
@@ -281,7 +283,13 @@ export function ListingWizard({
       case 1:
         return <StepLocation data={formData} onChange={updateFormData} />;
       case 2:
-        return <StepPricing data={formData} onChange={updateFormData} />;
+        return (
+          <StepPricing
+            data={formData}
+            onChange={updateFormData}
+            bookingCommissionBps={bookingCommissionBps}
+          />
+        );
       case 3:
         return <StepOffsite data={formData} onChange={updateFormData} />;
       case 4:

@@ -3,15 +3,22 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CANCELLATION_POLICIES } from "@/lib/constants";
+import { calculateBookingPricingFromGross } from "@/lib/payout-config";
 import { cn } from "@/lib/utils";
 import type { ListingFormData } from "@/hooks/use-listing-form";
 
 interface StepPricingProps {
   data: ListingFormData;
   onChange: (updates: Partial<ListingFormData>) => void;
+  bookingCommissionBps: number;
 }
 
-export function StepPricing({ data, onChange }: StepPricingProps) {
+export function StepPricing({ data, onChange, bookingCommissionBps }: StepPricingProps) {
+  const pricing = calculateBookingPricingFromGross(
+    data.pricePerDay + data.cleaningFee,
+    bookingCommissionBps
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -103,9 +110,9 @@ export function StepPricing({ data, onChange }: StepPricingProps) {
               </div>
             )}
             <div className="flex justify-between text-xs text-gray-400">
-              <span>Way Work commission (15%)</span>
+              <span>Way Work commission ({pricing.commissionPercent.toFixed(2)}%)</span>
               <span>
-                ${(((data.pricePerDay + data.cleaningFee) * 0.15) / 100).toFixed(2)} / 1-day booking
+                ${(pricing.serviceFee / 100).toFixed(2)} / 1-day booking
               </span>
             </div>
             <div className="border-t pt-1 flex justify-between font-medium text-gray-900">
@@ -122,11 +129,7 @@ export function StepPricing({ data, onChange }: StepPricingProps) {
             <div className="flex justify-between text-xs text-gray-500">
               <span>Estimated host payout</span>
               <span>
-                $
-                {(
-                  (data.pricePerDay + data.cleaningFee - Math.round((data.pricePerDay + data.cleaningFee) * 0.15)) /
-                  100
-                ).toFixed(2)}
+                ${(pricing.hostPayout / 100).toFixed(2)}
               </span>
             </div>
           </div>

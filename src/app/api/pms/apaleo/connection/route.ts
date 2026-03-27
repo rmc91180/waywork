@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  bookingCommissionBpsToPercent,
+  bookingCommissionPercentToBps,
+} from "@/lib/payout-config";
 import { isApaleoProviderActive } from "@/lib/pms/provider-mode";
 
 const listingMappingSchema = z.object({
@@ -21,6 +25,7 @@ const connectionSchema = z.object({
   webhookSecret: z.string().optional(),
   webhookSubscriptionId: z.string().optional(),
   ariSubscriptionId: z.string().optional(),
+  bookingCommissionPercent: z.number().min(0).max(100).nullable().optional(),
   listingMappings: z.array(listingMappingSchema).max(500).optional(),
 });
 
@@ -99,6 +104,10 @@ export async function GET() {
       webhookSubscriptionId: connection.apaleoWebhookSubscriptionId,
       ariSubscriptionId: connection.apaleoAriSubscriptionId,
       ariSubscriptionState: connection.apaleoAriSubscriptionState,
+      bookingCommissionPercent:
+        connection.bookingCommissionBps === null
+          ? null
+          : bookingCommissionBpsToPercent(connection.bookingCommissionBps),
       updatedAt: connection.updatedAt,
     },
     listings: connection.listings,
@@ -169,6 +178,7 @@ export async function POST(request: NextRequest) {
       apaleoWebhookSecret: body.webhookSecret?.trim() || null,
       apaleoWebhookSubscriptionId: body.webhookSubscriptionId?.trim() || null,
       apaleoAriSubscriptionId: body.ariSubscriptionId?.trim() || null,
+      bookingCommissionBps: bookingCommissionPercentToBps(body.bookingCommissionPercent),
     },
     update: {
       enabled: typeof body.enabled === "boolean" ? body.enabled : undefined,
@@ -193,6 +203,10 @@ export async function POST(request: NextRequest) {
       apaleoAriSubscriptionId:
         typeof body.ariSubscriptionId === "string"
           ? body.ariSubscriptionId.trim() || null
+          : undefined,
+      bookingCommissionBps:
+        body.bookingCommissionPercent !== undefined
+          ? bookingCommissionPercentToBps(body.bookingCommissionPercent)
           : undefined,
     },
   });

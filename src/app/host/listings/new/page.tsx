@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { ListingWizard } from "@/components/host/listing-wizard";
+import { db } from "@/lib/db";
+import { DEFAULT_BOOKING_COMMISSION_BPS } from "@/lib/payout-config";
 
 export const metadata = {
   title: "Create Listing",
@@ -10,6 +12,11 @@ export default async function NewListingPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { defaultBookingCommissionBps: true },
+  });
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6">
@@ -18,7 +25,10 @@ export default async function NewListingPage() {
           List your workspace on WayWork and reach remote professionals.
         </p>
       </div>
-      <ListingWizard mode="create" />
+      <ListingWizard
+        mode="create"
+        bookingCommissionBps={user?.defaultBookingCommissionBps || DEFAULT_BOOKING_COMMISSION_BPS}
+      />
     </div>
   );
 }

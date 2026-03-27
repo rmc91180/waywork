@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getConnectStatus } from "@/actions/stripe-connect";
+import { getConnectStatus, getPayoutSettings } from "@/actions/stripe-connect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConnectActions } from "@/components/host/connect-actions";
+import { PayoutSettingsForm } from "@/components/host/payout-settings-form";
 
 export const metadata = {
   title: "Payouts",
@@ -19,6 +20,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
 
   const params = await searchParams;
   const status = await getConnectStatus();
+  const payoutSettings = await getPayoutSettings();
 
   const showOnboardingComplete = params.onboarding === "complete";
   const showOnboardingRefresh = params.onboarding === "refresh";
@@ -107,6 +109,17 @@ export default async function PayoutsPage({ searchParams }: Props) {
               <ConnectActions hasAccount={false} isOnboarded={false} />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6 border-slate-200/80 bg-white/95">
+        <CardHeader>
+          <CardTitle>Default Payout Split</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PayoutSettingsForm
+            defaultBookingCommissionPercent={payoutSettings.defaultBookingCommissionPercent}
+          />
         </CardContent>
       </Card>
 

@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
+  bookingCommissionBpsToPercent,
+  bookingCommissionPercentToBps,
+} from "@/lib/payout-config";
+import {
   createConnectAccount,
   createOnboardingLink,
   createDashboardLink,
@@ -106,5 +110,61 @@ export async function getConnectStatus(): Promise<{
     hasAccount: true,
     isOnboarded: onboarded,
     accountId: user.stripeConnectAccountId,
+  };
+}
+
+export async function getPayoutSettings(): Promise<{
+  stripeConnectAccountId: string | null;
+  defaultBookingCommissionBps: number;
+  defaultBookingCommissionPercent: number;
+}> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      stripeConnectAccountId: true,
+      defaultBookingCommissionBps: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  return {
+    stripeConnectAccountId: user.stripeConnectAccountId,
+    defaultBookingCommissionBps: user.defaultBookingCommissionBps,
+    defaultBookingCommissionPercent: bookingCommissionBpsToPercent(
+      user.defaultBookingCommissionBps
+    ),
+  };
+}
+
+export async function updateDefaultBookingCommissionPercent(percent: number) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const commissionBps = bookingCommissionPercentToBps(percent);
+  if (commissionBps === null) {
+    throw new Error("A valid commission percentage is required.");
+  }
+
+  await db.user.update({
+    where: { id: session.user.id },
+    data: {
+      defaultBookingCommissionBps: commissionBps,
+    },
+  });
+
+  return {
+    ok: true,
+    defaultBookingCommissionBps: commissionBps,
+    defaultBookingCommissionPercent: bookingCommissionBpsToPercent(commissionBps),
   };
 }

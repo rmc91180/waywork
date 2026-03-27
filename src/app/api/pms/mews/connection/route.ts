@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  bookingCommissionBpsToPercent,
+  bookingCommissionPercentToBps,
+} from "@/lib/payout-config";
 import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
 import { isMewsProviderActive } from "@/lib/pms/provider-mode";
 
@@ -19,6 +23,7 @@ const connectionRequestSchema = z.object({
   mewsAccessToken: z.string().optional(),
   mewsEnterpriseId: z.string().optional(),
   mewsClientName: z.string().optional(),
+  bookingCommissionPercent: z.number().min(0).max(100).nullable().optional(),
   listingMappings: z.array(listingMappingSchema).max(500).optional(),
 });
 
@@ -91,6 +96,10 @@ export async function GET() {
       mewsAccessToken: redact(connection.mewsAccessToken),
       mewsEnterpriseId: redact(connection.mewsEnterpriseId),
       mewsClientName: connection.mewsClientName,
+      bookingCommissionPercent:
+        connection.bookingCommissionBps === null
+          ? null
+          : bookingCommissionBpsToPercent(connection.bookingCommissionBps),
       updatedAt: connection.updatedAt,
     },
     listings: connection.listings,
@@ -155,6 +164,7 @@ export async function POST(request: NextRequest) {
       mewsAccessToken: body.mewsAccessToken?.trim() || null,
       mewsEnterpriseId: body.mewsEnterpriseId?.trim() || null,
       mewsClientName: body.mewsClientName?.trim() || "WayWork PMS Sync/1.0",
+      bookingCommissionBps: bookingCommissionPercentToBps(body.bookingCommissionPercent),
     },
     update: {
       enabled: typeof body.enabled === "boolean" ? body.enabled : undefined,
@@ -173,6 +183,10 @@ export async function POST(request: NextRequest) {
           ? body.mewsEnterpriseId.trim() || null
           : undefined,
       mewsClientName: body.mewsClientName?.trim() || undefined,
+      bookingCommissionBps:
+        body.bookingCommissionPercent !== undefined
+          ? bookingCommissionPercentToBps(body.bookingCommissionPercent)
+          : undefined,
     },
   });
 

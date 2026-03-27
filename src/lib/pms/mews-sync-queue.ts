@@ -1,16 +1,18 @@
 import { addMinutes } from "date-fns";
 import { db } from "@/lib/db";
 import { captureObservedError, createObservationContext, logObservation } from "@/lib/observability";
+import { syncBookingToApaleo } from "@/lib/pms/apaleo-booking";
 import { requestAriSyncForConnection, syncBookingToMews } from "@/lib/pms/mews-sync";
 import { syncBookingToSiteMinder } from "@/lib/pms/siteminder-sync";
 import {
   getActivePmsProviderMode,
+  isApaleoProviderActive,
   isMewsProviderActive,
   isSiteMinderProviderActive,
 } from "@/lib/pms/provider-mode";
 
 const MAX_SYNC_ATTEMPTS = 5;
-type ActivePmsProvider = "MEWS" | "SITEMINDER";
+type ActivePmsProvider = "MEWS" | "SITEMINDER" | "APALEO";
 
 function nextRetryDelayMinutes(attemptCount: number) {
   return Math.min(60, Math.pow(2, Math.max(0, attemptCount - 1)));
@@ -20,12 +22,14 @@ function getRoutableProvider(): ActivePmsProvider | null {
   const mode = getActivePmsProviderMode();
   if (mode === "MEWS") return "MEWS";
   if (mode === "SITEMINDER") return "SITEMINDER";
+  if (mode === "APALEO") return "APALEO";
   return null;
 }
 
 function isProviderEnabled(provider: ActivePmsProvider) {
   if (provider === "MEWS") return isMewsProviderActive();
-  return isSiteMinderProviderActive();
+  if (provider === "SITEMINDER") return isSiteMinderProviderActive();
+  return isApaleoProviderActive();
 }
 
 export async function enqueueBookingSyncJob(
@@ -217,14 +221,18 @@ export async function processPendingPmsSyncJobs(limit = 25) {
         const result =
           job.connection.provider === "MEWS"
             ? await syncBookingToMews(job.bookingId, "UPSERT")
-            : await syncBookingToSiteMinder(job.bookingId, "UPSERT");
+            : job.connection.provider === "SITEMINDER"
+              ? await syncBookingToSiteMinder(job.bookingId, "UPSERT")
+              : await syncBookingToApaleo(job.bookingId, "UPSERT");
         if (!result.ok) throw new Error(result.error || "Booking UPSERT sync failed.");
       } else if (job.type === "BOOKING_CANCEL") {
         if (!job.bookingId) throw new Error("Booking sync job is missing bookingId.");
         const result =
           job.connection.provider === "MEWS"
             ? await syncBookingToMews(job.bookingId, "CANCEL")
-            : await syncBookingToSiteMinder(job.bookingId, "CANCEL");
+            : job.connection.provider === "SITEMINDER"
+              ? await syncBookingToSiteMinder(job.bookingId, "CANCEL")
+              : await syncBookingToApaleo(job.bookingId, "CANCEL");
         if (!result.ok) throw new Error(result.error || "Booking CANCEL sync failed.");
       } else if (job.type === "REQUEST_ARI_UPDATE") {
         if (job.connection.provider !== "MEWS") {

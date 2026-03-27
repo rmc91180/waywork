@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
+import { syncBookingToApaleo } from "@/lib/pms/apaleo-booking";
 import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import type Stripe from "stripe";
 
-async function releaseBookingInventory(bookingId: string) {
+async function releaseBookingInventory(
+  bookingId: string,
+  status: "CANCELLED_BY_GUEST" | "CANCELLED_BY_HOST" = "CANCELLED_BY_GUEST"
+) {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     select: {
@@ -31,9 +35,65 @@ async function releaseBookingInventory(bookingId: string) {
     }),
     db.booking.update({
       where: { id: booking.id },
-      data: { status: "CANCELLED_BY_GUEST" },
+      data: { status },
     }),
   ]);
+}
+
+async function rollbackApaleoPaymentHold(
+  stripe: ReturnType<typeof getStripe>,
+  paymentIntentId: string
+) {
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+  if (paymentIntent.status === "requires_capture") {
+    await stripe.paymentIntents.cancel(paymentIntentId);
+    return;
+  }
+
+  if (paymentIntent.status === "succeeded") {
+    await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+    });
+  }
+}
+
+function extractTransferIdFromPaymentIntent(
+  paymentIntent: Stripe.PaymentIntent | Stripe.Response<Stripe.PaymentIntent>
+) {
+  const latestCharge = paymentIntent.latest_charge;
+  if (!latestCharge || typeof latestCharge === "string") {
+    return null;
+  }
+
+  const transfer = latestCharge.transfer;
+  if (!transfer) {
+    return null;
+  }
+
+  return typeof transfer === "string" ? transfer : transfer.id;
+}
+
+async function syncStripeSettlementMetadata(
+  stripe: ReturnType<typeof getStripe>,
+  bookingId: string,
+  paymentIntentId: string
+) {
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+    expand: ["latest_charge.transfer"],
+  });
+
+  const transferId = extractTransferIdFromPaymentIntent(paymentIntent);
+
+  await db.booking.update({
+    where: { id: bookingId },
+    data: {
+      stripePaymentIntentId: paymentIntentId,
+      stripeTransferId: transferId,
+    },
+  });
+
+  return transferId;
 }
 
 export async function POST(request: NextRequest) {
@@ -76,7 +136,18 @@ export async function POST(request: NextRequest) {
 
         const booking = await db.booking.findUnique({
           where: { id: bookingId },
-          include: { listing: true },
+          include: {
+            listing: {
+              include: {
+                pmsConnection: {
+                  select: {
+                    provider: true,
+                    enabled: true,
+                  },
+                },
+              },
+            },
+          },
         });
 
         if (!booking) {
@@ -88,17 +159,63 @@ export async function POST(request: NextRequest) {
           break;
         }
 
-        // Update booking status
+        const paymentIntentId =
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : session.payment_intent?.id || null;
+        const stripe = getStripe();
+        const isApaleoBooking = Boolean(
+          booking.listing.pmsConnection?.enabled &&
+            booking.listing.pmsConnection.provider === "APALEO"
+        );
+
+        if (isApaleoBooking) {
+          if (!paymentIntentId) {
+            console.error("Apaleo booking is missing payment intent:", bookingId);
+            await releaseBookingInventory(bookingId, "CANCELLED_BY_HOST");
+            break;
+          }
+
+          const syncResult = await syncBookingToApaleo(bookingId, "UPSERT");
+          if (!syncResult.ok) {
+            await rollbackApaleoPaymentHold(stripe, paymentIntentId);
+            await releaseBookingInventory(bookingId, "CANCELLED_BY_HOST");
+            console.error(`Apaleo sync failed for booking ${bookingId}: ${syncResult.error}`);
+            break;
+          }
+
+          try {
+            await stripe.paymentIntents.capture(paymentIntentId);
+            await db.booking.update({
+              where: { id: bookingId },
+              data: {
+                status: "CONFIRMED",
+                stripePaymentIntentId: paymentIntentId,
+              },
+            });
+            await syncStripeSettlementMetadata(stripe, bookingId, paymentIntentId);
+            console.log(`Booking ${bookingId} confirmed and captured after apaleo sync`);
+          } catch (captureError) {
+            console.error("Stripe capture failed after apaleo sync:", captureError);
+            await syncBookingToApaleo(bookingId, "CANCEL");
+            await rollbackApaleoPaymentHold(stripe, paymentIntentId);
+            await releaseBookingInventory(bookingId, "CANCELLED_BY_HOST");
+            break;
+          }
+
+          break;
+        }
+
         await db.booking.update({
           where: { id: bookingId },
           data: {
             status: "CONFIRMED",
-            stripePaymentIntentId:
-              typeof session.payment_intent === "string"
-                ? session.payment_intent
-                : session.payment_intent?.id || null,
+            stripePaymentIntentId: paymentIntentId,
           },
         });
+        if (paymentIntentId) {
+          await syncStripeSettlementMetadata(stripe, bookingId, paymentIntentId);
+        }
 
         await enqueueBookingSyncJob(bookingId, "UPSERT");
         void processPendingMewsSyncJobs(5);

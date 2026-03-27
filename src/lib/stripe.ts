@@ -1,4 +1,9 @@
 import Stripe from "stripe";
+import {
+  calculateBookingPricingFromGross,
+  DEFAULT_BOOKING_COMMISSION_BPS,
+  DEFAULT_BOOKING_COMMISSION_PERCENT,
+} from "@/lib/payout-config";
 
 let _stripe: Stripe | null = null;
 
@@ -12,18 +17,21 @@ export function getStripe(): Stripe {
 }
 
 // Way Work platform commission on booking gross (subtotal + cleaning fee)
-export const SERVICE_FEE_PERCENTAGE = 0.15;
+export const SERVICE_FEE_PERCENTAGE = DEFAULT_BOOKING_COMMISSION_PERCENT / 100;
+export const DEFAULT_SERVICE_FEE_BPS = DEFAULT_BOOKING_COMMISSION_BPS;
 
 export function calculatePricing(
   pricePerDay: number,
   numberOfDays: number,
-  cleaningFee: number
+  cleaningFee: number,
+  commissionBps = DEFAULT_BOOKING_COMMISSION_BPS
 ) {
   const subtotal = pricePerDay * numberOfDays;
   const grossBookingAmount = subtotal + cleaningFee;
-  const serviceFee = Math.round(grossBookingAmount * SERVICE_FEE_PERCENTAGE);
-  const totalPrice = grossBookingAmount;
-  const hostPayout = Math.max(0, grossBookingAmount - serviceFee);
+  const { serviceFee, totalPrice, hostPayout } = calculateBookingPricingFromGross(
+    grossBookingAmount,
+    commissionBps
+  );
 
   return {
     subtotal,

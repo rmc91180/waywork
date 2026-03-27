@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getListingAccessRole } from "@/lib/host-access";
 import { ListingWizard } from "@/components/host/listing-wizard";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_BOOKING_COMMISSION_BPS } from "@/lib/payout-config";
 
 export const metadata = {
   title: "Edit Listing",
@@ -41,6 +42,11 @@ export default async function EditListingPage({
   if (!listing || !accessRole) {
     notFound();
   }
+
+  const currentUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { defaultBookingCommissionBps: true },
+  });
 
   // Transform listing data into wizard form shape
   const initialData = {
@@ -132,6 +138,9 @@ export default async function EditListingPage({
         mode="edit"
         listingId={listing.id}
         initialData={initialData}
+        bookingCommissionBps={
+          currentUser?.defaultBookingCommissionBps || DEFAULT_BOOKING_COMMISSION_BPS
+        }
       />
     </div>
   );

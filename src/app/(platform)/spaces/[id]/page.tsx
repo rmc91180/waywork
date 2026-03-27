@@ -16,6 +16,10 @@ import {
   LEISURE_FEATURE_LABELS,
   WORKSPACE_TYPES,
 } from "@/lib/constants";
+import {
+  bookingCommissionBpsToPercent,
+  resolveBookingCommissionBps,
+} from "@/lib/payout-config";
 import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import { BookingSidebar } from "@/components/booking/booking-sidebar";
@@ -72,7 +76,21 @@ export default async function SpaceDetailPage({ params }: Props) {
       amenities: { orderBy: { category: "asc" } },
       connectivityProfile: true,
       activities: { orderBy: [{ distanceKm: "asc" }, { title: "asc" }] },
-      host: { select: { id: true, name: true, image: true, bio: true, createdAt: true } },
+      host: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          bio: true,
+          createdAt: true,
+          defaultBookingCommissionBps: true,
+        },
+      },
+      pmsConnection: {
+        select: {
+          bookingCommissionBps: true,
+        },
+      },
       reviews: {
         include: { author: { select: { name: true, image: true } } },
         orderBy: { createdAt: "desc" },
@@ -112,6 +130,12 @@ export default async function SpaceDetailPage({ params }: Props) {
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];
   const bedSize = BED_SIZE_OPTIONS[listing.bedSize as keyof typeof BED_SIZE_OPTIONS];
   const cancelPolicy = CANCELLATION_POLICIES[listing.cancellationPolicy as keyof typeof CANCELLATION_POLICIES];
+  const bookingCommissionPercent = bookingCommissionBpsToPercent(
+    resolveBookingCommissionBps({
+      hostDefaultBookingCommissionBps: listing.host.defaultBookingCommissionBps,
+      connectionBookingCommissionBps: listing.pmsConnection?.bookingCommissionBps,
+    })
+  );
   const workScore = computeWorkScore({
     amenities: listing.amenities,
     connectivity: listing.connectivityProfile,
@@ -606,6 +630,7 @@ export default async function SpaceDetailPage({ params }: Props) {
             cleaningFee={listing.cleaningFee}
             maxGuests={listing.maxGuests}
             cancellationPolicy={listing.cancellationPolicy}
+            bookingCommissionPercent={bookingCommissionPercent}
           />
           <InquiryButton
             listingId={listing.id}

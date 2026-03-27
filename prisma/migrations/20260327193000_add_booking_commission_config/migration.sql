@@ -1,0 +1,5 @@
+ALTER TABLE "User"
+ADD COLUMN IF NOT EXISTS "defaultBookingCommissionBps" INTEGER NOT NULL DEFAULT 1500;
+
+ALTER TABLE "PmsConnection"
+ADD COLUMN IF NOT EXISTS "bookingCommissionBps" INTEGER;

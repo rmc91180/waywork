@@ -15,7 +15,7 @@ const hostTerms = [
   "Hosts warrant they have legal authority to list each property and grant occupancy rights for booked periods.",
   "Hosts are solely responsible for listing accuracy, statutory compliance, safety standards, and tax obligations.",
   "Hosts retain all liability for property condition, building permissions, guest injury claims, and third-party claims arising from their listings.",
-  "Way Work commission is 15% of booking gross, deducted automatically before host payout remittance.",
+  "Way Work commission is deducted automatically before host payout remittance according to the active host or partner agreement.",
   "Hosts must honor confirmed reservations except where cancellation is legally required or approved through platform support.",
   "Hosts authorize synchronization of listing availability, rates, and reservation metadata through configured channel manager integrations.",
 ];

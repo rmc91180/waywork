@@ -52,7 +52,7 @@ export function HostTeaserToggle() {
       {expanded ? (
         <div id="host-teaser-content" className="mt-4 max-w-3xl">
           <p className="text-white/90">
-            Fill quiet weeks with remote teams seeking your space. Easy listings, 15% commission,
+            Fill quiet weeks with remote teams seeking your space. Easy listings, flexible commission,
             and built-in tools to spotlight your WiFi reliability and work-ready amenities.
           </p>
           <Button

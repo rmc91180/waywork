@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getStripe, SERVICE_FEE_PERCENTAGE } from "@/lib/stripe";
+import {
+  calculateBookingPricingFromGross,
+  resolveBookingCommissionBps,
+} from "@/lib/payout-config";
+import { getStripe } from "@/lib/stripe";
 import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import { assertListingAccess, buildHostListingScope } from "@/lib/host-access";
 import { createBookingSchema } from "@/lib/validators";
@@ -50,7 +54,17 @@ export async function createBookingAndCheckout(
   // Fetch listing
   const listing = await db.listing.findUnique({
     where: { id: parsed.listingId },
-    include: { host: true, images: { where: { isPrimary: true }, take: 1 } },
+    include: {
+      host: true,
+      images: { where: { isPrimary: true }, take: 1 },
+      pmsConnection: {
+        select: {
+          provider: true,
+          enabled: true,
+          bookingCommissionBps: true,
+        },
+      },
+    },
   });
 
   if (!listing) throw new Error("Listing not found");
@@ -103,13 +117,21 @@ export async function createBookingAndCheckout(
     return sum + (dailyRateMap.get(key) ?? listing.pricePerDay);
   }, 0);
   const grossBookingAmount = subtotal + listing.cleaningFee;
-  const serviceFee = Math.round(grossBookingAmount * SERVICE_FEE_PERCENTAGE);
+  const bookingCommissionBps = resolveBookingCommissionBps({
+    hostDefaultBookingCommissionBps: listing.host.defaultBookingCommissionBps,
+    connectionBookingCommissionBps: listing.pmsConnection?.bookingCommissionBps,
+  });
+  const { serviceFee, totalPrice, hostPayout } = calculateBookingPricingFromGross(
+    grossBookingAmount,
+    bookingCommissionBps
+  );
   const pricing = {
     subtotal,
     cleaningFee: listing.cleaningFee,
     serviceFee,
-    totalPrice: grossBookingAmount,
-    hostPayout: Math.max(0, grossBookingAmount - serviceFee),
+    totalPrice,
+    hostPayout,
+    bookingCommissionBps,
   };
 
   // --- DEMO MODE: no Stripe configured ---
@@ -173,6 +195,14 @@ export async function createBookingAndCheckout(
 
   const stripe = getStripe();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const destinationAccountId = listing.host.stripeConnectAccountId;
+  const requiresApaleoManualCapture = Boolean(
+    listing.pmsConnection?.enabled && listing.pmsConnection.provider === "APALEO"
+  );
+
+  if (!destinationAccountId) {
+    throw new Error("Host payouts are not configured for this listing yet.");
+  }
 
   const lineItems = [
     {
@@ -210,19 +240,23 @@ export async function createBookingAndCheckout(
       guestId: session.user.id,
       hostId: listing.hostId,
       attendeeEmails: parsed.attendeeEmails?.join(",") || "",
+      pmsProvider: listing.pmsConnection?.provider || "NONE",
+      destinationAccountId,
+      bookingCommissionBps: String(pricing.bookingCommissionBps),
     },
     success_url: `${appUrl}/bookings/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/spaces/${listing.id}?booking_cancelled=true`,
-    ...(listing.host.stripeConnectAccountId
-      ? {
-          payment_intent_data: {
-            transfer_data: {
-              destination: listing.host.stripeConnectAccountId,
-              amount: pricing.hostPayout,
-            },
-          },
-        }
-      : {}),
+    payment_intent_data: {
+      ...(requiresApaleoManualCapture
+        ? {
+            capture_method: "manual" as const,
+          }
+        : {}),
+      application_fee_amount: pricing.serviceFee,
+      transfer_data: {
+        destination: destinationAccountId,
+      },
+    },
   });
 
   // Store payment intent ID on the booking

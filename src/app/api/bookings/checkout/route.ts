@@ -4,8 +4,13 @@ import { ZodError } from "zod";
 import { Prisma } from "@/generated/prisma";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  calculateBookingPricingFromGross,
+  resolveBookingCommissionBps,
+} from "@/lib/payout-config";
+import { syncBookingToApaleo } from "@/lib/pms/apaleo-booking";
 import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
-import { getStripe, SERVICE_FEE_PERCENTAGE } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createBookingSchema } from "@/lib/validators";
 
 function parseDateInput(value: string) {
@@ -66,7 +71,16 @@ export async function POST(request: NextRequest) {
 
     const listing = await db.listing.findUnique({
       where: { id: parsed.listingId, status: "ACTIVE" },
-      include: { host: true },
+      include: {
+        host: true,
+        pmsConnection: {
+          select: {
+            provider: true,
+            enabled: true,
+            bookingCommissionBps: true,
+          },
+        },
+      },
     });
 
     if (!listing) {
@@ -130,15 +144,21 @@ export async function POST(request: NextRequest) {
       return sum + rate;
     }, 0);
     const grossBookingAmount = subtotal + listing.cleaningFee;
-    const serviceFee = Math.round(grossBookingAmount * SERVICE_FEE_PERCENTAGE);
-    const totalPrice = grossBookingAmount;
-    const hostPayout = Math.max(0, totalPrice - serviceFee);
+    const bookingCommissionBps = resolveBookingCommissionBps({
+      hostDefaultBookingCommissionBps: listing.host.defaultBookingCommissionBps,
+      connectionBookingCommissionBps: listing.pmsConnection?.bookingCommissionBps,
+    });
+    const { serviceFee, totalPrice, hostPayout } = calculateBookingPricingFromGross(
+      grossBookingAmount,
+      bookingCommissionBps
+    );
     const pricing = {
       subtotal,
       cleaningFee: listing.cleaningFee,
       serviceFee,
       totalPrice,
       hostPayout,
+      bookingCommissionBps,
     };
 
     let bookingId = "";
@@ -219,14 +239,38 @@ export async function POST(request: NextRequest) {
     }
 
     const hasStripe = !!process.env.STRIPE_SECRET_KEY;
+    const requiresApaleoManualCapture = Boolean(
+      listing.pmsConnection?.enabled && listing.pmsConnection.provider === "APALEO"
+    );
+    const destinationAccountId = listing.host.stripeConnectAccountId;
+
+    if (hasStripe && !destinationAccountId) {
+      await releasePendingInventory(bookingId);
+      return NextResponse.json(
+        { error: "Host payouts are not configured for this listing yet." },
+        { status: 409 }
+      );
+    }
 
     if (!hasStripe) {
+      if (requiresApaleoManualCapture) {
+        const syncResult = await syncBookingToApaleo(bookingId, "UPSERT");
+        if (!syncResult.ok) {
+          await releasePendingInventory(bookingId);
+          return NextResponse.json(
+            { error: syncResult.error || "Failed to confirm booking in apaleo" },
+            { status: 502 }
+          );
+        }
+      } else {
+        await enqueueBookingSyncJob(bookingId, "UPSERT");
+        void processPendingMewsSyncJobs(5);
+      }
+
       await db.booking.update({
         where: { id: bookingId },
         data: { status: "CONFIRMED" },
       });
-      await enqueueBookingSyncJob(bookingId, "UPSERT");
-      void processPendingMewsSyncJobs(5);
       return NextResponse.json({ bookingId });
     }
 
@@ -259,6 +303,24 @@ export async function POST(request: NextRequest) {
           guestId: session.user.id,
           checkIn: parsed.checkIn,
           checkOut: parsed.checkOut,
+          pmsProvider: listing.pmsConnection?.provider || "NONE",
+          destinationAccountId: destinationAccountId || "",
+          bookingCommissionBps: String(pricing.bookingCommissionBps),
+        },
+        payment_intent_data: {
+          ...(requiresApaleoManualCapture
+            ? {
+                capture_method: "manual" as const,
+              }
+            : {}),
+          ...(destinationAccountId
+            ? {
+                application_fee_amount: pricing.serviceFee,
+                transfer_data: {
+                  destination: destinationAccountId,
+                },
+              }
+            : {}),
         },
         success_url: `${appUrl}/bookings/${bookingId}?success=true`,
         cancel_url: `${appUrl}/spaces/${listing.id}?cancelled=true&bookingId=${bookingId}`,
