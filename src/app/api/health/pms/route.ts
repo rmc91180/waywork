@@ -19,7 +19,8 @@ function parseBooleanEnv(value: string | undefined, fallback: boolean) {
 export async function GET() {
   const startedAt = Date.now();
   const mode = getActivePmsProviderMode();
-  const dbBackedProvider = mode === "MEWS" || mode === "SITEMINDER" ? mode : null;
+  const dbBackedProvider =
+    mode === "MEWS" || mode === "SITEMINDER" || mode === "APALEO" ? mode : null;
 
   const staleMinutes = parseIntegerEnv(process.env.PMS_HEALTH_STALE_JOB_MINUTES, 15);
   const maxFailedJobs = parseIntegerEnv(process.env.PMS_HEALTH_MAX_FAILED_JOBS, 25);

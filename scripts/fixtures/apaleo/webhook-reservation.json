@@ -1,0 +1,9 @@
+{
+  "accountCode": "LIMEHOME-MADRID",
+  "propertyId": "MADRID-CENTRO",
+  "topic": "reservation",
+  "eventType": "reservation.confirmed",
+  "data": {
+    "entityId": "reservation-123"
+  }
+}

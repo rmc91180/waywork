@@ -60,6 +60,51 @@ export interface ApaleoRatePlan {
   cancellationPolicy?: "FLEXIBLE" | "MODERATE" | "STRICT";
 }
 
+export interface ApaleoReservation {
+  id: string;
+  status?: string;
+  unitGroupId?: string;
+  ratePlanId?: string;
+  arrival?: string;
+  departure?: string;
+  adults?: number;
+  totalGrossAmount?: {
+    amount?: number;
+    currency?: string;
+  };
+  booker?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}
+
+export interface ApaleoReservationWebhook {
+  accountCode?: string;
+  propertyId?: string;
+  topic?: string;
+  eventType?: string;
+  data?: {
+    entityId?: string;
+  };
+}
+
+export interface ApaleoAriPayload {
+  accountCode?: string;
+  propertyId?: string;
+  ratePlanId?: string;
+  unitGroupId?: string;
+  updates?: Array<{
+    from: string;
+    to: string;
+    availability?: number;
+    price?: {
+      amount: number;
+      currency: string;
+    };
+  }>;
+}
+
 export interface ApaleoCredentials {
   apiBaseUrl: string;
   identityBaseUrl: string;
@@ -266,7 +311,7 @@ export class ApaleoClient {
     }
 
     return this.requestJson<Record<string, JsonValue>>(
-      `${this.distributionBaseUrl}/channel/v1/ari-subscriptions`,
+      `${this.distributionBaseUrl}/channel/v1/subscriptions`,
       {
         method: "POST",
         headers: {
@@ -275,5 +320,31 @@ export class ApaleoClient {
         body: JSON.stringify(payload),
       }
     );
+  }
+
+  async getReservation(reservationId: string) {
+    if (this.fixtureDir) {
+      return readFixture<ApaleoReservation>(this.fixtureDir, "reservation-detail.json");
+    }
+
+    return this.requestJson<ApaleoReservation>(
+      `${this.apiBaseUrl}/booking/v1/reservations/${encodeURIComponent(reservationId)}`
+    );
+  }
+
+  async listReservations() {
+    if (this.fixtureDir) {
+      return readFixture<ApaleoReservation[]>(this.fixtureDir, "reservations.json");
+    }
+
+    return this.requestJson<ApaleoReservation[]>(`${this.apiBaseUrl}/booking/v1/reservations`);
+  }
+
+  async getAriSnapshot() {
+    if (this.fixtureDir) {
+      return readFixture<ApaleoAriPayload[]>(this.fixtureDir, "ari-snapshot.json");
+    }
+
+    throw new Error("Live ARI snapshot retrieval is not configured yet.");
   }
 }

@@ -497,6 +497,7 @@ model PmsConnection {
   apaleoWebhookSecret     String?
   apaleoWebhookSubscriptionId String?
   apaleoAriSubscriptionId String?
+  apaleoAriSubscriptionState Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

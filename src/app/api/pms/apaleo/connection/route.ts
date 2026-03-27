@@ -98,6 +98,7 @@ export async function GET() {
       webhookSecret: redact(connection.apaleoWebhookSecret),
       webhookSubscriptionId: connection.apaleoWebhookSubscriptionId,
       ariSubscriptionId: connection.apaleoAriSubscriptionId,
+      ariSubscriptionState: connection.apaleoAriSubscriptionState,
       updatedAt: connection.updatedAt,
     },
     listings: connection.listings,

@@ -1,0 +1,26 @@
+{
+  "accountCode": "LIMEHOME-MADRID",
+  "propertyId": "MADRID-CENTRO",
+  "ratePlanId": "RP-CENTRO-FLEX",
+  "unitGroupId": "UG-CENTRO-STUDIO",
+  "updates": [
+    {
+      "from": "2026-04-10",
+      "to": "2026-04-11",
+      "availability": 1,
+      "price": {
+        "amount": 159.0,
+        "currency": "EUR"
+      }
+    },
+    {
+      "from": "2026-04-11",
+      "to": "2026-04-12",
+      "availability": 0,
+      "price": {
+        "amount": 169.0,
+        "currency": "EUR"
+      }
+    }
+  ]
+}
