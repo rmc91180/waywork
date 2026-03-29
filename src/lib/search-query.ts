@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma";
-import { db } from "@/lib/db";
+import { db, withDbRetry } from "@/lib/db";
 import type { SearchFilterState, SearchSortBy } from "@/lib/search-filters";
 import {
   getBoundingBox,
@@ -119,8 +119,8 @@ function reviewVolume(listing: {
   return Math.max(listing.reviewCount || 0, listing._count.reviews || 0);
 }
 
-function resolveLocationFromListing(query: string) {
-  return db.listing.findFirst({
+function resolveLocationFromListing(query: string, client = db) {
+  return client.listing.findFirst({
     where: {
       status: "ACTIVE",
       OR: [
@@ -486,71 +486,77 @@ function buildFacets(
 export async function searchListingsWithFacets(
   filters: SearchFilterState
 ): Promise<SearchQueryResult> {
-  const radiusValue = toInt(filters.radiusKm);
-  const radiusKm = clampRadius(radiusValue);
+  return withDbRetry(async (client) => {
+    const radiusValue = toInt(filters.radiusKm);
+    const radiusKm = clampRadius(radiusValue);
 
-  const resolvedLocation = filters.nearQuery.trim()
-    ? (await (async () => {
-        const fromListing = await resolveLocationFromListing(filters.nearQuery);
-        if (fromListing) {
-          return {
-            query: filters.nearQuery,
-            label: `${fromListing.title}, ${fromListing.city}`,
-            lat: fromListing.lat,
-            lng: fromListing.lng,
-            source: "listing" as const,
-          };
-        }
-        return resolveSearchLocation(filters.nearQuery);
-      })())
-    : null;
+    const resolvedLocation = filters.nearQuery.trim()
+      ? (await (async () => {
+          const fromListing = await resolveLocationFromListing(filters.nearQuery, client);
+          if (fromListing) {
+            return {
+              query: filters.nearQuery,
+              label: `${fromListing.title}, ${fromListing.city}`,
+              lat: fromListing.lat,
+              lng: fromListing.lng,
+              source: "listing" as const,
+            };
+          }
+          return resolveSearchLocation(filters.nearQuery);
+        })())
+      : null;
 
-  const bounds = resolvedLocation
-    ? getBoundingBox(resolvedLocation.lat, resolvedLocation.lng, radiusKm)
-    : undefined;
+    const bounds = resolvedLocation
+      ? getBoundingBox(resolvedLocation.lat, resolvedLocation.lng, radiusKm)
+      : undefined;
 
-  const baseWhere = buildWhere(filters, bounds);
-  let where = baseWhere;
+    const baseWhere = buildWhere(filters, bounds);
+    let where = baseWhere;
 
-  if (resolvedLocation) {
-    const radiusCandidates = await db.listing.findMany({
-      where: baseWhere,
-      select: {
-        id: true,
-        lat: true,
-        lng: true,
-      },
-    });
-
-    const nearbyIds = radiusCandidates
-      .filter((item) => haversineKm(resolvedLocation.lat, resolvedLocation.lng, item.lat, item.lng) <= radiusKm)
-      .map((item) => item.id);
-
-    if (nearbyIds.length === 0) {
-      return {
-        listings: [],
-        total: 0,
-        facets: emptyFacets(),
-        locationContext: {
-          query: filters.nearQuery,
-          resolvedLabel: resolvedLocation.label,
-          source: resolvedLocation.source,
-          radiusKm,
+    if (resolvedLocation) {
+      const radiusCandidates = await client.listing.findMany({
+        where: baseWhere,
+        select: {
+          id: true,
+          lat: true,
+          lng: true,
         },
+      });
+
+      const nearbyIds = radiusCandidates
+        .filter(
+          (item) =>
+            haversineKm(resolvedLocation.lat, resolvedLocation.lng, item.lat, item.lng) <= radiusKm
+        )
+        .map((item) => item.id);
+
+      if (nearbyIds.length === 0) {
+        return {
+          listings: [],
+          total: 0,
+          facets: emptyFacets(),
+          locationContext: {
+            query: filters.nearQuery,
+            resolvedLabel: resolvedLocation.label,
+            source: resolvedLocation.source,
+            radiusKm,
+          },
+        };
+      }
+
+      where = {
+        AND: [baseWhere, { id: { in: nearbyIds } }],
       };
     }
 
-    where = {
-      AND: [baseWhere, { id: { in: nearbyIds } }],
-    };
-  }
+    const skip = (filters.page - 1) * filters.limit;
+    const take = filters.limit;
 
-  const skip = (filters.page - 1) * filters.limit;
-  const take = filters.limit;
-
-  const [total, facetListings, recommendedCandidates, orderedListings] = await Promise.all([
-    db.listing.count({ where }),
-    db.listing.findMany({
+    // Keep search reads sequential. This is slightly slower than Promise.all on a full
+    // Postgres instance, but it is materially more reliable for local single-connection
+    // development runtimes and prevents intermittent "server closed the connection" errors.
+    const total = await client.listing.count({ where });
+    const facetListings = await client.listing.findMany({
       where,
       select: {
         workspaceType: true,
@@ -567,63 +573,65 @@ export async function searchListingsWithFacets(
         amenities: { select: { name: true } },
         connectivityProfile: { select: { networkType: true } },
       },
-    }),
-    filters.sortBy === "recommended"
-      ? db.listing.findMany({
-          where,
-          include: listingInclude,
-        })
-      : Promise.resolve([] as SearchListing[]),
-    filters.sortBy === "recommended"
-      ? Promise.resolve([] as SearchListing[])
-      : db.listing.findMany({
-          where,
-          include: listingInclude,
-          orderBy: buildOrderBy(filters.sortBy),
-          skip,
-          take,
-        }),
-  ]);
-
-  const listings =
-    filters.sortBy === "recommended"
-      ? recommendedCandidates
-          .map((listing) => ({
-            listing,
-            score: getRecommendedScore(
-              listing,
-              filters,
-              facetListings.length > 0
-                ? Math.min(...facetListings.map((item) => item.pricePerDay))
-                : 0,
-              facetListings.length > 0
-                ? Math.max(...facetListings.map((item) => item.pricePerDay))
-                : 0,
-              resolvedLocation
-            ),
-          }))
-          .sort((a, b) => {
-            if (b.score !== a.score) return b.score - a.score;
-            if ((b.listing.averageRating || 0) !== (a.listing.averageRating || 0)) {
-              return (b.listing.averageRating || 0) - (a.listing.averageRating || 0);
-            }
-            return reviewVolume(b.listing) - reviewVolume(a.listing);
+    });
+    const recommendedCandidates =
+      filters.sortBy === "recommended"
+        ? await client.listing.findMany({
+            where,
+            include: listingInclude,
           })
-          .slice(skip, skip + take)
-          .map((item) => item.listing)
-      : orderedListings;
+        : ([] as SearchListing[]);
+    const orderedListings =
+      filters.sortBy === "recommended"
+        ? ([] as SearchListing[])
+        : await client.listing.findMany({
+            where,
+            include: listingInclude,
+            orderBy: buildOrderBy(filters.sortBy),
+            skip,
+            take,
+          });
 
-  return {
-    listings,
-    total,
-    facets: buildFacets(facetListings),
-    locationContext: resolvedLocation
-      ? {
-          query: filters.nearQuery,
-          resolvedLabel: resolvedLocation.label,
-          source: resolvedLocation.source,
-          radiusKm,
-        }
-      : null,
-  };
+    const listings =
+      filters.sortBy === "recommended"
+        ? recommendedCandidates
+            .map((listing) => ({
+              listing,
+              score: getRecommendedScore(
+                listing,
+                filters,
+                facetListings.length > 0
+                  ? Math.min(...facetListings.map((item) => item.pricePerDay))
+                  : 0,
+                facetListings.length > 0
+                  ? Math.max(...facetListings.map((item) => item.pricePerDay))
+                  : 0,
+                resolvedLocation
+              ),
+            }))
+            .sort((a, b) => {
+              if (b.score !== a.score) return b.score - a.score;
+              if ((b.listing.averageRating || 0) !== (a.listing.averageRating || 0)) {
+                return (b.listing.averageRating || 0) - (a.listing.averageRating || 0);
+              }
+              return reviewVolume(b.listing) - reviewVolume(a.listing);
+            })
+            .slice(skip, skip + take)
+            .map((item) => item.listing)
+        : orderedListings;
+
+    return {
+      listings,
+      total,
+      facets: buildFacets(facetListings),
+      locationContext: resolvedLocation
+        ? {
+            query: filters.nearQuery,
+            resolvedLabel: resolvedLocation.label,
+            source: resolvedLocation.source,
+            radiusKm,
+          }
+        : null,
+    };
+  });
 }
