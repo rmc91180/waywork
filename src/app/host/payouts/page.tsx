@@ -4,6 +4,7 @@ import { getConnectStatus, getPayoutSettings } from "@/actions/stripe-connect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConnectActions } from "@/components/host/connect-actions";
+import { HostPageHeader } from "@/components/host/host-page-header";
 import { PayoutSettingsForm } from "@/components/host/payout-settings-form";
 
 export const metadata = {
@@ -27,17 +28,11 @@ export default async function PayoutsPage({ searchParams }: Props) {
 
   return (
     <div className="waywork-shell max-w-5xl py-8 md:py-10">
-      <section className="waywork-section mb-6 p-5 md:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
-          Host Financial Setup
-        </p>
-        <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-          Payouts
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Connect Stripe, verify your account, and keep your payout pipeline healthy.
-        </p>
-      </section>
+      <HostPageHeader
+        eyebrow="Host workspace"
+        title="Payouts"
+        description="Connect Stripe once, set your default split, and keep payouts moving."
+      />
 
       {/* Status Banner */}
       {showOnboardingComplete && (
@@ -56,8 +51,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
         </div>
       )}
 
-      {/* Connect Status Card */}
-      <Card className="mb-6 border-slate-200/80 bg-white/95">
+      <Card className="mt-6 mb-6 border-slate-200/80 bg-white/95">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Stripe Connect</CardTitle>
@@ -98,13 +92,8 @@ export default async function PayoutsPage({ searchParams }: Props) {
                 Stripe account. This allows us to securely transfer earnings
                 directly to your bank account.
               </p>
-              <div className="rounded-lg bg-slate-50 p-4 text-sm space-y-2">
-                <p className="font-medium">What you&apos;ll need:</p>
-                <ul className="list-disc list-inside text-gray-600 space-y-1">
-                  <li>Bank account or debit card for payouts</li>
-                  <li>Government-issued ID for verification</li>
-                  <li>Tax information (SSN or EIN)</li>
-                </ul>
+              <div className="rounded-lg bg-slate-50 p-4 text-sm text-gray-600">
+                Bank account, ID verification, and tax information are typically required.
               </div>
               <ConnectActions hasAccount={false} isOnboarded={false} />
             </div>
@@ -123,13 +112,12 @@ export default async function PayoutsPage({ searchParams }: Props) {
         </CardContent>
       </Card>
 
-      {/* How Payouts Work */}
       <Card className="border-slate-200/80 bg-white/95">
         <CardHeader>
           <CardTitle>How Payouts Work</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 text-sm text-gray-600">
+          <div className="grid gap-4 text-sm text-gray-600 md:grid-cols-3">
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold shrink-0">
                 1

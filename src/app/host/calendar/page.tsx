@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { buildHostListingScope } from "@/lib/host-access";
 import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { CalendarView } from "@/components/host/calendar-view";
+import { HostPageHeader } from "@/components/host/host-page-header";
 
 export default async function CalendarPage() {
   const session = await auth();
@@ -38,7 +39,11 @@ export default async function CalendarPage() {
   if (listings.length === 0) {
     return (
       <div className="waywork-shell py-8 md:py-10">
-        <h1 className="font-display mb-6 text-3xl font-semibold text-slate-900">Calendar</h1>
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="Calendar"
+          description="View availability and booking holds across your listings."
+        />
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
           <div className="text-4xl mb-4">📅</div>
           <p className="mb-2 text-slate-500">No listings yet</p>
@@ -106,36 +111,35 @@ export default async function CalendarPage() {
 
   return (
     <div className="waywork-shell py-8 md:py-10">
-      <div className="waywork-section mb-6 flex flex-wrap items-center justify-between gap-4 p-5 md:p-6">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
-            Host Availability
-          </p>
-          <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-            Calendar
-          </h1>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-blue-500" />
-            <span className="text-slate-600">Booked</span>
+      <HostPageHeader
+        eyebrow="Host workspace"
+        title="Calendar"
+        description="See booked, blocked, and pending dates without switching between listings."
+        aside={
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1.5">
+              <div className="h-3 w-3 rounded bg-blue-500" />
+              <span className="text-slate-600">Booked</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-3 w-3 rounded bg-red-400" />
+              <span className="text-slate-600">Blocked</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-3 w-3 rounded bg-yellow-400" />
+              <span className="text-slate-600">Pending</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-red-400" />
-            <span className="text-slate-600">Blocked</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-yellow-400" />
-            <span className="text-slate-600">Pending</span>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
-      <CalendarView
+      <div className="mt-6">
+        <CalendarView
         listings={serializedListings}
         blockedDates={serializedBlockedDates}
         bookings={serializedBookings}
-      />
+        />
+      </div>
     </div>
   );
 }

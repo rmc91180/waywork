@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/stripe";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { HostPageHeader } from "@/components/host/host-page-header";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 
 const statusColors: Record<string, string> = {
@@ -148,20 +149,14 @@ export default async function EarningsPage() {
   // ---------------------------------------------------------------------------
   return (
     <div className="waywork-shell py-8 md:py-10">
-      <section className="waywork-section mb-6 p-5 md:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
-          Host Revenue Analytics
-        </p>
-        <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-          Earnings
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Track payout performance across listings, months, and booking activity.
-        </p>
-      </section>
+      <HostPageHeader
+        eyebrow="Host workspace"
+        title="Earnings"
+        description="Track host payout performance across listings and bookings."
+      />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <Card className="border-slate-200/80 bg-white/95">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">

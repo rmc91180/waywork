@@ -5,7 +5,6 @@ import {
   BookOpenCheck,
   CalendarCheck2,
   CircleDollarSign,
-  LayoutDashboard,
   Network,
   PlusCircle,
   Wallet,
@@ -17,6 +16,7 @@ import { formatCurrency } from "@/lib/stripe";
 import { buildHostListingScope } from "@/lib/host-access";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { HostPageHeader } from "@/components/host/host-page-header";
 import { HostTeamAccessPanel } from "@/components/host/host-team-access-panel";
 import {
   HostOnboardingChecklist,
@@ -288,73 +288,56 @@ export default async function HostDashboardPage() {
 
   return (
     <div className="waywork-shell py-8 md:py-10">
-      <section className="rounded-2xl border border-white/70 bg-white/90 p-6 shadow-sm backdrop-blur md:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
-          Host Dashboard
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
-          Welcome back, {session.user.name || "Host"}
-        </h1>
-        <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
-          Create, monitor, and optimize listings from one control center. SiteMinder rollout is
-          active with direct listing controls always available.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Button asChild className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]">
-            <Link href="/host/listings/new">
-              <PlusCircle className="size-4" />
-              Add New Listing
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/host/listings">
-              <LayoutDashboard className="size-4" />
-              Manage Listings
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/host/channel-manager">
-              <Network className="size-4" />
-              Channel Manager
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/host/calendar">
-              <CalendarCheck2 className="size-4" />
-              Calendar
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/host/earnings">
-              <Wallet className="size-4" />
-              Earnings
-            </Link>
-          </Button>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Badge variant={providerActive ? "default" : "secondary"}>
-            {providerActive ? "SiteMinder Migration Active" : "PMS Mode Not Set"}
-          </Badge>
-          <Badge variant={siteminderConnected && siteMinderConnection?.enabled ? "default" : "secondary"}>
-            {siteminderConnected && siteMinderConnection?.enabled
-              ? "SiteMinder Credentials Connected"
-              : "SiteMinder Setup Required"}
-          </Badge>
-          <Badge variant="outline">
-            {mappedListings}/{totalListings} listings mapped
-          </Badge>
-          <Badge variant="outline">{syncedListings} listings synced</Badge>
-        </div>
-      </section>
+      <HostPageHeader
+        eyebrow="Host workspace"
+        title={`Welcome back, ${session.user.name || "Host"}`}
+        description="Everything important in one place: listings, bookings, payouts, and PMS setup."
+        actions={
+          <>
+            <Button asChild className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]">
+              <Link href="/host/listings/new">
+                <PlusCircle className="size-4" />
+                New Listing
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/host/bookings">
+                <BookOpenCheck className="size-4" />
+                Bookings
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/host/channel-manager">
+                <Network className="size-4" />
+                PMS
+              </Link>
+            </Button>
+          </>
+        }
+        aside={
+          <div className="flex flex-wrap justify-end gap-2">
+            <Badge variant={providerActive ? "default" : "secondary"}>
+              {providerActive ? "PMS active" : "PMS inactive"}
+            </Badge>
+            <Badge
+              variant={siteminderConnected && siteMinderConnection?.enabled ? "default" : "secondary"}
+            >
+              {siteminderConnected && siteMinderConnection?.enabled
+                ? "Connected"
+                : "Needs setup"}
+            </Badge>
+          </div>
+        }
+      />
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Listings</p>
           <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{totalListings}</p>
           <p className="mt-1 text-sm text-slate-600">{activeListings} active</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Upcoming Confirmed</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Upcoming</p>
           <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{upcomingBookings}</p>
           <p className="mt-1 text-sm text-slate-600">confirmed bookings</p>
         </article>
@@ -365,105 +348,103 @@ export default async function HostDashboardPage() {
             {totalBookings} total booking{totalBookings === 1 ? "" : "s"}
           </p>
         </article>
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Gross Revenue</p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{formatCurrency(grossRevenue)}</p>
-          <p className="mt-1 text-sm text-slate-600">confirmed + completed payouts</p>
-        </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Sync Failures</p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{failedSyncListings}</p>
-          <p className="mt-1 text-sm text-slate-600">listings requiring attention</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Host revenue</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{formatCurrency(grossRevenue)}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {failedSyncListings > 0
+              ? `${failedSyncListings} sync issue${failedSyncListings === 1 ? "" : "s"} to review`
+              : "No current sync issues"}
+          </p>
         </article>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-3">
-        <Link
-          href="/host/bookings"
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <BookOpenCheck className="size-5 text-[var(--ww-secondary-green)]" />
-          <h2 className="mt-3 text-lg font-semibold text-[var(--ww-primary-blue)]">Host Bookings</h2>
-          <p className="mt-1 text-sm text-slate-600">Confirm, review, and manage guest reservations.</p>
-        </Link>
-        <Link
-          href="/host/channel-manager"
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <Network className="size-5 text-[var(--ww-secondary-green)]" />
-          <h2 className="mt-3 text-lg font-semibold text-[var(--ww-primary-blue)]">SiteMinder Setup</h2>
-          <p className="mt-1 text-sm text-slate-600">Manage credentials and listing mapping for channel sync.</p>
-        </Link>
-        <Link
-          href="/host/earnings"
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <CircleDollarSign className="size-5 text-[var(--ww-secondary-green)]" />
-          <h2 className="mt-3 text-lg font-semibold text-[var(--ww-primary-blue)]">Revenue & Payouts</h2>
-          <p className="mt-1 text-sm text-slate-600">Track performance and prep your payout setup.</p>
-        </Link>
-      </section>
-
-      <section className="mt-6">
+      <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <HostOnboardingChecklist steps={onboardingSteps} />
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-[var(--ww-primary-blue)]">At a glance</h2>
+            <Badge variant="outline">{mappedListings}/{totalListings} mapped</Badge>
+          </div>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-slate-200 p-3">
+              <p className="text-sm font-semibold text-slate-900">Listings synced</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {syncedListings} synced, {failedSyncListings} failed
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 p-3">
+              <p className="text-sm font-semibold text-slate-900">Payout profile</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {payoutsReady ? "Ready to receive payouts" : "Needs Stripe setup"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 p-3">
+              <p className="text-sm font-semibold text-slate-900">PMS mapping</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {mappedSyncManagedListings}/{syncManagedListings.length} live listings mapped
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/host/listings">
+                <Wrench className="size-4" />
+                Listings
+              </Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/host/payouts">
+                <Wallet className="size-4" />
+                Payouts
+              </Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/host/calendar">
+                <CalendarCheck2 className="size-4" />
+                Calendar
+              </Link>
+            </Button>
+          </div>
+        </article>
       </section>
 
       <section className="mt-6">
         <HostAirbnbImportCard />
       </section>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
-              PMS Migration
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-primary-blue)]">
-              SiteMinder Rollout Status
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Host credentials and mapping are available. Two-way reservation + ARI adapters are staged
-              and will run through this channel manager path.
-            </p>
-          </div>
-          <Button variant="outline" asChild>
-            <Link href="/host/channel-manager">
-              <Network className="size-4" />
-              Open Channel Manager
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      <section className="mt-6">
-        <HostTeamAccessPanel
-          listings={ownerListingsForTeamAccess.map((listing) => ({
-            listingId: listing.id,
-            title: listing.title,
-            ownerName: listing.host.name,
-            managers: listing.teamMembers.map((teamMember) => ({
-              userId: teamMember.user.id,
-              name: teamMember.user.name,
-              email: teamMember.user.email,
-              role: teamMember.role,
-            })),
-          }))}
-        />
-      </section>
+      {ownerListingsForTeamAccess.length > 0 ? (
+        <section className="mt-6">
+          <HostTeamAccessPanel
+            listings={ownerListingsForTeamAccess.map((listing) => ({
+              listingId: listing.id,
+              title: listing.title,
+              ownerName: listing.host.name,
+              managers: listing.teamMembers.map((teamMember) => ({
+                userId: teamMember.user.id,
+                name: teamMember.user.name,
+                email: teamMember.user.email,
+                role: teamMember.role,
+              })),
+            }))}
+          />
+        </section>
+      ) : null}
 
       <section className="mt-6 grid gap-4 xl:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-[var(--ww-primary-blue)]">Listing Monitor</h2>
-            <Badge variant="outline">{totalListings} listings</Badge>
+            <h2 className="text-lg font-semibold text-[var(--ww-primary-blue)]">Listings</h2>
+            <Badge variant="outline">{totalListings}</Badge>
           </div>
           {listings.length === 0 ? (
             <p className="text-sm text-slate-600">
-              No listings yet. Create one to start host operations and channel manager mapping.
+              No listings yet. Create one to start hosting.
             </p>
           ) : (
             <div className="space-y-3">
-              {listings.slice(0, 8).map((listing) => (
+              {listings.slice(0, 6).map((listing) => (
                 <div key={listing.id} className="rounded-lg border border-slate-200 p-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
@@ -482,15 +463,11 @@ export default async function HostDashboardPage() {
                     </div>
                     <div className="text-right text-xs text-slate-500">
                       <p>Updated {formatDateTime(listing.updatedAt)}</p>
-                      <p>Last sync {formatDateTime(listing.pmsLastSyncedAt)}</p>
                     </div>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/host/listings/${listing.id}`}>Edit Listing</Link>
-                    </Button>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href="/host/calendar">Open Calendar</Link>
+                      <Link href={`/host/listings/${listing.id}`}>Edit</Link>
                     </Button>
                   </div>
                 </div>
@@ -503,17 +480,17 @@ export default async function HostDashboardPage() {
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--ww-primary-blue)]">
               <Activity className="size-4" />
-              Recent Sync Events
+              Recent activity
             </h2>
             <Badge variant="outline">{recentSyncEvents.length}</Badge>
           </div>
           {recentSyncEvents.length === 0 ? (
             <p className="text-sm text-slate-600">
-              No PMS sync events yet. Complete channel manager setup to start event tracking.
+              No PMS sync events yet.
             </p>
           ) : (
             <div className="space-y-3">
-              {recentSyncEvents.map((event) => (
+              {recentSyncEvents.slice(0, 6).map((event) => (
                 <div key={event.id} className="rounded-lg border border-slate-200 p-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
@@ -526,11 +503,7 @@ export default async function HostDashboardPage() {
                       {event.success ? "Success" : "Failed"}
                     </Badge>
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {formatDateTime(event.createdAt)}
-                    {event.messageId ? ` • Message ${event.messageId}` : ""}
-                    {event.bookingId ? ` • Booking ${event.bookingId}` : ""}
-                  </p>
+                  <p className="mt-1 text-xs text-slate-500">{formatDateTime(event.createdAt)}</p>
                   {event.error ? (
                     <div className="mt-2 rounded border border-rose-200 bg-rose-50 p-2 text-xs text-rose-800">
                       {event.error}
@@ -542,15 +515,15 @@ export default async function HostDashboardPage() {
           )}
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" asChild>
-              <Link href="/host/bookings">
-                <BookOpenCheck className="size-4" />
-                Check Booking Queue
+              <Link href="/host/channel-manager">
+                <Network className="size-4" />
+                Open PMS
               </Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
-              <Link href="/host/listings">
-                <Wrench className="size-4" />
-                Direct Listing Controls
+              <Link href="/host/earnings">
+                <CircleDollarSign className="size-4" />
+                Earnings
               </Link>
             </Button>
           </div>

@@ -8,6 +8,7 @@ import { buildHostListingScope } from "@/lib/host-access";
 import { formatCurrency } from "@/lib/stripe";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { HostPageHeader } from "@/components/host/host-page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -70,27 +71,38 @@ export default async function HostBookingsPage() {
 
   return (
     <div className="waywork-shell py-8 md:py-10">
-      <section className="waywork-section mb-6 p-5 md:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
-          Host Booking Operations
-        </p>
-        <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-slate-900">
-              Bookings
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Track upcoming guests, pending requests, and completed stays.
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-right">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Upcoming Payout Value</p>
+      <HostPageHeader
+        eyebrow="Host workspace"
+        title="Bookings"
+        description="See what needs attention, what is upcoming, and what has already wrapped."
+        aside={
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Upcoming payout value</p>
             <p className="text-xl font-semibold text-slate-900">{formatCurrency(upcomingPayout)}</p>
           </div>
+        }
+      />
+
+      <section className="mt-6 grid gap-3 sm:grid-cols-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Pending</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{pending.length}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Upcoming</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{confirmed.length}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Past</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{past.length}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Cancelled</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{cancelled.length}</p>
         </div>
       </section>
 
-      <Tabs defaultValue="confirmed">
+      <Tabs defaultValue="confirmed" className="mt-6">
         <TabsList className="h-auto rounded-xl bg-white p-1 shadow-sm">
           {pending.length > 0 && <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>}
           <TabsTrigger value="confirmed">

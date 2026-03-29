@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { buildHostListingScope } from "@/lib/host-access";
 import { isSiteMinderProviderActive } from "@/lib/pms/provider-mode";
 import { Badge } from "@/components/ui/badge";
+import { HostPageHeader } from "@/components/host/host-page-header";
 import { HostChannelManagerControlPanel } from "@/components/host/host-channel-manager-control-panel";
 
 export const metadata = {
@@ -54,29 +55,21 @@ export default async function HostChannelManagerPage() {
 
   return (
     <div className="waywork-shell py-8 md:py-10">
-      <section className="rounded-2xl border border-white/70 bg-white/90 p-6 shadow-sm backdrop-blur md:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
-          Host Dashboard
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
-          Channel Manager
-        </h1>
-        <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
-          SiteMinder is the active PMS direction for OTA-grade listing, calendar, and booking synchronization.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Badge variant={providerActive ? "default" : "secondary"}>
-            {providerActive ? "SiteMinder Mode Active" : "SiteMinder Mode Disabled"}
-          </Badge>
-          <Badge variant="outline">
-            {mappedListings}/{listings.length} listings mapped
-          </Badge>
-        </div>
-      </section>
-
-      <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        SiteMinder sync adapters are staged for rollout. Credential management and mapping are live in this release.
-      </section>
+      <HostPageHeader
+        eyebrow="Host workspace"
+        title="PMS"
+        description="Connect SiteMinder, map listings, and keep sync settings in one place."
+        aside={
+          <div className="flex flex-wrap justify-end gap-2">
+            <Badge variant={providerActive ? "default" : "secondary"}>
+              {providerActive ? "SiteMinder active" : "SiteMinder inactive"}
+            </Badge>
+            <Badge variant="outline">
+              {mappedListings}/{listings.length} mapped
+            </Badge>
+          </div>
+        }
+      />
 
       <section className="mt-6">
         <HostChannelManagerControlPanel

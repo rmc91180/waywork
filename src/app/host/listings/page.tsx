@@ -7,6 +7,7 @@ import { buildHostListingScope } from "@/lib/host-access";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { HostPageHeader } from "@/components/host/host-page-header";
 import { WORKSPACE_TYPES } from "@/lib/constants";
 import { getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
@@ -68,41 +69,35 @@ export default async function HostListingsPage() {
 
   return (
     <div className="waywork-shell py-8 md:py-10">
-      <section className="waywork-section mb-6 p-5 md:p-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
-              Host Workspace Console
-            </p>
-            <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-              Listings
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Manage visual quality, listing readiness, and daily booking performance.
-            </p>
-          </div>
-          <Button className="bg-cyan-700 hover:bg-cyan-800" asChild>
+      <HostPageHeader
+        eyebrow="Host workspace"
+        title="Listings"
+        description="Keep your inventory clean, current, and easy to manage."
+        actions={
+          <Button className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]" asChild>
             <Link href="/host/listings/new">
               <Plus className="size-4" />
               New Listing
             </Link>
           </Button>
-        </div>
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-200 bg-white p-3">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Active</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{activeCount}</p>
+        }
+        aside={
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Active</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900">{activeCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Pending</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900">{pendingCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Work score</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900">{avgWorkScore}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-3">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Pending Review</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{pendingCount}</p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-3">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Avg Work Score</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{avgWorkScore}</p>
-          </div>
-        </div>
-      </section>
+        }
+      />
 
       {listings.length === 0 ? (
         <Card className="waywork-section">
