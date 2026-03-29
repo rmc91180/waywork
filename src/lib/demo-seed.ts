@@ -632,7 +632,15 @@ export interface DemoSeedResult {
   listingsUpdated: number;
 }
 
-async function seedLimehomeMadridPilot(prisma: PrismaClient) {
+export interface LimehomePilotSeedResult {
+  hostEmail: string;
+  listingsCreated: number;
+  listingsUpdated: number;
+}
+
+export async function seedLimehomeMadridPilot(
+  prisma: PrismaClient
+): Promise<LimehomePilotSeedResult> {
   const host = await prisma.user.upsert({
     where: { email: "limehome-samples@waywork.com" },
     update: {
@@ -801,7 +809,11 @@ async function seedLimehomeMadridPilot(prisma: PrismaClient) {
     });
   }
 
-  return { listingsCreated, listingsUpdated };
+  return {
+    hostEmail: "limehome-samples@waywork.com",
+    listingsCreated,
+    listingsUpdated,
+  };
 }
 
 export async function seedDemoData(prisma: PrismaClient): Promise<DemoSeedResult> {

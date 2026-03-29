@@ -18,6 +18,7 @@
     "db:push": "prisma db push",
     "db:bootstrap": "npx tsx scripts/db-bootstrap.ts",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:seed:limehome-pilot": "npx tsx scripts/seed-limehome-pilot.ts",
     "db:setup": "npm run db:deploy && npm run db:seed",
     "db:studio": "prisma studio",
     "siteminder:sandbox": "npx tsx scripts/siteminder-sandbox-cycle.ts",
