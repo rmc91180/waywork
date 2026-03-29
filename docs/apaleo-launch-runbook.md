@@ -24,6 +24,7 @@ Last updated: 2026-03-27
    - `npm run test:apaleo-booking`
    - `npm run test:payout-config`
    - `npm run test:apaleo-pilot`
+   - `npm run test:pilot-merchandising`
 4. In `/admin/pms/apaleo`, run the internal launch sequence:
    - Import Madrid inventory
    - Curate Madrid inventory
@@ -47,7 +48,11 @@ Last updated: 2026-03-27
 4. Confirm apaleo subscription state:
    - reservation webhook subscription is present
    - ARI subscription state is present for every Madrid property
-5. Confirm direct-booking readiness:
+5. Confirm guest-facing merchandising:
+   - homepage shows the Madrid launch collection
+   - `/search?query=madrid` shows the full Limehome set
+   - `npm run test:pilot-acceptance` passes against the deployed app
+6. Confirm direct-booking readiness:
    - at least one active Madrid listing has live price and availability
    - the host Stripe Connect account is configured
    - booking capture happens only after apaleo reservation creation succeeds

@@ -31,6 +31,8 @@
     "test:apaleo-booking": "npx tsx scripts/apaleo-booking-test.ts",
     "test:apaleo-pilot": "npx tsx scripts/apaleo-pilot-smoke.ts",
     "test:analytics-pilot": "npx tsx scripts/analytics-pilot-test.ts",
+    "test:pilot-merchandising": "npx tsx scripts/limehome-pilot-merchandising-test.ts",
+    "test:pilot-acceptance": "node --env-file=.env --import tsx scripts/limehome-pilot-acceptance.ts",
     "test:payout-config": "npx tsx scripts/payout-config-test.ts",
     "pms:jobs": "node --env-file=.env --import tsx scripts/process-pms-jobs.ts",
     "launch:healthcheck": "node --env-file=.env --import tsx scripts/launch-healthcheck.ts",

@@ -21,6 +21,7 @@ import { BookingSidebar } from "@/components/booking/booking-sidebar";
 import { InquiryButton } from "@/components/messaging/inquiry-button";
 import { PropertyAnalyticsTracker } from "@/components/listings/property-analytics-tracker";
 import { TeamStayPlanner } from "@/components/listings/team-stay-planner";
+import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
 import type { Metadata } from "next";
 
 interface Props {
@@ -183,6 +184,7 @@ export default async function SpaceDetailPage({ params }: Props) {
     amenities: listing.amenities,
     connectivity: listing.connectivityProfile,
   });
+  const limehomePilotMeta = getLimehomePilotMeta({ slug: listing.slug });
 
   // Group amenities by category
   const amenityGroups = listing.amenities.reduce(
@@ -301,6 +303,11 @@ export default async function SpaceDetailPage({ params }: Props) {
               {listing.address}, {listing.city}
               {listing.state ? `, ${listing.state}` : ""}, {listing.country}
             </p>
+            {limehomePilotMeta ? (
+              <p className="mt-3 text-sm font-medium text-[var(--ww-secondary-green)]">
+                {limehomePilotMeta.neighborhood} · {limehomePilotMeta.bestFor}
+              </p>
+            ) : null}
             <p className="mt-4 max-w-3xl text-base text-slate-700">{fitSummary}</p>
           </div>
 
@@ -352,6 +359,11 @@ export default async function SpaceDetailPage({ params }: Props) {
               <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
                 Fast read before you book
               </h2>
+              {limehomePilotMeta ? (
+                <p className="mt-3 text-sm font-medium text-slate-900">
+                  {limehomePilotMeta.summary}
+                </p>
+              ) : null}
               <p className="mt-3 text-sm leading-6 text-slate-700">{descriptionTeaser}</p>
               {highlightedAmenities.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">

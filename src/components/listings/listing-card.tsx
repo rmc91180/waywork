@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { BED_SIZE_OPTIONS, WORKSPACE_TYPES } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
+import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
 import { getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import type { SearchUiVariant } from "@/lib/experiments";
@@ -66,6 +67,7 @@ export function ListingCard({
   const primaryImage = listing.images[0];
   const rating = listing.averageRating || null;
   const reviewCount = listing.reviewCount || listing._count.reviews;
+  const limehomePilotMeta = getLimehomePilotMeta({ slug: listing.slug });
 
   return (
     <Link
@@ -107,6 +109,9 @@ export function ListingCard({
 
           <div className="absolute left-3 top-3 flex gap-2">
             <Badge className="bg-white/95 text-slate-800">{wsType?.label || listing.workspaceType}</Badge>
+            {limehomePilotMeta && (
+              <Badge className="bg-cyan-600 text-white">{limehomePilotMeta.badge}</Badge>
+            )}
             {listing.connectivityProfile?.verified && (
               <Badge className="bg-[var(--ww-secondary-green)] text-white">Verified Internet</Badge>
             )}
@@ -144,6 +149,12 @@ export function ListingCard({
           <h3 className="line-clamp-2 text-base font-semibold leading-tight text-slate-900">
             {listing.title}
           </h3>
+
+          {limehomePilotMeta && (
+            <p className="text-sm text-slate-600">
+              {limehomePilotMeta.neighborhood} · {limehomePilotMeta.bestFor}
+            </p>
+          )}
 
           {matchReasons.length > 0 && (
             <div className="flex flex-wrap gap-1.5">

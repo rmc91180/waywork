@@ -3,6 +3,8 @@ import { unstable_noStore as noStore } from "next/cache";
 import { ArrowRight, Gauge, Users2, Wifi } from "lucide-react";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
 import { formatCurrency } from "@/lib/stripe";
 import { HomeHero, type HeroImage } from "@/components/marketing/home-hero";
 import { HomeQuickSearchForm } from "@/components/marketing/home-quick-search-form";
@@ -10,6 +12,7 @@ import { HomeQuickSearchForm } from "@/components/marketing/home-quick-search-fo
 type FeaturedListing = {
   id: string;
   title: string;
+  slug: string;
   city: string;
   state: string | null;
   country: string;
@@ -25,6 +28,35 @@ type FeaturedListing = {
 
 async function getHomepageData() {
   try {
+    const pilotListings = await db.listing.findMany({
+      where: {
+        status: "ACTIVE",
+        city: "Madrid",
+        slug: { startsWith: "limehome-madrid-" },
+      },
+      orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        city: true,
+        state: true,
+        country: true,
+        pricePerDay: true,
+        maxGuests: true,
+        workScore: true,
+        images: {
+          where: { isPrimary: true },
+          take: 1,
+          select: { url: true, alt: true },
+        },
+        connectivityProfile: {
+          select: { declaredDownloadMbps: true, verified: true },
+        },
+      },
+    });
+
     const featuredListings = await db.listing.findMany({
       where: { status: "ACTIVE" },
       orderBy: [{ reviewCount: "desc" }, { workScore: "desc" }, { createdAt: "desc" }],
@@ -32,6 +64,7 @@ async function getHomepageData() {
       select: {
         id: true,
         title: true,
+        slug: true,
         city: true,
         state: true,
         country: true,
@@ -54,7 +87,8 @@ async function getHomepageData() {
     const reviewStats = await db.review.aggregate({ _avg: { overallRating: true } });
 
     return {
-      featuredListings,
+      featuredListings: pilotListings.length > 0 ? pilotListings : featuredListings,
+      hasPilotLaunchCollection: pilotListings.length > 0,
       bookingCount,
       averageRating: reviewStats._avg.overallRating ?? 4.8,
       activeSpaceCount,
@@ -62,6 +96,7 @@ async function getHomepageData() {
   } catch {
     return {
       featuredListings: [] as FeaturedListing[],
+      hasPilotLaunchCollection: false,
       bookingCount: 500,
       averageRating: 4.8,
       activeSpaceCount: 100,
@@ -163,19 +198,22 @@ export async function HomepageRefresh() {
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
-              Featured homes
+              {data.hasPilotLaunchCollection ? "Madrid pilot collection" : "Featured homes"}
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
-              Search first. Decide fast.
+              {data.hasPilotLaunchCollection
+                ? "Launching with Limehome in Madrid"
+                : "Search first. Decide fast."}
             </h2>
             <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
-              Every property is presented around the details that matter most for work:
-              internet, layout, guest fit, and price.
+              {data.hasPilotLaunchCollection
+                ? "A tighter first collection of Madrid homes for solo work trips, project pairs, and compact offsites."
+                : "Every property is presented around the details that matter most for work: internet, layout, guest fit, and price."}
             </p>
           </div>
           <Button variant="outline" asChild>
-            <Link href="/search">
-              Browse all spaces
+            <Link href={data.hasPilotLaunchCollection ? "/search?query=madrid" : "/search"}>
+              {data.hasPilotLaunchCollection ? "Browse Madrid launch homes" : "Browse all spaces"}
               <ArrowRight className="size-4" />
             </Link>
           </Button>
@@ -209,6 +247,11 @@ export async function HomepageRefresh() {
                 <div className="space-y-4 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
+                      {getLimehomePilotMeta({ slug: listing.slug }) ? (
+                        <Badge variant="secondary" className="mb-2 bg-cyan-50 text-cyan-800">
+                          {getLimehomePilotMeta({ slug: listing.slug })?.badge}
+                        </Badge>
+                      ) : null}
                       <p className="text-sm text-slate-500">
                         {listing.city}
                         {listing.state ? `, ${listing.state}` : ""}, {listing.country}
@@ -216,6 +259,11 @@ export async function HomepageRefresh() {
                       <h3 className="mt-1 line-clamp-2 text-xl font-semibold text-[var(--ww-primary-blue)]">
                         {listing.title}
                       </h3>
+                      {getLimehomePilotMeta({ slug: listing.slug }) ? (
+                        <p className="mt-2 text-sm text-slate-600">
+                          {getLimehomePilotMeta({ slug: listing.slug })?.summary}
+                        </p>
+                      ) : null}
                     </div>
                     <p className="shrink-0 text-sm font-semibold text-[var(--ww-primary-blue)]">
                       {formatCurrency(listing.pricePerDay)}/day
@@ -235,6 +283,11 @@ export async function HomepageRefresh() {
                       <Gauge className="size-3.5" />
                       Work Score {listing.workScore}
                     </span>
+                    {getLimehomePilotMeta({ slug: listing.slug }) ? (
+                      <span className="ww-trust-pill inline-flex items-center gap-1.5">
+                        {getLimehomePilotMeta({ slug: listing.slug })?.bestFor}
+                      </span>
+                    ) : null}
                   </div>
 
                   <Button
