@@ -11,15 +11,10 @@ import {
 } from "@/components/ui/tooltip";
 import {
   AMENITY_CATEGORIES,
-  BED_SIZE_OPTIONS,
   CANCELLATION_POLICIES,
   LEISURE_FEATURE_LABELS,
   WORKSPACE_TYPES,
 } from "@/lib/constants";
-import {
-  bookingCommissionBpsToPercent,
-  resolveBookingCommissionBps,
-} from "@/lib/payout-config";
 import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import { BookingSidebar } from "@/components/booking/booking-sidebar";
@@ -83,12 +78,6 @@ export default async function SpaceDetailPage({ params }: Props) {
           image: true,
           bio: true,
           createdAt: true,
-          defaultBookingCommissionBps: true,
-        },
-      },
-      pmsConnection: {
-        select: {
-          bookingCommissionBps: true,
         },
       },
       reviews: {
@@ -126,16 +115,32 @@ export default async function SpaceDetailPage({ params }: Props) {
       },
     },
   });
+  const sameBuildingListings = listing.pmsExternalPropertyId
+    ? await db.listing.findMany({
+        where: {
+          status: "ACTIVE",
+          id: { not: listing.id },
+          pmsExternalPropertyId: listing.pmsExternalPropertyId,
+        },
+        orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
+        take: 3,
+        select: {
+          id: true,
+          title: true,
+          maxGuests: true,
+          pricePerDay: true,
+          workspaceType: true,
+          images: {
+            where: { isPrimary: true },
+            take: 1,
+            select: { url: true, alt: true },
+          },
+        },
+      })
+    : [];
 
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];
-  const bedSize = BED_SIZE_OPTIONS[listing.bedSize as keyof typeof BED_SIZE_OPTIONS];
   const cancelPolicy = CANCELLATION_POLICIES[listing.cancellationPolicy as keyof typeof CANCELLATION_POLICIES];
-  const bookingCommissionPercent = bookingCommissionBpsToPercent(
-    resolveBookingCommissionBps({
-      hostDefaultBookingCommissionBps: listing.host.defaultBookingCommissionBps,
-      connectionBookingCommissionBps: listing.pmsConnection?.bookingCommissionBps,
-    })
-  );
   const workScore = computeWorkScore({
     amenities: listing.amenities,
     connectivity: listing.connectivityProfile,
@@ -164,6 +169,45 @@ export default async function SpaceDetailPage({ params }: Props) {
     .filter((review) => review.comment && review.comment.trim().length > 24)
     .sort((a, b) => b.overallRating - a.overallRating)
     .slice(0, 3);
+  const fitSummary =
+    listing.maxGuests >= 5 && (listing.propertySizeSqm ?? 0) >= 80
+      ? "A strong fit for small-team offsites that still need proper accommodation."
+      : listing.maxGuests >= 3
+        ? "Best for focused pair stays or small-group work trips."
+        : "Best for solo work trips or a quiet stay for two.";
+  const descriptionTeaser =
+    listing.description.length > 220
+      ? `${listing.description.slice(0, 217).trimEnd()}...`
+      : listing.description;
+  const highlightedAmenities = listing.amenities.slice(0, 6);
+  const quickFacts = [
+    {
+      label: "Work score",
+      value: `${workScore.total}/100`,
+      detail: wsType?.label || listing.workspaceType,
+    },
+    {
+      label: "Internet",
+      value: listing.connectivityProfile
+        ? `${listing.connectivityProfile.declaredDownloadMbps} Mbps`
+        : "Available",
+      detail: listing.connectivityProfile?.verified
+        ? listing.connectivityProfile.hasBackupConnection
+          ? "Verified + backup"
+          : "Verified"
+        : "Reported by host",
+    },
+    {
+      label: "Guest fit",
+      value: `Up to ${listing.maxGuests} guests`,
+      detail: `${listing.bedroomCount} bedroom${listing.bedroomCount === 1 ? "" : "s"}${listing.propertySizeSqm ? ` · ${listing.propertySizeSqm} sqm` : ""}`,
+    },
+    {
+      label: "Cancellation",
+      value: cancelPolicy?.label || listing.cancellationPolicy,
+      detail: cancelPolicy?.description || "Flexible booking terms vary by property.",
+    },
+  ];
 
   return (
     <div className="waywork-shell py-8 md:py-10">
@@ -184,19 +228,25 @@ export default async function SpaceDetailPage({ params }: Props) {
           {/* Title section */}
           <div className="waywork-section mb-6 p-5 md:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
-              Work Wonders Worldwide
+              {listing.city}
+              {listing.state ? `, ${listing.state}` : ""} · {listing.country}
             </p>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="mb-2 mt-3 flex flex-wrap items-center gap-2">
               <Badge variant="outline">{wsType?.label}</Badge>
               {listing.connectivityProfile?.verified && (
                 <Badge className="bg-[var(--ww-secondary-green)]">Verified Internet</Badge>
               )}
               <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-                Secure Booking
+                {cancelPolicy?.label || listing.cancellationPolicy}
               </Badge>
+              {listing.amenities.some((amenity) => /self check-in/i.test(amenity.name)) && (
+                <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                  Self check-in
+                </Badge>
+              )}
               {avgRating && (
                 <span className="text-sm text-slate-600">
-                  {"*".repeat(Math.round(parseFloat(avgRating)))} {avgRating} (
+                  {"★".repeat(Math.round(parseFloat(avgRating)))} {avgRating} (
                   {listing._count.reviews})
                 </span>
               )}
@@ -206,6 +256,7 @@ export default async function SpaceDetailPage({ params }: Props) {
               {listing.address}, {listing.city}
               {listing.state ? `, ${listing.state}` : ""}, {listing.country}
             </p>
+            <p className="mt-4 max-w-3xl text-base text-slate-700">{fitSummary}</p>
           </div>
 
           {/* Image gallery */}
@@ -247,10 +298,107 @@ export default async function SpaceDetailPage({ params }: Props) {
             )}
           </div>
 
+          {/* Quick read */}
+          <div className="mb-8 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
+                Why this place works
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+                Fast read before you book
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-700">{descriptionTeaser}</p>
+              {highlightedAmenities.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {highlightedAmenities.map((amenity) => (
+                    <Badge key={amenity.id} variant="secondary" className="bg-slate-100 text-slate-700">
+                      {amenity.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {quickFacts.map((fact) => (
+                <div
+                  key={fact.label}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    {fact.label}
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">{fact.value}</p>
+                  <p className="mt-1 text-sm text-slate-600">{fact.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {sameBuildingListings.length > 0 && (
+            <div className="mb-8 rounded-2xl border border-cyan-200 bg-cyan-50/60 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">
+                Team stay option
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">
+                More units are available in this building
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
+                Need more room for an offsite or distributed team trip? This property has
+                additional live units you can pair with this stay.
+              </p>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                {sameBuildingListings.map((relatedUnit) => (
+                  <Link
+                    key={relatedUnit.id}
+                    href={`/spaces/${relatedUnit.id}`}
+                    className="overflow-hidden rounded-2xl border border-cyan-200 bg-white transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="aspect-[4/3] bg-slate-100">
+                      {relatedUnit.images[0]?.url ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={relatedUnit.images[0].url}
+                            alt={relatedUnit.images[0].alt || relatedUnit.title}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        </>
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                          Additional unit
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1 p-4">
+                      <p className="line-clamp-2 font-semibold text-slate-900">
+                        {relatedUnit.title}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {WORKSPACE_TYPES[
+                          relatedUnit.workspaceType as keyof typeof WORKSPACE_TYPES
+                        ]?.label || relatedUnit.workspaceType}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Up to {relatedUnit.maxGuests} guest
+                        {relatedUnit.maxGuests === 1 ? "" : "s"}
+                      </p>
+                      <p className="text-sm font-semibold text-[var(--ww-primary-blue)]">
+                        ${(relatedUnit.pricePerDay / 100).toFixed(0)}/day
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Work Score */}
           <div className="waywork-section mb-8 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Work Score</h2>
+              <h2 className="text-lg font-semibold">Work Readiness Breakdown</h2>
               <Tooltip>
                 <TooltipTrigger>
                   <div
@@ -300,31 +448,6 @@ export default async function SpaceDetailPage({ params }: Props) {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Stay profile */}
-          <div className="mb-8 rounded-lg border border-cyan-200 bg-cyan-50/60 p-6">
-            <h2 className="text-lg font-semibold text-slate-900">Stay Profile</h2>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
-                <p className="text-xs uppercase text-slate-500">Bedrooms</p>
-                <p className="text-lg font-semibold text-slate-900">{listing.bedroomCount}</p>
-              </div>
-              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
-                <p className="text-xs uppercase text-slate-500">Bed Size</p>
-                <p className="text-lg font-semibold text-slate-900">{bedSize?.label || listing.bedSize}</p>
-              </div>
-              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
-                <p className="text-xs uppercase text-slate-500">Property Size</p>
-                <p className="text-lg font-semibold text-slate-900">
-                  {listing.propertySizeSqm ? `${listing.propertySizeSqm} sqm` : "N/A"}
-                </p>
-              </div>
-              <div className="rounded-md border border-cyan-200 bg-white p-3 text-center">
-                <p className="text-xs uppercase text-slate-500">Max Guests</p>
-                <p className="text-lg font-semibold text-slate-900">{listing.maxGuests}</p>
-              </div>
             </div>
           </div>
 
@@ -630,7 +753,6 @@ export default async function SpaceDetailPage({ params }: Props) {
             cleaningFee={listing.cleaningFee}
             maxGuests={listing.maxGuests}
             cancellationPolicy={listing.cancellationPolicy}
-            bookingCommissionPercent={bookingCommissionPercent}
           />
           <InquiryButton
             listingId={listing.id}

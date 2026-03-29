@@ -13,6 +13,7 @@ import {
 } from "@/lib/search-filters";
 import { trackEvent } from "@/lib/analytics";
 import type { SearchUiVariant } from "@/lib/experiments";
+import { WORKSPACE_TYPES } from "@/lib/constants";
 
 interface SearchResultsClientProps {
   initialListings: ListingCardData[];
@@ -43,6 +44,54 @@ function toMapListings(listings: ListingCardData[]) {
     workspaceType: listing.workspaceType,
     images: listing.images.map((img) => ({ url: img.url, alt: img.alt })),
   }));
+}
+
+function getMatchReasons(listing: ListingCardData, filters: SearchFilterState) {
+  const reasons: string[] = [];
+  const pushReason = (reason: string) => {
+    if (!reasons.includes(reason)) reasons.push(reason);
+  };
+
+  if (filters.workspaceTypes.includes(listing.workspaceType)) {
+    pushReason(
+      WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES]?.label ||
+        "Matching layout"
+    );
+  }
+
+  if (filters.verifiedInternet && listing.connectivityProfile?.verified) {
+    pushReason("Verified internet");
+  }
+
+  if (filters.guests) {
+    const requestedGuests = Number(filters.guests);
+    if (Number.isFinite(requestedGuests) && listing.maxGuests >= requestedGuests) {
+      pushReason(`Fits ${requestedGuests}+ guests`);
+    }
+  }
+
+  if (listing.connectivityProfile?.declaredDownloadMbps) {
+    const speed = listing.connectivityProfile.declaredDownloadMbps;
+    if (speed >= 300) {
+      pushReason(`${speed} Mbps`);
+    }
+  }
+
+  if (listing.workScore >= 90) {
+    pushReason(`Work Score ${listing.workScore}`);
+  }
+
+  if (filters.hasSwimmingPool && listing.hasSwimmingPool) pushReason("Pool");
+  if (filters.hasBackyard && listing.hasBackyard) pushReason("Backyard");
+  if (filters.hasJacuzzi && listing.hasJacuzzi) pushReason("Jacuzzi");
+
+  if (reasons.length === 0) {
+    if (listing.connectivityProfile?.verified) pushReason("Verified internet");
+    if (listing.workScore >= 85) pushReason(`Work Score ${listing.workScore}`);
+    pushReason(`Up to ${listing.maxGuests} guests`);
+  }
+
+  return reasons.slice(0, 3);
 }
 
 export function SearchResultsClient({
@@ -188,7 +237,12 @@ export function SearchResultsClient({
         <>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} variant={searchVariant} />
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                matchReasons={getMatchReasons(listing, filters)}
+                variant={searchVariant}
+              />
             ))}
           </div>
 

@@ -33,7 +33,7 @@ export function HostOnboardingChecklist({ steps }: HostOnboardingChecklistProps)
             Launch Checklist
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Complete these steps to go live with direct host controls and full channel manager readiness.
+            Complete these steps to publish confidently, accept bookings, and keep your PMS in sync.
           </p>
         </div>
         <Badge variant={completed === total ? "default" : "secondary"}>
@@ -71,7 +71,7 @@ export function HostOnboardingChecklist({ steps }: HostOnboardingChecklistProps)
         </div>
       ) : (
         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-          Checklist complete. Your host setup is production-ready for direct operations and PMS sync.
+          Checklist complete. Your host setup is ready for live bookings and PMS-driven operations.
         </div>
       )}
 

@@ -121,10 +121,6 @@ export default async function BookingConfirmationPage({ params }: Props) {
                   <span>{formatCurrency(booking.cleaningFee)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-slate-600">
-                <span>Way Work commission</span>
-                <span>{formatCurrency(booking.serviceFee)}</span>
-              </div>
               <Separator />
               <div className="flex justify-between text-base font-semibold text-slate-900">
                 <span>Total paid</span>

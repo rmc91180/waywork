@@ -79,12 +79,13 @@ test("search calendars, filters, map mode, and property links work", async ({ pa
   await expect(page.locator(".leaflet-container")).toBeVisible();
 
   await page.getByRole("button", { name: /^Grid$/i }).click();
-  await page.getByRole("link", { name: /View details/i }).first().click();
+  await page.locator('a[href^="/spaces/"]:visible').first().click();
 
   await expect(page).toHaveURL(/\/spaces\//);
-  await expect(page.getByRole("button", { name: /Reserve Workspace/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Reserve stay/i })).toBeVisible();
   await expect(page.getByLabel(/Check-in/i)).toBeVisible();
   await expect(page.getByLabel(/Check-out/i)).toBeVisible();
+  await expect(page.getByText(/Way Work commission/i)).toHaveCount(0);
 });
 
 test("host login and primary workspace routes load cleanly", async ({ page }) => {

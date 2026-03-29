@@ -44,6 +44,7 @@ export interface ListingCardData {
 interface ListingCardProps {
   variant?: SearchUiVariant;
   listing: ListingCardData;
+  matchReasons?: string[];
 }
 
 function networkLabel(type: string) {
@@ -52,7 +53,11 @@ function networkLabel(type: string) {
   return "WiFi";
 }
 
-export function ListingCard({ listing, variant = "control" }: ListingCardProps) {
+export function ListingCard({
+  listing,
+  variant = "control",
+  matchReasons = [],
+}: ListingCardProps) {
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];
   const bedSize = BED_SIZE_OPTIONS[listing.bedSize as keyof typeof BED_SIZE_OPTIONS];
   const primaryImage = listing.images[0];
@@ -122,6 +127,20 @@ export function ListingCard({ listing, variant = "control" }: ListingCardProps) 
           <h3 className="line-clamp-2 text-base font-semibold leading-tight text-slate-900">
             {listing.title}
           </h3>
+
+          {matchReasons.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {matchReasons.slice(0, 3).map((reason) => (
+                <Badge
+                  key={reason}
+                  variant="secondary"
+                  className="bg-cyan-50 text-cyan-800"
+                >
+                  {reason}
+                </Badge>
+              ))}
+            </div>
+          )}
 
           {listing.connectivityProfile && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">

@@ -317,18 +317,12 @@ export function SearchTopBar({
             )}
             {filters.verifiedInternet && (
               <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
-                Verified Internet
+                Verified internet only
               </Badge>
             )}
-            {filters.workspaceTypes.length > 0 && (
+            {filters.guests && (
               <Badge variant="secondary" className="bg-sky-50 text-sky-700">
-                {filters.workspaceTypes.length} workspace type
-                {filters.workspaceTypes.length > 1 ? "s" : ""}
-              </Badge>
-            )}
-            {filters.amenities.length > 0 && (
-              <Badge variant="secondary" className="bg-amber-50 text-amber-700">
-                {filters.amenities.length} amenities
+                {filters.guests} guest{filters.guests === "1" ? "" : "s"}
               </Badge>
             )}
             {locationBadgeLabel && (

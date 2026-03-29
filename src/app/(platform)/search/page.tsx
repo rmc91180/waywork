@@ -11,6 +11,7 @@ import {
 } from "@/lib/search-filters";
 import { searchListingsWithFacets, type SearchFacets } from "@/lib/search-query";
 import { getSearchUiVariant } from "@/lib/experiments";
+import { WORKSPACE_TYPES } from "@/lib/constants";
 
 export const metadata = {
   title: "Search Workspaces",
@@ -40,25 +41,6 @@ function createEmptyFacets(): SearchFacets {
     },
   };
 }
-
-const quickSearchLinks = [
-  {
-    label: "Deep Focus Mode",
-    href: "/search?workspaceTypes=PRIVATE_OFFICE,HOME_OFFICE&minWorkScore=75&verifiedInternet=true",
-  },
-  {
-    label: "Team Offsite",
-    href: "/search?workspaceTypes=MEETING_ROOM,HYBRID_SPACE&networkTypes=BOTH&guests=6",
-  },
-  {
-    label: "Work + Play",
-    href: "/search?hasSwimmingPool=true&hasBackyard=true",
-  },
-  {
-    label: "Under $150",
-    href: "/search?maxPrice=150&sortBy=price_asc",
-  },
-];
 
 function toListingCardData(
   listings: Awaited<ReturnType<typeof searchListingsWithFacets>>["listings"]
@@ -133,6 +115,69 @@ function nearbySuggestionHref(filters: SearchFilterState) {
   return `/search?${params.toString()}`;
 }
 
+function buildQuickRefinementLinks(filters: SearchFilterState, facets: SearchFacets) {
+  const links: Array<{ label: string; href: string }> = [];
+  const seen = new Set<string>();
+
+  const pushLink = (label: string, nextFilters: SearchFilterState) => {
+    if (seen.has(label)) return;
+    seen.add(label);
+    links.push({
+      label,
+      href: `/search?${serializeSearchFilterParams({ ...nextFilters, page: 1 }).toString()}`,
+    });
+  };
+
+  if (!filters.verifiedInternet) {
+    pushLink("Verified internet", {
+      ...filters,
+      verifiedInternet: true,
+    });
+  }
+
+  if (!filters.minWorkScore || filters.minWorkScore < 75) {
+    pushLink("Top work score", {
+      ...filters,
+      minWorkScore: 75,
+    });
+  }
+
+  if (!filters.maxPrice && facets.price.max >= 15_000) {
+    pushLink("Under $150", {
+      ...filters,
+      maxPrice: "150",
+      sortBy: "price_asc",
+    });
+  }
+
+  if (!filters.guests || Number(filters.guests) < 4) {
+    pushLink("Team stays", {
+      ...filters,
+      guests: "4",
+      workspaceTypes:
+        facets.workspaceTypes.HYBRID_SPACE || facets.workspaceTypes.MEETING_ROOM
+          ? ["HYBRID_SPACE", "MEETING_ROOM"]
+          : filters.workspaceTypes,
+    });
+  }
+
+  if (filters.workspaceTypes.length === 0) {
+    Object.entries(facets.workspaceTypes)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .forEach(([workspaceType]) => {
+        const label = WORKSPACE_TYPES[workspaceType as keyof typeof WORKSPACE_TYPES]?.label;
+        if (!label) return;
+        pushLink(label, {
+          ...filters,
+          workspaceTypes: [workspaceType],
+        });
+      });
+  }
+
+  return links.slice(0, 4);
+}
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const cookieStore = await cookies();
@@ -165,6 +210,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const locationBadgeLabel = locationContext
     ? `Near ${locationContext.resolvedLabel} (${locationContext.radiusKm} km)`
     : null;
+  const quickRefinementLinks = buildQuickRefinementLinks(filters, facets);
 
   return (
     <div className="relative overflow-hidden">
@@ -180,7 +226,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         />
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {quickSearchLinks.map((link) => (
+          {quickRefinementLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}

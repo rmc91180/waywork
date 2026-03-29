@@ -251,17 +251,17 @@ export default async function HostDashboardPage() {
       ctaLabel: "Manage Status",
     },
     {
-      id: "connect-siteminder",
-      title: "Connect SiteMinder credentials",
-      description: "Attach SiteMinder credentials for upcoming two-way channel sync.",
+      id: "connect-pms",
+      title: "Connect your PMS",
+      description: "Link your property system so inventory and booking sync can be managed in one place.",
       complete: siteminderConnected && Boolean(siteMinderConnection?.enabled),
       href: "/host/channel-manager",
-      ctaLabel: "Connect SiteMinder",
+      ctaLabel: "Connect PMS",
     },
     {
       id: "map-listings",
-      title: "Map listings to external IDs",
-      description: "Map active listings to channel manager listing and rate plan IDs.",
+      title: "Map your live listings",
+      description: "Match each active listing to the correct external property and rate plan.",
       complete:
         syncManagedListings.length > 0 &&
         mappedSyncManagedListings === syncManagedListings.length,
@@ -269,12 +269,12 @@ export default async function HostDashboardPage() {
       ctaLabel: "Map Listings",
     },
     {
-      id: "configure-webhook",
-      title: "Configure webhook secret",
-      description: "Store webhook secret so inbound availability and booking updates can verify.",
+      id: "enable-live-sync",
+      title: "Enable live sync",
+      description: "Finish PMS verification so rates, availability, and booking updates flow automatically.",
       complete: webhookConfigured,
       href: "/host/channel-manager",
-      ctaLabel: "Add Webhook Secret",
+      ctaLabel: "Finish Sync Setup",
     },
     {
       id: "payouts",

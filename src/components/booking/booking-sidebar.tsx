@@ -20,7 +20,6 @@ interface BookingSidebarProps {
   cleaningFee: number;
   maxGuests: number;
   cancellationPolicy: string;
-  bookingCommissionPercent: number;
 }
 
 export function BookingSidebar({
@@ -29,7 +28,6 @@ export function BookingSidebar({
   cleaningFee,
   maxGuests,
   cancellationPolicy,
-  bookingCommissionPercent,
 }: BookingSidebarProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -50,11 +48,9 @@ export function BookingSidebar({
   const pricing = useMemo(() => {
     if (numberOfDays === 0) return null;
     const subtotal = pricePerDay * numberOfDays;
-    const grossBookingAmount = subtotal + cleaningFee;
-    const serviceFee = Math.round(grossBookingAmount * (bookingCommissionPercent / 100));
-    const total = grossBookingAmount;
-    return { subtotal, cleaningFee, serviceFee, total };
-  }, [bookingCommissionPercent, numberOfDays, pricePerDay, cleaningFee]);
+    const total = subtotal + cleaningFee;
+    return { subtotal, cleaningFee, total };
+  }, [numberOfDays, pricePerDay, cleaningFee]);
 
   const policyLabel =
     cancellationPolicy === "FLEXIBLE"
@@ -138,7 +134,7 @@ export function BookingSidebar({
   return (
     <Card className="sticky top-24 overflow-hidden border-slate-200 py-0 shadow-lg">
       <div className="bg-gradient-to-r from-[var(--ww-primary-blue)] via-[var(--ww-secondary-green)] to-[var(--ww-text-primary)] px-6 py-5 text-white">
-        <p className="text-xs uppercase tracking-[0.18em] text-cyan-100">Reserve this workspace</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-cyan-100">Book this stay</p>
         <CardTitle className="mt-2 flex items-baseline gap-2">
           <span className="text-3xl font-bold">{formatCurrency(pricePerDay)}</span>
           <span className="text-sm font-normal text-slate-200">/ day</span>
@@ -212,7 +208,7 @@ export function BookingSidebar({
           onClick={handleBooking}
           disabled={loading || numberOfDays === 0}
         >
-          {loading ? "Processing..." : "Reserve Workspace"}
+          {loading ? "Processing..." : "Reserve stay"}
         </Button>
 
         {pricing && (
@@ -230,15 +226,9 @@ export function BookingSidebar({
                 <span>{formatCurrency(pricing.cleaningFee)}</span>
               </div>
             )}
-            <div className="flex justify-between">
-                <span className="text-slate-600">
-                  Way Work commission ({bookingCommissionPercent.toFixed(2)}%)
-                </span>
-                <span>{formatCurrency(pricing.serviceFee)}</span>
-              </div>
             <Separator />
             <div className="flex justify-between font-semibold">
-              <span>Total</span>
+              <span>Total before taxes</span>
               <span>{formatCurrency(pricing.total)}</span>
             </div>
           </div>
@@ -256,6 +246,10 @@ export function BookingSidebar({
           <p className="flex items-start gap-2">
             <Clock3 className="mt-0.5 size-3.5 shrink-0" />
             Most hosts respond to booking questions within a few hours.
+          </p>
+          <p className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
+            No extra guest booking fee is added at checkout.
           </p>
         </div>
       </CardContent>

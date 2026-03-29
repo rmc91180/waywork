@@ -8,7 +8,7 @@ import { HostPageHeader } from "@/components/host/host-page-header";
 import { HostChannelManagerControlPanel } from "@/components/host/host-channel-manager-control-panel";
 
 export const metadata = {
-  title: "Channel Manager",
+  title: "PMS Setup",
 };
 
 export default async function HostChannelManagerPage() {
@@ -57,12 +57,12 @@ export default async function HostChannelManagerPage() {
     <div className="waywork-shell py-8 md:py-10">
       <HostPageHeader
         eyebrow="Host workspace"
-        title="PMS"
-        description="Connect SiteMinder, map listings, and keep sync settings in one place."
+        title="PMS Setup"
+        description="Connect your property system, map listings, and manage live sync in one place."
         aside={
           <div className="flex flex-wrap justify-end gap-2">
             <Badge variant={providerActive ? "default" : "secondary"}>
-              {providerActive ? "SiteMinder active" : "SiteMinder inactive"}
+              {providerActive ? "PMS active" : "PMS inactive"}
             </Badge>
             <Badge variant="outline">
               {mappedListings}/{listings.length} mapped

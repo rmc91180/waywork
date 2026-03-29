@@ -210,7 +210,9 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
           <div className="space-y-6">
             <Card className="border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">Price Breakdown</CardTitle>
+                <CardTitle className="text-lg">
+                  {isHost ? "Booking Economics" : "Price Breakdown"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between text-slate-600">
@@ -228,13 +230,15 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
                     <span>{formatCurrency(booking.cleaningFee)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-slate-600">
-                  <span>Way Work commission</span>
-                  <span>{formatCurrency(booking.serviceFee)}</span>
-                </div>
+                {isHost && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Way Work platform fee</span>
+                    <span>{formatCurrency(booking.serviceFee)}</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between text-base font-semibold text-slate-900">
-                  <span>Total paid</span>
+                  <span>{isHost ? "Guest total" : "Total paid"}</span>
                   <span>{formatCurrency(booking.totalPrice)}</span>
                 </div>
                 {isHost && (
