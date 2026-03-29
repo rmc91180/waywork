@@ -11,6 +11,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "test-results/**",
     "next-env.d.ts",
     // Prisma client output is generated code and should not be linted.
     "src/generated/prisma/**",

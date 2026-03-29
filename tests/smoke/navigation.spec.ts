@@ -6,8 +6,16 @@ async function expectNoBrokenAnchors(page: Page) {
       .map((anchor) => ({
         href: anchor.getAttribute("href"),
         text: anchor.textContent?.trim() || "",
+        className:
+          typeof anchor.className === "string"
+            ? anchor.className
+            : anchor.getAttribute("class") || "",
       }))
-      .filter((item) => item.href === "" || item.href === "#")
+      .filter((item) => {
+        const isLeafletZoomControl =
+          item.href === "#" && item.className.includes("leaflet-control-zoom");
+        return !isLeafletZoomControl && (item.href === "" || item.href === "#");
+      })
   );
 
   expect(invalidHrefs).toEqual([]);
@@ -22,6 +30,16 @@ async function signInAsDemoHost(page: Page) {
   await page.getByRole("button", { name: /Sign in as Demo User/i }).click();
   await page.waitForURL(/\/host/, { timeout: 30_000 });
   await expect(page.getByText(/Host workspace/i)).toBeVisible();
+}
+
+async function signInAsDemoUser(page: Page, callbackUrl: string, destinationPattern: RegExp) {
+  await page.goto(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  await expect(page.getByText(/Welcome back/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Sign in as Demo User/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole("button", { name: /Sign in as Demo User/i }).click();
+  await page.waitForURL(destinationPattern, { timeout: 30_000 });
 }
 
 test("homepage CTAs and quick search are functional", async ({ page }) => {
@@ -86,6 +104,36 @@ test("search calendars, filters, map mode, and property links work", async ({ pa
   await expect(page.getByLabel(/Check-in/i)).toBeVisible();
   await expect(page.getByLabel(/Check-out/i)).toBeVisible();
   await expect(page.getByText(/Way Work commission/i)).toHaveCount(0);
+});
+
+test("team-stay planner supports grouped inquiries for Madrid portfolio units", async ({ page }) => {
+  await signInAsDemoUser(page, "/search?query=madrid", /\/search\?query=madrid/);
+
+  await expect(page.getByText(/results for "madrid"/i)).toBeVisible();
+  await page
+    .locator('a[href^="/spaces/"]')
+    .filter({ hasText: /Limehome Madrid Doctor Fleming Team Apartment/i })
+    .first()
+    .click();
+
+  await expect(page).toHaveURL(/\/spaces\//);
+  await expect(
+    page.getByText(/Bundle multiple units in one building|Pair this stay with more Madrid Limehome units/i)
+  ).toBeVisible();
+
+  await page.getByRole("checkbox").first().click();
+  await page.getByRole("button", { name: /Request multiple units/i }).click();
+
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.getByLabel(/Expected team size/i).fill("8 teammates");
+  await page.getByLabel(/Notes for the host/i).fill(
+    "We'd like to keep the team close together and coordinate arrivals."
+  );
+  await page.getByRole("button", { name: /Send team stay request/i }).click();
+
+  await page.waitForURL(/\/messages\//, { timeout: 30_000 });
+  await expect(page.getByText(/multi-unit team stay/i).first()).toBeVisible();
+  await expect(page.getByText(/Additional units requested:/i).first()).toBeVisible();
 });
 
 test("host login and primary workspace routes load cleanly", async ({ page }) => {

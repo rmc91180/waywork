@@ -19,6 +19,7 @@ import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import { BookingSidebar } from "@/components/booking/booking-sidebar";
 import { InquiryButton } from "@/components/messaging/inquiry-button";
+import { TeamStayPlanner } from "@/components/listings/team-stay-planner";
 import type { Metadata } from "next";
 
 interface Props {
@@ -138,6 +139,42 @@ export default async function SpaceDetailPage({ params }: Props) {
         },
       })
     : [];
+  const portfolioTeamStayListings =
+    sameBuildingListings.length === 0
+      ? await db.listing.findMany({
+          where: {
+            status: "ACTIVE",
+            id: { not: listing.id },
+            city: listing.city,
+            hostId: listing.hostId,
+            ...(listing.pmsConnectionId
+              ? { pmsConnectionId: listing.pmsConnectionId }
+              : {}),
+          },
+          orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
+          take: 3,
+          select: {
+            id: true,
+            title: true,
+            maxGuests: true,
+            pricePerDay: true,
+            workspaceType: true,
+            images: {
+              where: { isPrimary: true },
+              take: 1,
+              select: { url: true, alt: true },
+            },
+          },
+        })
+      : [];
+  const teamStayListings =
+    sameBuildingListings.length > 0 ? sameBuildingListings : portfolioTeamStayListings;
+  const teamStayMode =
+    sameBuildingListings.length > 0
+      ? "same-building"
+      : portfolioTeamStayListings.length > 0
+        ? "city-portfolio"
+        : null;
 
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];
   const cancelPolicy = CANCELLATION_POLICIES[listing.cancellationPolicy as keyof typeof CANCELLATION_POLICIES];
@@ -335,65 +372,19 @@ export default async function SpaceDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {sameBuildingListings.length > 0 && (
-            <div className="mb-8 rounded-2xl border border-cyan-200 bg-cyan-50/60 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">
-                Team stay option
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-                More units are available in this building
-              </h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
-                Need more room for an offsite or distributed team trip? This property has
-                additional live units you can pair with this stay.
-              </p>
-
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
-                {sameBuildingListings.map((relatedUnit) => (
-                  <Link
-                    key={relatedUnit.id}
-                    href={`/spaces/${relatedUnit.id}`}
-                    className="overflow-hidden rounded-2xl border border-cyan-200 bg-white transition hover:-translate-y-0.5 hover:shadow-md"
-                  >
-                    <div className="aspect-[4/3] bg-slate-100">
-                      {relatedUnit.images[0]?.url ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={relatedUnit.images[0].url}
-                            alt={relatedUnit.images[0].alt || relatedUnit.title}
-                            loading="lazy"
-                            className="h-full w-full object-cover"
-                          />
-                        </>
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                          Additional unit
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-1 p-4">
-                      <p className="line-clamp-2 font-semibold text-slate-900">
-                        {relatedUnit.title}
-                      </p>
-                      <p className="text-sm text-slate-600">
-                        {WORKSPACE_TYPES[
-                          relatedUnit.workspaceType as keyof typeof WORKSPACE_TYPES
-                        ]?.label || relatedUnit.workspaceType}
-                      </p>
-                      <p className="text-sm text-slate-600">
-                        Up to {relatedUnit.maxGuests} guest
-                        {relatedUnit.maxGuests === 1 ? "" : "s"}
-                      </p>
-                      <p className="text-sm font-semibold text-[var(--ww-primary-blue)]">
-                        ${(relatedUnit.pricePerDay / 100).toFixed(0)}/day
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+          {teamStayMode ? (
+            <TeamStayPlanner
+              listingId={listing.id}
+              listingTitle={listing.title}
+              hostName={listing.host.name || "Host"}
+              city={listing.city}
+              currency={listing.currency}
+              baseMaxGuests={listing.maxGuests}
+              basePricePerDay={listing.pricePerDay}
+              mode={teamStayMode}
+              candidates={teamStayListings}
+            />
+          ) : null}
 
           {/* Work Score */}
           <div className="waywork-section mb-8 p-6">
