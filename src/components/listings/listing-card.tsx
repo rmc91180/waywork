@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { BED_SIZE_OPTIONS, WORKSPACE_TYPES } from "@/lib/constants";
+import { trackEvent } from "@/lib/analytics";
 import { getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import type { SearchUiVariant } from "@/lib/experiments";
@@ -65,7 +68,21 @@ export function ListingCard({
   const reviewCount = listing.reviewCount || listing._count.reviews;
 
   return (
-    <Link href={`/spaces/${listing.id}`} className="block">
+    <Link
+      href={`/spaces/${listing.id}`}
+      className="block"
+      onClick={() =>
+        trackEvent({
+          event: "search_result_clicked",
+          properties: {
+            listingId: listing.id,
+            title: listing.title,
+            city: listing.city,
+            workScore: listing.workScore,
+          },
+        })
+      }
+    >
       <Card
         className={cn(
           "group h-full overflow-hidden border-slate-200 py-0 transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300",

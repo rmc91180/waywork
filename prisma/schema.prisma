@@ -95,6 +95,7 @@ model User {
   pmsConnections PmsConnection[]
   listingTeamMemberships ListingTeamMember[] @relation("ListingTeamMembership")
   listingTeamInvitesCreated ListingTeamMember[] @relation("ListingTeamInviteCreator")
+  analyticsEvents AnalyticsEvent[]
 }
 
 // ============================================================================
@@ -247,6 +248,7 @@ model Listing {
   pmsConnection       PmsConnection?        @relation(fields: [pmsConnectionId], references: [id], onDelete: SetNull)
   teamMembers         ListingTeamMember[]
   pmsSyncJobs         PmsSyncJob[]
+  analyticsEvents     AnalyticsEvent[]
 
   @@index([status])
   @@index([city])
@@ -450,6 +452,7 @@ model Booking {
   guest     User              @relation("GuestBookings", fields: [guestId], references: [id])
   listing   Listing           @relation(fields: [listingId], references: [id])
   attendees BookingAttendee[]
+  analyticsEvents AnalyticsEvent[]
   review    Review?
   messages  MessageThread[]
   pmsSyncEvents PmsSyncEvent[]
@@ -459,6 +462,33 @@ model Booking {
   @@index([listingId])
   @@index([status])
   @@index([checkIn])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  listingId String?
+  bookingId String?
+
+  sessionId String
+  event     String
+  path      String?
+  search    String?
+  userAgent String?
+  referrer  String?
+  properties Json?
+
+  createdAt DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([event, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([listingId, createdAt])
+  @@index([bookingId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model PmsConnection {

@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { trackEvent } from "@/lib/analytics";
 import { formatCurrency } from "@/lib/stripe";
 import { WORKSPACE_TYPES } from "@/lib/constants";
 
@@ -63,11 +64,23 @@ export function TeamStayPlanner({
   const totalUnits = 1 + selectedUnits.length;
 
   function toggleUnit(unitId: string) {
-    setSelectedIds((current) =>
-      current.includes(unitId)
+    setSelectedIds((current) => {
+      const next = current.includes(unitId)
         ? current.filter((id) => id !== unitId)
-        : [...current, unitId]
-    );
+        : [...current, unitId];
+
+      trackEvent({
+        event: "team_stay_unit_toggled",
+        properties: {
+          listingId,
+          unitId,
+          selectedCount: next.length,
+          mode,
+        },
+      });
+
+      return next;
+    });
   }
 
   async function handleGroupedInquiry() {
@@ -103,6 +116,16 @@ export function TeamStayPlanner({
       const result = await createThread({
         listingId,
         message: messageLines.join("\n"),
+      });
+      trackEvent({
+        event: "team_stay_request_sent",
+        properties: {
+          listingId,
+          mode,
+          totalUnits,
+          totalCapacity,
+          selectedUnitIds: selectedUnits.map((unit) => unit.id),
+        },
       });
       toast.success("Team stay request sent");
       setOpen(false);
@@ -231,7 +254,17 @@ export function TeamStayPlanner({
           </p>
         </div>
         <Button
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            trackEvent({
+              event: "team_stay_request_opened",
+              properties: {
+                listingId,
+                mode,
+                selectedCount: selectedUnits.length,
+              },
+            });
+            setOpen(true);
+          }}
           disabled={selectedUnits.length === 0}
           className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
         >

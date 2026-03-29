@@ -118,6 +118,27 @@ export function SearchResultsClient({
     setLoadError(null);
   }, [initialListings, initialPage, totalPages]);
 
+  useEffect(() => {
+    trackEvent({
+      event: "search_results_viewed",
+      properties: {
+        query: filters.query || null,
+        city: filters.city || null,
+        nearQuery: filters.nearQuery || null,
+        totalVisibleListings: listings.length,
+        currentPage,
+        totalPages: resolvedTotalPages,
+      },
+    });
+  }, [
+    currentPage,
+    filters.city,
+    filters.nearQuery,
+    filters.query,
+    listings.length,
+    resolvedTotalPages,
+  ]);
+
   const loadNextPage = useCallback(async () => {
     if (!hasMore || loadingNextPage) return;
 

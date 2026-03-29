@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
+import { getPilotAnalyticsDashboard } from "@/lib/pilot-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SeedDemoDataButton } from "@/components/admin/seed-demo-data-button";
@@ -21,6 +22,7 @@ export default async function AdminDashboardPage() {
     confirmedBookings,
     totalReviews,
     revenueResult,
+    pilotAnalytics,
   ] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { role: "HOST" } }),
@@ -34,6 +36,7 @@ export default async function AdminDashboardPage() {
       where: { status: { in: ["CONFIRMED", "COMPLETED"] } },
       _sum: { totalPrice: true },
     }),
+    getPilotAnalyticsDashboard(14),
   ]);
 
   const totalRevenue = revenueResult._sum.totalPrice || 0;
@@ -96,8 +99,54 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
+      <div className="mb-8 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <Card className="border-cyan-200 bg-cyan-50/60">
+          <CardHeader>
+            <CardTitle className="text-lg">Limehome Pilot Snapshot</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-4">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-cyan-800">Events</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{pilotAnalytics.totals.limehomeEvents}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-cyan-800">Sessions</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{pilotAnalytics.totals.limehomeSessions}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-cyan-800">Property Views</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">
+                {pilotAnalytics.limehomeFunnel.find((step) => step.key === "property_viewed")?.sessions || 0}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-cyan-800">Checkout Starts</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">
+                {pilotAnalytics.limehomeFunnel.find((step) => step.key === "checkout_started")?.sessions || 0}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Pilot Funnel</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pilotAnalytics.limehomeFunnel.slice(0, 4).map((step) => (
+              <div key={step.key} className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">{step.label}</span>
+                <span className="font-semibold text-slate-900">{step.sessions}</span>
+              </div>
+            ))}
+            <Button variant="outline" className="mt-2 w-full justify-start" asChild>
+              <Link href="/admin/analytics">Open Launch Dashboard</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Quick links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Listings</CardTitle>
@@ -135,6 +184,16 @@ export default async function AdminDashboardPage() {
           <CardContent className="space-y-2">
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/admin/pms/apaleo">Open Control Room</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Analytics</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/admin/analytics">View Pilot Funnel</Link>
             </Button>
           </CardContent>
         </Card>

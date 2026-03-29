@@ -19,6 +19,7 @@ import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
 import { cn } from "@/lib/utils";
 import { BookingSidebar } from "@/components/booking/booking-sidebar";
 import { InquiryButton } from "@/components/messaging/inquiry-button";
+import { PropertyAnalyticsTracker } from "@/components/listings/property-analytics-tracker";
 import { TeamStayPlanner } from "@/components/listings/team-stay-planner";
 import type { Metadata } from "next";
 
@@ -248,6 +249,13 @@ export default async function SpaceDetailPage({ params }: Props) {
 
   return (
     <div className="waywork-shell py-8 md:py-10">
+      <PropertyAnalyticsTracker
+        listingId={listing.id}
+        title={listing.title}
+        city={listing.city}
+        maxGuests={listing.maxGuests}
+        hasTeamStayOption={Boolean(teamStayMode)}
+      />
       {/* Breadcrumb */}
       <div className="mb-4 text-sm text-slate-500">
         <Link href="/search" className="transition-colors hover:text-slate-700 hover:underline">
