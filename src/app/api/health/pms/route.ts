@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getApaleoPilotPreflightSummary } from "@/lib/pms/apaleo-pilot-preflight";
 import { getApaleoPilotReadinessSummary } from "@/lib/pms/apaleo-pilot-readiness";
 import { getActivePmsProviderMode } from "@/lib/pms/provider-mode";
 
@@ -33,7 +34,13 @@ export async function GET() {
 
   try {
     await db.$queryRaw`SELECT 1`;
-    const apaleoReadiness = mode === "APALEO" ? await getApaleoPilotReadinessSummary() : null;
+    const [apaleoReadiness, apaleoPreflight] =
+      mode === "APALEO"
+        ? await Promise.all([
+            getApaleoPilotReadinessSummary(),
+            getApaleoPilotPreflightSummary(),
+          ])
+        : [null, null];
 
     if (mode === "NONE") {
       return NextResponse.json(
@@ -173,7 +180,13 @@ export async function GET() {
         },
         recentErrors24h: recentErrors,
         lastSuccess,
-        provider: apaleoReadiness,
+        provider:
+          apaleoReadiness && apaleoPreflight
+            ? {
+                ...apaleoReadiness,
+                preflight: apaleoPreflight,
+              }
+            : apaleoReadiness,
         warnings,
         checkedAt: new Date().toISOString(),
       },

@@ -6,12 +6,20 @@ import { db } from "@/lib/db";
 import { ApaleoPilotOpsPanel } from "@/components/admin/apaleo-pilot-ops-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { bookingCommissionBpsToPercent } from "@/lib/payout-config";
+import { getApaleoPilotPreflightSummary } from "@/lib/pms/apaleo-pilot-preflight";
 import { getApaleoPilotReadinessSummary } from "@/lib/pms/apaleo-pilot-readiness";
 
 const readinessBadgeClasses: Record<string, string> = {
   GREEN: "bg-emerald-100 text-emerald-800 border-emerald-200",
   YELLOW: "bg-amber-100 text-amber-800 border-amber-200",
   RED: "bg-rose-100 text-rose-800 border-rose-200",
+};
+
+const preflightBadgeClasses: Record<string, string> = {
+  ACTION_REQUIRED: "bg-rose-100 text-rose-800 border-rose-200",
+  READY_FOR_CREDENTIAL_INPUT: "bg-sky-100 text-sky-800 border-sky-200",
+  READY_FOR_LIVE_CUTOVER: "bg-emerald-100 text-emerald-800 border-emerald-200",
 };
 
 function formatRelativeTimestamp(value: string | null) {
@@ -23,8 +31,25 @@ export default async function AdminApaleoPilotPage() {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "ADMIN") redirect("/");
 
-  const [summary, recentListings] = await Promise.all([
+  const [summary, preflight, pilotConnection, recentListings] = await Promise.all([
     getApaleoPilotReadinessSummary(),
+    getApaleoPilotPreflightSummary(),
+    db.pmsConnection.findFirst({
+      where: { provider: "APALEO" },
+      orderBy: [{ enabled: "desc" }, { updatedAt: "desc" }],
+      select: {
+        apaleoAccountCode: true,
+        bookingCommissionBps: true,
+        user: {
+          select: {
+            email: true,
+            name: true,
+            stripeConnectAccountId: true,
+            defaultBookingCommissionBps: true,
+          },
+        },
+      },
+    }),
     db.listing.findMany({
       where: {
         pmsConnection: { provider: "APALEO" },
@@ -127,6 +152,113 @@ export default async function AdminApaleoPilotPage() {
         </Card>
       </div>
 
+      <Card className="border-slate-200">
+        <CardHeader>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <CardTitle className="text-lg">Pilot Preflight</CardTitle>
+              <p className="mt-1 text-sm text-slate-600">
+                This is the launch filter: everything operational should be green before we switch
+                over to real Limehome credentials.
+              </p>
+            </div>
+            <Badge className={preflightBadgeClasses[preflight.state] || ""}>
+              {preflight.state.replace(/_/g, " ")}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-medium text-slate-900">{preflight.recommendedNextStep}</p>
+            {preflight.onlyCredentialsRemain && (
+              <p className="mt-2 text-sm text-sky-700">
+                All remaining launch work is credential entry and live partner hookup.
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Completed</h2>
+              {preflight.completed.length === 0 ? (
+                <p className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                  Nothing has been marked complete yet.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2 text-sm text-emerald-700">
+                  {preflight.completed.map((item) => (
+                    <li key={item} className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Remaining Non-Credential Tasks</h2>
+              {preflight.nonCredentialTasks.length === 0 ? (
+                <p className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                  No non-credential tasks remain.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2 text-sm text-rose-700">
+                  {preflight.nonCredentialTasks.map((item) => (
+                    <li key={item} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Remaining Credential Inputs</h2>
+              {preflight.credentialTasks.length === 0 ? (
+                <p className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                  All required credential inputs are present.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2 text-sm text-sky-700">
+                  {preflight.credentialTasks.map((item) => (
+                    <li key={item} className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-3">
+            {[
+              { title: "Environment", items: preflight.credentialChecks.environment },
+              { title: "Apaleo Connection", items: preflight.credentialChecks.apaleoConnection },
+              { title: "Host Payout", items: preflight.credentialChecks.hostPayout },
+            ].map((section) => (
+              <div key={section.title} className="rounded-2xl border border-slate-200 p-4">
+                <h3 className="text-sm font-semibold text-slate-900">{section.title}</h3>
+                <div className="mt-3 space-y-2">
+                  {section.items.map((item) => (
+                    <div
+                      key={item.key}
+                      className={`rounded-xl border px-3 py-2 text-sm ${
+                        item.status === "READY"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-sky-200 bg-sky-50 text-sky-700"
+                      }`}
+                    >
+                      <p className="font-medium">{item.label}</p>
+                      <p className="mt-1 text-xs">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)]">
         <div className="space-y-6">
           <Card className="border-slate-200">
@@ -191,7 +323,16 @@ export default async function AdminApaleoPilotPage() {
             </CardContent>
           </Card>
 
-          <ApaleoPilotOpsPanel />
+          <ApaleoPilotOpsPanel
+            defaultHostEmail={pilotConnection?.user.email}
+            defaultHostName={pilotConnection?.user.name}
+            defaultAccountCode={pilotConnection?.apaleoAccountCode}
+            defaultStripeConnectAccountId={pilotConnection?.user.stripeConnectAccountId}
+            defaultBookingCommissionPercent={bookingCommissionBpsToPercent(
+              pilotConnection?.bookingCommissionBps ??
+                pilotConnection?.user.defaultBookingCommissionBps
+            )}
+          />
         </div>
 
         <Card className="border-slate-200">

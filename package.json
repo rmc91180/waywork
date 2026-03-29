@@ -34,8 +34,10 @@
     "test:pilot-merchandising": "npx tsx scripts/limehome-pilot-merchandising-test.ts",
     "test:pilot-acceptance": "node --env-file=.env --import tsx scripts/limehome-pilot-acceptance.ts",
     "test:payout-config": "npx tsx scripts/payout-config-test.ts",
+    "test:apaleo-preflight": "npx tsx scripts/apaleo-preflight-test.ts",
     "pms:jobs": "node --env-file=.env --import tsx scripts/process-pms-jobs.ts",
     "launch:healthcheck": "node --env-file=.env --import tsx scripts/launch-healthcheck.ts",
+    "launch:preflight": "node --env-file=.env --import tsx scripts/apaleo-launch-preflight.ts",
     "test:ops": "npm run test:mews-contract && npm run test:smoke"
   },
   "prisma": {

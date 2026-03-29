@@ -23,14 +23,18 @@ Last updated: 2026-03-27
    - `npm run test:apaleo-sync`
    - `npm run test:apaleo-booking`
    - `npm run test:payout-config`
+   - `npm run test:apaleo-preflight`
    - `npm run test:apaleo-pilot`
    - `npm run test:pilot-merchandising`
-4. In `/admin/pms/apaleo`, run the internal launch sequence:
+4. Run the preflight gate:
+   - `npm run launch:preflight`
+   - `/admin/pms/apaleo` should show no remaining non-credential tasks before live credential entry
+5. In `/admin/pms/apaleo`, run the internal launch sequence:
    - Import Madrid inventory
    - Curate Madrid inventory
    - Register subscriptions
    - Run full resync
-5. Review `/admin/listings` and approve only the Madrid listings that are both:
+6. Review `/admin/listings` and approve only the Madrid listings that are both:
    - `PUBLISHABLE`
    - operationally ready for direct booking
 
@@ -41,10 +45,12 @@ Last updated: 2026-03-27
    - `npm run db:deploy`
    - `npm run db:prepare`
 3. Verify health:
+   - `npm run launch:preflight`
    - `npm run launch:healthcheck`
    - `GET /api/health/db` returns `ok=true`
    - `GET /api/health/pms` returns `ok=true`
    - `/admin/pms/apaleo` shows no blockers
+   - `/admin/pms/apaleo` shows no remaining non-credential tasks
 4. Confirm apaleo subscription state:
    - reservation webhook subscription is present
    - ARI subscription state is present for every Madrid property
