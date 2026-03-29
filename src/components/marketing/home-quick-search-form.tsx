@@ -8,21 +8,21 @@ export function HomeQuickSearchForm() {
   return (
     <form
       action="/search"
-      className="grid gap-3 rounded-[28px] border border-white/45 bg-white/94 p-3 shadow-xl shadow-slate-900/10 md:grid-cols-[minmax(0,1.9fr)_180px_140px_190px_auto] md:items-stretch md:p-4"
+      className="grid gap-3 rounded-[28px] border border-slate-200 bg-white p-3 shadow-lg shadow-slate-900/8 md:grid-cols-[minmax(0,2fr)_170px_170px_140px_auto] md:items-stretch md:p-4"
       onSubmit={() =>
         trackEvent({
           event: "homepage_quick_search_submitted",
           properties: { source: "homepage_quick_search" },
         })
       }
-    >
+      >
       <label className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
         <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
           Where
         </span>
         <input
           name="nearQuery"
-          placeholder="City, landmark, or team hub"
+          placeholder="City or neighborhood"
           className="mt-2 h-auto w-full border-0 p-0 text-sm text-slate-900 outline-none placeholder:text-slate-400"
           aria-label="Destination, landmark, or team hub"
         />
@@ -37,6 +37,18 @@ export function HomeQuickSearchForm() {
           name="checkIn"
           className="mt-2 h-auto w-full border-0 bg-transparent p-0 text-sm text-slate-900 outline-none"
           aria-label="Check-in date"
+        />
+      </label>
+
+      <label className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Check Out
+        </span>
+        <input
+          type="date"
+          name="checkOut"
+          className="mt-2 h-auto w-full border-0 bg-transparent p-0 text-sm text-slate-900 outline-none"
+          aria-label="Check-out date"
         />
       </label>
 
@@ -58,26 +70,10 @@ export function HomeQuickSearchForm() {
         </select>
       </label>
 
-      <label className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-          Verified Internet
-        </span>
-        <select
-          name="minSpeed"
-          defaultValue="250"
-          className="mt-2 h-auto w-full border-0 bg-transparent p-0 text-sm text-slate-900 outline-none"
-          aria-label="Minimum internet speed"
-        >
-          <option value="500">500+ Mbps</option>
-          <option value="250">250+ Mbps</option>
-          <option value="100">100+ Mbps</option>
-        </select>
-      </label>
-
       <Button
         type="submit"
         size="lg"
-        className="h-full min-h-14 rounded-2xl bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+        className="h-full min-h-14 rounded-2xl bg-[var(--ww-primary-blue)] px-6 text-white hover:bg-[var(--ww-secondary-green)]"
       >
         <Search className="size-4" />
         Search

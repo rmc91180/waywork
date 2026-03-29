@@ -1,18 +1,10 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import {
-  Gauge,
-  ShieldCheck,
-  Sparkles,
-  Users2,
-  Wifi,
-} from "lucide-react";
+import { ArrowRight, Gauge, Users2, Wifi } from "lucide-react";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/stripe";
 import { HomeHero, type HeroImage } from "@/components/marketing/home-hero";
-import { ReturningGuestBanner } from "@/components/marketing/returning-guest-banner";
-import { HostTeaserToggle } from "@/components/marketing/host-teaser-toggle";
 import { HomeQuickSearchForm } from "@/components/marketing/home-quick-search-form";
 
 type FeaturedListing = {
@@ -31,93 +23,38 @@ type FeaturedListing = {
   } | null;
 };
 
-type Testimonial = {
-  id: string;
-  comment: string;
-  author: string;
-  context: string;
-};
-
-const fallbackTestimonials: Testimonial[] = [
-  {
-    id: "fallback-1",
-    comment: "Finally, a spot where my WiFi matches my wanderlust.",
-    author: "Alex",
-    context: "Digital Nomad",
-  },
-  {
-    id: "fallback-2",
-    comment: "Our leadership offsite felt productive and genuinely fun.",
-    author: "Mina",
-    context: "Chief of Staff",
-  },
-  {
-    id: "fallback-3",
-    comment: "The work score made picking a reliable setup fast and stress-free.",
-    author: "Theo",
-    context: "Product Lead",
-  },
-];
-
 async function getHomepageData() {
   try {
-    const [featuredListings, rawTestimonials, bookingCount, reviewStats, activeSpaceCount] =
-      await Promise.all([
-        db.listing.findMany({
-          where: { status: "ACTIVE" },
-          orderBy: [{ reviewCount: "desc" }, { workScore: "desc" }, { createdAt: "desc" }],
-          take: 6,
-          select: {
-            id: true,
-            title: true,
-            city: true,
-            state: true,
-            country: true,
-            pricePerDay: true,
-            maxGuests: true,
-            workScore: true,
-            images: {
-              where: { isPrimary: true },
-              take: 1,
-              select: { url: true, alt: true },
-            },
-            connectivityProfile: {
-              select: { declaredDownloadMbps: true, verified: true },
-            },
-          },
-        }),
-        db.review.findMany({
-          where: {
-            targetType: "LISTING",
-            comment: { not: null },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 8,
-          select: {
-            id: true,
-            comment: true,
-            author: { select: { name: true } },
-            listing: { select: { city: true, country: true } },
-          },
-        }),
-        db.booking.count(),
-        db.review.aggregate({ _avg: { overallRating: true } }),
-        db.listing.count({ where: { status: "ACTIVE" } }),
-      ]);
+    const featuredListings = await db.listing.findMany({
+      where: { status: "ACTIVE" },
+      orderBy: [{ reviewCount: "desc" }, { workScore: "desc" }, { createdAt: "desc" }],
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        city: true,
+        state: true,
+        country: true,
+        pricePerDay: true,
+        maxGuests: true,
+        workScore: true,
+        images: {
+          where: { isPrimary: true },
+          take: 1,
+          select: { url: true, alt: true },
+        },
+        connectivityProfile: {
+          select: { declaredDownloadMbps: true, verified: true },
+        },
+      },
+    });
 
-    const testimonials = rawTestimonials
-      .filter((item) => item.comment && item.comment.trim().length > 30)
-      .slice(0, 3)
-      .map((item) => ({
-        id: item.id,
-        comment: item.comment || "",
-        author: item.author.name || "Way Work Guest",
-        context: item.listing ? `${item.listing.city}, ${item.listing.country}` : "Way Work",
-      }));
+    const activeSpaceCount = await db.listing.count({ where: { status: "ACTIVE" } });
+    const bookingCount = await db.booking.count();
+    const reviewStats = await db.review.aggregate({ _avg: { overallRating: true } });
 
     return {
       featuredListings,
-      testimonials: testimonials.length > 0 ? testimonials : fallbackTestimonials,
       bookingCount,
       averageRating: reviewStats._avg.overallRating ?? 4.8,
       activeSpaceCount,
@@ -125,13 +62,30 @@ async function getHomepageData() {
   } catch {
     return {
       featuredListings: [] as FeaturedListing[],
-      testimonials: fallbackTestimonials,
       bookingCount: 500,
       averageRating: 4.8,
       activeSpaceCount: 100,
     };
   }
 }
+
+const browseLinks = [
+  {
+    label: "Deep focus",
+    description: "Quiet homes with strong internet",
+    href: "/search?workspaceTypes=PRIVATE_OFFICE,HOME_OFFICE&minWorkScore=75&verifiedInternet=true",
+  },
+  {
+    label: "Team stays",
+    description: "Small-group homes with space to work together",
+    href: "/search?workspaceTypes=HYBRID_SPACE,MEETING_ROOM&guests=4",
+  },
+  {
+    label: "City escapes",
+    description: "Well-located stays for work and downtime",
+    href: "/search?sortBy=recommended",
+  },
+];
 
 export async function HomepageRefresh() {
   noStore();
@@ -142,100 +96,97 @@ export async function HomepageRefresh() {
     .filter(Boolean)
     .map((image, index) => ({
       url: image.url,
-      alt: image.alt || `Remote workspace destination ${index + 1}`,
-    }))
-    .slice(0, 5);
+      alt: image.alt || `Work-ready stay ${index + 1}`,
+    }));
 
   return (
-    <div className="pb-16">
+    <div className="pb-18">
       <HomeHero
         images={heroImages}
         searchPanel={
           <div className="space-y-4">
             <HomeQuickSearchForm />
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="flex flex-wrap gap-2">
-                <span className="ww-trust-pill border-white/45 bg-white/14 text-white">
-                  Verified Internet
-                </span>
-                <span className="ww-trust-pill border-white/45 bg-white/14 text-white">
-                  Secure Booking
-                </span>
-                <span className="ww-trust-pill border-white/45 bg-white/14 text-white">
-                  Flexible Stays
-                </span>
-                <span className="ww-trust-pill border-white/45 bg-white/14 text-white">
-                  Team-Friendly Homes
-                </span>
-              </div>
-              <ReturningGuestBanner />
+            <div className="flex flex-wrap gap-2 text-xs text-white/86">
+              <span className="ww-trust-pill border-white/35 bg-white/10 text-white">
+                Verified internet
+              </span>
+              <span className="ww-trust-pill border-white/35 bg-white/10 text-white">
+                Work score on every stay
+              </span>
+              <span className="ww-trust-pill border-white/35 bg-white/10 text-white">
+                Homes for solo trips and small teams
+              </span>
             </div>
           </div>
         }
       />
 
-      <section className="waywork-shell -mt-8 relative z-10">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              icon: Wifi,
-              title: "Verified Internet",
-              body: "Search homes with tested connectivity and stronger work setups.",
-            },
-            {
-              icon: Gauge,
-              title: "Work Score",
-              body: "Understand productivity fit at a glance before you book.",
-            },
-            {
-              icon: Users2,
-              title: "Small-Team Ready",
-              body: "Find residential layouts that work for solo trips and team escapes.",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Clear Booking Flow",
-              body: "Transparent pricing, direct booking, and cleaner trust signals.",
-            },
-          ].map((item) => (
-            <article
-              key={item.title}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <item.icon className="size-5 text-[var(--ww-secondary-green)]" />
-              <h2 className="mt-3 text-lg font-semibold text-[var(--ww-primary-blue)]">
-                {item.title}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--ww-text-primary)]">{item.body}</p>
-            </article>
-          ))}
+      <section className="waywork-shell -mt-4 relative z-10">
+        <div className="grid gap-3 rounded-[32px] border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3 md:p-5">
+          <div className="rounded-2xl bg-slate-50 px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Active spaces
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+              {data.activeSpaceCount}+
+            </p>
+            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
+              Residential stays curated for work.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Guest rating
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+              {data.averageRating.toFixed(1)}/5
+            </p>
+            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
+              Clearer work signals and easier booking.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Bookings
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+              {data.bookingCount}+
+            </p>
+            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
+              Trusted for focused stays and offsites.
+            </p>
+          </div>
         </div>
       </section>
 
       <section className="waywork-shell mt-14">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
-              Featured Stays
+              Featured homes
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
-              Spaces that work as hard as you do.
+              Search first. Decide fast.
             </h2>
-            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
-              Browse residential spaces curated for reliable workdays and better downtime.
+            <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
+              Every property is presented around the details that matter most for work:
+              internet, layout, guest fit, and price.
             </p>
           </div>
           <Button variant="outline" asChild>
-            <Link href="/search">Browse all spaces</Link>
+            <Link href="/search">
+              Browse all spaces
+              <ArrowRight className="size-4" />
+            </Link>
           </Button>
         </div>
 
-        <div className="grid auto-cols-[84%] grid-flow-col gap-4 overflow-x-auto pb-2 sm:auto-cols-[48%] lg:auto-cols-[32%]">
+        <div className="grid gap-5 lg:grid-cols-3">
           {data.featuredListings.length > 0 ? (
             data.featuredListings.map((listing) => (
               <article
                 key={listing.id}
-                className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+                className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
               >
                 <div className="aspect-[4/3] bg-slate-100">
                   {listing.images[0]?.url ? (
@@ -254,39 +205,44 @@ export async function HomepageRefresh() {
                     </div>
                   )}
                 </div>
-                <div className="space-y-3 p-4">
+
+                <div className="space-y-4 p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="line-clamp-2 text-lg font-semibold text-[var(--ww-primary-blue)]">
-                      {listing.title}
-                    </h3>
-                    <p className="text-sm font-semibold text-[var(--ww-primary-blue)]">
+                    <div>
+                      <p className="text-sm text-slate-500">
+                        {listing.city}
+                        {listing.state ? `, ${listing.state}` : ""}, {listing.country}
+                      </p>
+                      <h3 className="mt-1 line-clamp-2 text-xl font-semibold text-[var(--ww-primary-blue)]">
+                        {listing.title}
+                      </h3>
+                    </div>
+                    <p className="shrink-0 text-sm font-semibold text-[var(--ww-primary-blue)]">
                       {formatCurrency(listing.pricePerDay)}/day
                     </p>
                   </div>
-                  <p className="text-sm text-[var(--ww-text-primary)]">
-                    {listing.city}
-                    {listing.state ? `, ${listing.state}` : ""}, {listing.country}
-                  </p>
-                  <div className="flex flex-wrap gap-2 text-xs text-[var(--ww-secondary-green)]">
+
+                  <div className="flex flex-wrap gap-2 text-xs text-slate-700">
                     <span className="ww-trust-pill inline-flex items-center gap-1.5">
                       <Wifi className="size-3.5" />
                       {listing.connectivityProfile?.declaredDownloadMbps ?? 0} Mbps
                     </span>
                     <span className="ww-trust-pill inline-flex items-center gap-1.5">
                       <Users2 className="size-3.5" />
-                      Up to {listing.maxGuests}
+                      Up to {listing.maxGuests} guests
                     </span>
                     <span className="ww-trust-pill inline-flex items-center gap-1.5">
                       <Gauge className="size-3.5" />
                       Work Score {listing.workScore}
                     </span>
                   </div>
+
                   <Button
                     variant="outline"
-                    className="w-full border-[var(--ww-secondary-green)]/30 text-[var(--ww-primary-blue)] hover:bg-emerald-50"
+                    className="w-full border-[var(--ww-secondary-green)]/25 text-[var(--ww-primary-blue)] hover:bg-emerald-50"
                     asChild
                   >
-                    <Link href={`/spaces/${listing.id}`}>View Details</Link>
+                    <Link href={`/spaces/${listing.id}`}>View property</Link>
                   </Button>
                 </div>
               </article>
@@ -295,9 +251,9 @@ export async function HomepageRefresh() {
             Array.from({ length: 3 }).map((_, index) => (
               <article
                 key={`placeholder-${index}`}
-                className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500"
+                className="rounded-[30px] border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500"
               >
-                Featured listing coming soon.
+                Featured property coming soon.
               </article>
             ))
           )}
@@ -305,45 +261,38 @@ export async function HomepageRefresh() {
       </section>
 
       <section className="waywork-shell mt-14">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
-              Guest Feedback
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
-              Guests keep coming back for a reason.
-            </h2>
-            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
-              Better search clarity, stronger work signals, and homes that feel easier to trust.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="ww-trust-pill inline-flex items-center gap-1.5">
-              <Sparkles className="size-3.5" />
-              {data.bookingCount}+ bookings
-            </span>
-            <span className="ww-trust-pill">{data.averageRating.toFixed(1)}/5 average rating</span>
-            <span className="ww-trust-pill">{data.activeSpaceCount}+ active spaces</span>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {data.testimonials.map((testimonial) => (
-            <article key={testimonial.id} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-sm italic text-[var(--ww-text-primary)]">
-                &quot;{testimonial.comment}&quot;
-              </p>
-              <p className="mt-4 text-sm font-semibold text-[var(--ww-primary-blue)]">
-                {testimonial.author}
-              </p>
-              <p className="text-xs text-slate-500">{testimonial.context}</p>
-            </article>
+        <div className="grid gap-4 rounded-[32px] border border-slate-200 bg-white p-5 md:grid-cols-3 md:p-6">
+          {browseLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-[var(--ww-secondary-green)]/35 hover:bg-white"
+            >
+              <p className="text-lg font-semibold text-[var(--ww-primary-blue)]">{link.label}</p>
+              <p className="mt-1 text-sm text-[var(--ww-text-primary)]">{link.description}</p>
+            </Link>
           ))}
         </div>
       </section>
 
       <section className="waywork-shell mt-14">
-        <HostTeaserToggle />
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-[32px] border border-slate-200 bg-[#f7f8fa] px-6 py-6 md:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
+              For hosts
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)] md:text-3xl">
+              Want to list a work-ready home?
+            </h2>
+            <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
+              We&apos;ll refine the host experience next. For now, guests stay front and center and
+              hosts still have a clear route in.
+            </p>
+          </div>
+          <Button asChild className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]">
+            <Link href="/register?callbackUrl=%2Fhost">Become a Host</Link>
+          </Button>
+        </div>
       </section>
     </div>
   );

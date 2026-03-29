@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,56 +33,30 @@ const fallbackImages: HeroImage[] = [
 
 export function HomeHero({ images, searchPanel }: HomeHeroProps) {
   const slides = useMemo(() => (images.length >= 3 ? images : fallbackImages), [images]);
-  const [active, setActive] = useState(0);
-  const [autoplay] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  });
-
-  useEffect(() => {
-    trackEvent({
-      event: "hero_viewed",
-      properties: { slideCount: slides.length },
-    });
-  }, [slides.length]);
-
-  useEffect(() => {
-    if (!autoplay) return;
-    const timer = setInterval(() => {
-      setActive((current) => (current + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [autoplay, slides.length]);
+  const leadImage = slides[0];
 
   return (
-    <section className="relative overflow-hidden pb-18 pt-10 md:pb-22 md:pt-14">
+    <section className="relative overflow-hidden pb-14 pt-8 md:pb-18 md:pt-10">
       <div className="absolute inset-0">
-        {slides.map((slide, index) => (
-          <div key={`${slide.url}-${index}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={slide.url}
-              alt={slide.alt}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-                index === active ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          </div>
-        ))}
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(3,63,99,0.78),rgba(3,63,99,0.52)_48%,rgba(40,102,110,0.3))]" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={leadImage.url}
+          alt={leadImage.alt}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,32,52,0.28),rgba(6,32,52,0.6)_60%,rgba(6,32,52,0.78))]" />
       </div>
 
       <div className="waywork-shell relative z-10">
         <div className="max-w-3xl text-white">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/92">
-            Residential Workspaces, Global Reach
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/92">
+            Work-ready homes
           </p>
-          <h1 className="mt-5 text-4xl font-bold leading-[1.02] md:text-5xl lg:text-6xl">
-            Find work-ready homes for productive escapes.
+          <h1 className="mt-5 max-w-2xl text-4xl font-bold leading-[1.02] md:text-5xl lg:text-6xl">
+            Find beautiful homes that actually work for work.
           </h1>
-          <p className="mt-4 max-w-2xl text-base text-white/88 md:text-xl">
-            Book clean, high-speed residential spaces for focused solo stays and small-team
-            offsites without the clutter of a hotel-first experience.
+          <p className="mt-4 max-w-xl text-base text-white/88 md:text-lg">
+            Search clean, high-speed stays built for focus, comfort, and small team trips.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button
@@ -100,19 +74,11 @@ export function HomeHero({ images, searchPanel }: HomeHeroProps) {
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
-            <Link
-              href="#host-teaser"
-              className="text-sm font-semibold text-white/88 underline decoration-white/30 underline-offset-4 transition hover:text-white"
-              onClick={() =>
-                trackEvent({ event: "hero_cta_clicked", properties: { cta: "host_teaser" } })
-              }
-            >
-              Hosting with Way Work?
-            </Link>
+            <p className="text-sm text-white/78">Verified internet. Straightforward booking. No clutter.</p>
           </div>
         </div>
 
-        {searchPanel ? <div className="mt-8 max-w-6xl">{searchPanel}</div> : null}
+        {searchPanel ? <div className="mt-8 max-w-5xl">{searchPanel}</div> : null}
       </div>
     </section>
   );

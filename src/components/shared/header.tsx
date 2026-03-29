@@ -42,19 +42,16 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/95 backdrop-blur-xl">
       <div className="waywork-shell">
-        <div className="grid h-20 grid-cols-[auto_1fr_auto] items-center gap-4">
+        <div className="flex h-18 items-center justify-between gap-4">
           <Link href="/" className="group inline-flex items-center gap-3">
             <BrandLogo compact />
           </Link>
 
-          <p className="hidden px-4 text-center text-xs font-semibold tracking-[0.13em] text-[var(--ww-secondary-green)] lg:block">
-            Turning residential properties into fun and experiential workspaces
-          </p>
-
           <div className="flex items-center justify-end gap-2">
-            <Button variant="ghost" size="icon-sm" asChild>
+            <Button variant="ghost" className="hidden sm:inline-flex" asChild>
               <Link href="/search" aria-label="Search spaces">
                 <Search className="size-4" />
+                Search
               </Link>
             </Button>
             {status === "loading" ? (
@@ -126,10 +123,14 @@ export function Header() {
                   asChild
                 >
                   <Link href="/register" onClick={(event) => handleAuthClick(event, "/register")}>
-                    Sign Up Free
+                    Sign Up
                   </Link>
                 </Button>
-                <Button variant="ghost" className="hidden md:inline-flex text-[var(--ww-secondary-green)]" asChild>
+                <Button
+                  variant="ghost"
+                  className="hidden lg:inline-flex text-[var(--ww-secondary-green)]"
+                  asChild
+                >
                   <Link href="/register?callbackUrl=%2Fhost">Become a Host</Link>
                 </Button>
               </div>
