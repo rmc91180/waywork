@@ -23,7 +23,7 @@ import {
   type HostOnboardingStep,
 } from "@/components/host/host-onboarding-checklist";
 import { HostAirbnbImportCard } from "@/components/host/host-airbnb-import-card";
-import { isSiteMinderProviderActive } from "@/lib/pms/provider-mode";
+import { getActivePmsProviderMode } from "@/lib/pms/provider-mode";
 
 const LISTING_STATUS_LABEL: Record<string, string> = {
   DRAFT: "Draft",
@@ -64,6 +64,14 @@ export default async function HostDashboardPage() {
     siteminderClientSecret: string | null;
     siteminderWebhookSecret: string | null;
   } | null = null;
+  let apaleoConnection: {
+    id: string;
+    enabled: boolean;
+    apaleoClientId: string | null;
+    apaleoClientSecret: string | null;
+    apaleoRefreshToken: string | null;
+    apaleoWebhookSecret: string | null;
+  } | null = null;
   let hostPayoutProfile: {
     stripeConnectAccountId: string | null;
   } | null = null;
@@ -97,6 +105,7 @@ export default async function HostDashboardPage() {
     const [
       hostListings,
       connection,
+      apaleo,
       upcoming,
       payoutProfile,
       pending,
@@ -132,6 +141,20 @@ export default async function HostDashboardPage() {
           siteminderClientId: true,
           siteminderClientSecret: true,
           siteminderWebhookSecret: true,
+        },
+      }),
+      db.pmsConnection.findFirst({
+        where: {
+          userId: hostId,
+          provider: "APALEO",
+        },
+        select: {
+          id: true,
+          enabled: true,
+          apaleoClientId: true,
+          apaleoClientSecret: true,
+          apaleoRefreshToken: true,
+          apaleoWebhookSecret: true,
         },
       }),
       db.booking.count({
@@ -208,6 +231,7 @@ export default async function HostDashboardPage() {
 
     listings = hostListings;
     siteMinderConnection = connection;
+    apaleoConnection = apaleo;
     hostPayoutProfile = payoutProfile;
     ownerListingsForTeamAccess = ownerListings;
     upcomingBookings = upcoming;
@@ -226,12 +250,21 @@ export default async function HostDashboardPage() {
   const mappedSyncManagedListings = syncManagedListings.filter((listing) => Boolean(listing.pmsExternalListingId)).length;
   const syncedListings = listings.filter((listing) => listing.pmsSyncStatus === "SYNCED").length;
   const failedSyncListings = listings.filter((listing) => listing.pmsSyncStatus === "FAILED").length;
-  const siteminderConnected =
+  const siteMinderConfigured =
     Boolean(siteMinderConnection?.siteminderClientId) &&
     Boolean(siteMinderConnection?.siteminderClientSecret);
-  const webhookConfigured = Boolean(siteMinderConnection?.siteminderWebhookSecret);
+  const apaleoConfigured =
+    Boolean(apaleoConnection?.apaleoClientId) &&
+    Boolean(apaleoConnection?.apaleoClientSecret);
+  const connectedPms =
+    (siteMinderConfigured && Boolean(siteMinderConnection?.enabled)) ||
+    (apaleoConfigured && Boolean(apaleoConnection?.enabled));
+  const webhookConfigured =
+    Boolean(siteMinderConnection?.siteminderWebhookSecret) ||
+    (Boolean(apaleoConnection?.apaleoWebhookSecret) && Boolean(apaleoConnection?.apaleoRefreshToken));
   const payoutsReady = Boolean(hostPayoutProfile?.stripeConnectAccountId);
-  const providerActive = isSiteMinderProviderActive();
+  const activeProviderMode = getActivePmsProviderMode();
+  const providerActive = activeProviderMode !== "NONE";
 
   const onboardingSteps: HostOnboardingStep[] = [
     {
@@ -254,7 +287,7 @@ export default async function HostDashboardPage() {
       id: "connect-pms",
       title: "Connect your PMS",
       description: "Link your property system so inventory and booking sync can be managed in one place.",
-      complete: siteminderConnected && Boolean(siteMinderConnection?.enabled),
+      complete: connectedPms,
       href: "/host/channel-manager",
       ctaLabel: "Connect PMS",
     },
@@ -317,14 +350,10 @@ export default async function HostDashboardPage() {
         aside={
           <div className="flex flex-wrap justify-end gap-2">
             <Badge variant={providerActive ? "default" : "secondary"}>
-              {providerActive ? "PMS active" : "PMS inactive"}
+              {providerActive ? `Live mode: ${activeProviderMode}` : "PMS inactive"}
             </Badge>
-            <Badge
-              variant={siteminderConnected && siteMinderConnection?.enabled ? "default" : "secondary"}
-            >
-              {siteminderConnected && siteMinderConnection?.enabled
-                ? "Connected"
-                : "Needs setup"}
+            <Badge variant={connectedPms ? "default" : "secondary"}>
+              {connectedPms ? "Connected" : "Needs setup"}
             </Badge>
           </div>
         }

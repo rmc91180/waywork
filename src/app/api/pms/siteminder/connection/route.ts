@@ -6,7 +6,6 @@ import {
   bookingCommissionBpsToPercent,
   bookingCommissionPercentToBps,
 } from "@/lib/payout-config";
-import { isSiteMinderProviderActive } from "@/lib/pms/provider-mode";
 
 const listingMappingSchema = z.object({
   listingId: z.string().min(1),
@@ -44,13 +43,6 @@ function redact(value: string | null) {
 }
 
 export async function GET() {
-  if (!isSiteMinderProviderActive()) {
-    return NextResponse.json(
-      { error: "SiteMinder provider is not active in this environment." },
-      { status: 409 }
-    );
-  }
-
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -102,13 +94,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isSiteMinderProviderActive()) {
-    return NextResponse.json(
-      { error: "SiteMinder provider is not active in this environment." },
-      { status: 409 }
-    );
-  }
-
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
