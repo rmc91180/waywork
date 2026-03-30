@@ -31,6 +31,10 @@ export async function GET() {
     process.env.PMS_HEALTH_REQUIRE_ENABLED_CONNECTION,
     false
   );
+  const enforceApaleoLaunchReadiness = parseBooleanEnv(
+    process.env.PMS_HEALTH_ENFORCE_APALEO_LAUNCH_READINESS,
+    false
+  );
 
   try {
     await db.$queryRaw`SELECT 1`;
@@ -154,7 +158,7 @@ export async function GET() {
       failed > maxFailedJobs ||
       deadLetter > maxDeadLetterJobs ||
       stale > 0 ||
-      apaleoReadiness?.readiness === "RED";
+      (enforceApaleoLaunchReadiness && apaleoReadiness?.readiness === "RED");
 
     return NextResponse.json(
       {
@@ -167,6 +171,7 @@ export async function GET() {
           maxFailedJobs,
           maxDeadLetterJobs,
           requireEnabledConnection,
+          enforceApaleoLaunchReadiness,
         },
         connections: {
           enabled: enabledConnections,
