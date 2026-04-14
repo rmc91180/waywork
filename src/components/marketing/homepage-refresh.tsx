@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { ArrowRight, Gauge, Users2, Wifi } from "lucide-react";
+import { ArrowRight, Gauge, Wifi } from "lucide-react";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,6 @@ type FeaturedListing = {
   state: string | null;
   country: string;
   pricePerDay: number;
-  maxGuests: number;
   workScore: number;
   images: Array<{ url: string; alt: string | null }>;
   connectivityProfile: {
@@ -44,7 +43,6 @@ async function getHomepageData() {
         state: true,
         country: true,
         pricePerDay: true,
-        maxGuests: true,
         workScore: true,
         images: {
           where: { isPrimary: true },
@@ -69,7 +67,6 @@ async function getHomepageData() {
         state: true,
         country: true,
         pricePerDay: true,
-        maxGuests: true,
         workScore: true,
         images: {
           where: { isPrimary: true },
@@ -183,85 +180,80 @@ export async function HomepageRefresh() {
 
         <div className="grid gap-5 lg:grid-cols-3">
           {data.featuredListings.length > 0 ? (
-            data.featuredListings.map((listing) => (
-              <article
-                key={listing.id}
-                className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
-              >
-                <div className="aspect-[4/3] bg-slate-100">
-                  {listing.images[0]?.url ? (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={listing.images[0].url}
-                        alt={listing.images[0].alt || listing.title}
-                        loading="lazy"
-                        className="h-full w-full object-cover"
-                      />
-                    </>
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                      Workspace Preview
-                    </div>
-                  )}
-                </div>
+            data.featuredListings.map((listing) => {
+              const pilotMeta = getLimehomePilotMeta({ slug: listing.slug });
 
-                <div className="space-y-4 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      {getLimehomePilotMeta({ slug: listing.slug }) ? (
-                        <Badge variant="secondary" className="mb-2 bg-cyan-50 text-cyan-800">
-                          {getLimehomePilotMeta({ slug: listing.slug })?.badge}
-                        </Badge>
-                      ) : null}
-                      <p className="text-sm text-slate-500">
-                        {listing.city}
-                        {listing.state ? `, ${listing.state}` : ""}, {listing.country}
-                      </p>
-                      <h3 className="mt-1 line-clamp-2 text-xl font-semibold text-[var(--ww-primary-blue)]">
-                        {listing.title}
-                      </h3>
-                      {getLimehomePilotMeta({ slug: listing.slug }) ? (
-                        <p className="mt-2 text-sm text-slate-600">
-                          {getLimehomePilotMeta({ slug: listing.slug })?.summary}
+              return (
+                <article
+                  key={listing.id}
+                  className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
+                >
+                  <div className="aspect-[4/3] bg-slate-100">
+                    {listing.images[0]?.url ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={listing.images[0].url}
+                          alt={listing.images[0].alt || listing.title}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      </>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                        Workspace Preview
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        {pilotMeta ? (
+                          <Badge variant="secondary" className="mb-2 bg-cyan-50 text-cyan-800">
+                            {pilotMeta.badge}
+                          </Badge>
+                        ) : null}
+                        <p className="text-sm text-slate-500">
+                          {listing.city}
+                          {listing.state ? `, ${listing.state}` : ""}, {listing.country}
                         </p>
+                        <h3 className="mt-1 line-clamp-2 text-xl font-semibold text-[var(--ww-primary-blue)]">
+                          {listing.title}
+                        </h3>
+                      </div>
+                      <p className="shrink-0 text-sm font-semibold text-[var(--ww-primary-blue)]">
+                        {formatCurrency(listing.pricePerDay)}/day
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 text-xs text-slate-700">
+                      <span className="ww-trust-pill inline-flex items-center gap-1.5">
+                        <Wifi className="size-3.5" />
+                        {listing.connectivityProfile?.declaredDownloadMbps ?? 0} Mbps
+                      </span>
+                      <span className="ww-trust-pill inline-flex items-center gap-1.5">
+                        <Gauge className="size-3.5" />
+                        Work Score {listing.workScore}
+                      </span>
+                      {pilotMeta ? (
+                        <span className="ww-trust-pill inline-flex items-center gap-1.5">
+                          {pilotMeta.bestFor}
+                        </span>
                       ) : null}
                     </div>
-                    <p className="shrink-0 text-sm font-semibold text-[var(--ww-primary-blue)]">
-                      {formatCurrency(listing.pricePerDay)}/day
-                    </p>
-                  </div>
 
-                  <div className="flex flex-wrap gap-2 text-xs text-slate-700">
-                    <span className="ww-trust-pill inline-flex items-center gap-1.5">
-                      <Wifi className="size-3.5" />
-                      {listing.connectivityProfile?.declaredDownloadMbps ?? 0} Mbps
-                    </span>
-                    <span className="ww-trust-pill inline-flex items-center gap-1.5">
-                      <Users2 className="size-3.5" />
-                      Up to {listing.maxGuests} guests
-                    </span>
-                    <span className="ww-trust-pill inline-flex items-center gap-1.5">
-                      <Gauge className="size-3.5" />
-                      Work Score {listing.workScore}
-                    </span>
-                    {getLimehomePilotMeta({ slug: listing.slug }) ? (
-                      <span className="ww-trust-pill inline-flex items-center gap-1.5">
-                        {getLimehomePilotMeta({ slug: listing.slug })?.bestFor}
-                      </span>
-                    ) : null}
+                    <Button
+                      variant="outline"
+                      className="w-full border-[var(--ww-secondary-green)]/25 text-[var(--ww-primary-blue)] hover:bg-emerald-50"
+                      asChild
+                    >
+                      <Link href={`/spaces/${listing.id}`}>View property</Link>
+                    </Button>
                   </div>
-
-                  <Button
-                    variant="outline"
-                    className="w-full border-[var(--ww-secondary-green)]/25 text-[var(--ww-primary-blue)] hover:bg-emerald-50"
-                    asChild
-                  >
-                    <Link href={`/spaces/${listing.id}`}>View property</Link>
-                  </Button>
-                </div>
-              </article>
-            ))
+                </article>
+              );
+            })
           ) : (
             Array.from({ length: 3 }).map((_, index) => (
               <article

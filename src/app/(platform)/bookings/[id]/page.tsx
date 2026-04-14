@@ -54,6 +54,17 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
   const isGuest = booking.guestId === session.user.id;
   const isHost = booking.listing.hostId === session.user.id;
   const isAdmin = session.user.role === "ADMIN";
+  const isPendingBooking = isGuest && booking.status === "PENDING";
+  const priceCardTitle = isHost
+    ? "Booking Economics"
+    : booking.status === "PENDING"
+      ? "Amount Due"
+      : "Price Breakdown";
+  const totalLabel = isHost
+    ? "Guest total"
+    : booking.status === "PENDING"
+      ? "Amount due"
+      : "Total paid";
 
   if (!isGuest && !isHost && !isAdmin) notFound();
 
@@ -174,6 +185,35 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
               </CardContent>
             </Card>
 
+            {isPendingBooking && (
+              <Card className="border-amber-200 bg-amber-50/70 shadow-sm">
+                <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div className="max-w-xl">
+                    <p className="font-semibold text-slate-900">
+                      Complete payment to confirm this reservation
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Stripe will process the payment and split funds automatically between Way Work
+                      and the host.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      asChild
+                      className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+                    >
+                      <Link href={`/bookings/${booking.id}/payment`}>Book now</Link>
+                    </Button>
+                    <CancelBookingButton
+                      bookingId={booking.id}
+                      cancellationPolicy={booking.listing.cancellationPolicy}
+                      checkIn={booking.checkIn.toISOString()}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {isGuest && booking.status === "CONFIRMED" && (
               <Card className="border-slate-200 shadow-sm">
                 <CardContent className="flex flex-wrap gap-3 p-4">
@@ -210,9 +250,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
           <div className="space-y-6">
             <Card className="border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">
-                  {isHost ? "Booking Economics" : "Price Breakdown"}
-                </CardTitle>
+                <CardTitle className="text-lg">{priceCardTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between text-slate-600">
@@ -238,7 +276,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
                 )}
                 <Separator />
                 <div className="flex justify-between text-base font-semibold text-slate-900">
-                  <span>{isHost ? "Guest total" : "Total paid"}</span>
+                  <span>{totalLabel}</span>
                   <span>{formatCurrency(booking.totalPrice)}</span>
                 </div>
                 {isHost && (
