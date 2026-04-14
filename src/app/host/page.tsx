@@ -7,6 +7,9 @@ import {
   CircleDollarSign,
   Network,
   PlusCircle,
+  Scale,
+  ShieldCheck,
+  Lock,
   Wallet,
   Wrench,
 } from "lucide-react";
@@ -557,6 +560,67 @@ export default async function HostDashboardPage() {
             </Button>
           </div>
         </article>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Legal
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-[var(--ww-primary-blue)]">
+              Host terms and privacy are right here
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Keep the host contract, guest terms, and privacy policy close to the workspace you
+              use to manage listings, payouts, and reservations.
+            </p>
+          </div>
+          <Button variant="outline" asChild>
+            <Link href="/terms#host-terms">Review host terms</Link>
+          </Button>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <Link
+            href="/terms#host-terms"
+            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-secondary-green)]/40 hover:bg-white"
+          >
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]">
+              <Scale className="size-4" />
+              Host Terms
+            </div>
+            <p className="mt-2 text-sm text-slate-600">
+              Covers listing rules, payout split, liability, and the commercial terms that govern
+              the host relationship.
+            </p>
+          </Link>
+          <Link
+            href="/terms#guest-terms"
+            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-secondary-green)]/40 hover:bg-white"
+          >
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]">
+              <Lock className="size-4" />
+              Guest Terms
+            </div>
+            <p className="mt-2 text-sm text-slate-600">
+              Handy reference for the guest booking contract and the standards guests agree to at
+              checkout.
+            </p>
+          </Link>
+          <Link
+            href="/privacy"
+            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-secondary-green)]/40 hover:bg-white"
+          >
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]">
+              <ShieldCheck className="size-4" />
+              Privacy Policy
+            </div>
+            <p className="mt-2 text-sm text-slate-600">
+              Explains how guest and host data is collected, used, retained, and protected across
+              the platform.
+            </p>
+          </Link>
+        </div>
       </section>
     </div>
   );

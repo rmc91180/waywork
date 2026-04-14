@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
 import { CalendarDays, Clock3, MessageSquare, Users } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,20 +34,22 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
   const { id } = await params;
   const { success } = await searchParams;
 
-  const booking = await db.booking.findUnique({
-    where: { id },
-    include: {
-      listing: {
-        include: {
-          host: true,
-          images: { where: { isPrimary: true }, take: 1 },
+  const booking = await withDbRetry((client) =>
+    client.booking.findUnique({
+      where: { id },
+      include: {
+        listing: {
+          include: {
+            host: true,
+            images: { where: { isPrimary: true }, take: 1 },
+          },
         },
+        guest: true,
+        attendees: true,
+        review: true,
       },
-      guest: true,
-      attendees: true,
-      review: true,
-    },
-  });
+    })
+  );
 
   if (!booking) notFound();
 

@@ -1,58 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
 import { format } from "date-fns";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import { syncBookingToApaleo } from "@/lib/pms/apaleo-booking";
 import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
 import { resolveBookingCommissionBps } from "@/lib/payout-config";
 
 async function confirmBookingWithoutStripe(bookingId: string) {
-  const booking = await db.booking.findUnique({
-    where: { id: bookingId },
-    include: {
-      listing: {
-        include: {
-          pmsConnection: {
-            select: {
-              provider: true,
-              enabled: true,
+  const booking = await withDbRetry((client) =>
+    client.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        listing: {
+          include: {
+            pmsConnection: {
+              select: {
+                provider: true,
+                enabled: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    })
+  );
 
   if (!booking) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
+  let syncWarning: string | null = null;
   const requiresApaleoManualCapture = Boolean(
     booking.listing.pmsConnection?.enabled && booking.listing.pmsConnection.provider === "APALEO"
   );
 
   if (requiresApaleoManualCapture) {
-    const syncResult = await syncBookingToApaleo(booking.id, "UPSERT");
-    if (!syncResult.ok) {
-      return NextResponse.json(
-        { error: syncResult.error || "Failed to confirm booking in apaleo" },
-        { status: 502 }
-      );
+    try {
+      const syncResult = await syncBookingToApaleo(booking.id, "UPSERT");
+      if (!syncResult.ok) {
+        syncWarning = syncResult.error || "Failed to confirm booking in apaleo";
+      }
+    } catch (error) {
+      syncWarning =
+        error instanceof Error ? error.message : "Failed to confirm booking in apaleo";
     }
   } else {
-    await enqueueBookingSyncJob(booking.id, "UPSERT");
-    void processPendingMewsSyncJobs(5);
+    try {
+      await enqueueBookingSyncJob(booking.id, "UPSERT");
+      void processPendingMewsSyncJobs(5);
+    } catch (error) {
+      syncWarning =
+        error instanceof Error ? error.message : "Failed to queue booking sync";
+    }
   }
 
-  await db.booking.update({
-    where: { id: booking.id },
-    data: { status: "CONFIRMED" },
-  });
+  await withDbRetry((client) =>
+    client.booking.update({
+      where: { id: booking.id },
+      data: { status: "CONFIRMED" },
+    })
+  );
 
   return NextResponse.json({
     bookingId: booking.id,
     redirectUrl: `/bookings/${booking.id}?success=true`,
+    ...(syncWarning ? { syncWarning } : {}),
   });
 }
 
@@ -68,34 +81,36 @@ export async function POST(
 
     const { id } = await params;
 
-    const booking = await db.booking.findUnique({
-      where: { id },
-      include: {
-        guest: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
-        listing: {
-          include: {
-            host: {
-              select: {
-                stripeConnectAccountId: true,
-                defaultBookingCommissionBps: true,
-              },
-            },
-            pmsConnection: {
-              select: {
-                provider: true,
-                enabled: true,
-                bookingCommissionBps: true,
-              },
+    const booking = await withDbRetry((client) =>
+      client.booking.findUnique({
+        where: { id },
+        include: {
+          guest: {
+            select: {
+              id: true,
+              email: true,
             },
           },
+          listing: {
+            include: {
+              host: {
+                select: {
+                  stripeConnectAccountId: true,
+                  defaultBookingCommissionBps: true,
+                },
+              },
+              pmsConnection: {
+                select: {
+                  provider: true,
+                  enabled: true,
+                  bookingCommissionBps: true,
+                },
+              },
+            },
+          },
         },
-      },
-    });
+      })
+    );
 
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
@@ -182,15 +197,19 @@ export async function POST(
     });
 
     if (checkoutSession.payment_intent) {
-      await db.booking.update({
-        where: { id: booking.id },
-        data: {
-          stripePaymentIntentId:
-            typeof checkoutSession.payment_intent === "string"
-              ? checkoutSession.payment_intent
-              : checkoutSession.payment_intent.id,
-        },
-      });
+      const paymentIntentId =
+        typeof checkoutSession.payment_intent === "string"
+          ? checkoutSession.payment_intent
+          : checkoutSession.payment_intent.id;
+
+      await withDbRetry((client) =>
+        client.booking.update({
+          where: { id: booking.id },
+          data: {
+            stripePaymentIntentId: paymentIntentId,
+          },
+        })
+      );
     }
 
     return NextResponse.json({ checkoutUrl: checkoutSession.url });

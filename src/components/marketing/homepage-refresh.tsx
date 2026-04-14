@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { ArrowRight, Gauge, Wifi } from "lucide-react";
+import { ArrowRight, Gauge, Lock, Scale, ShieldCheck, Wifi } from "lucide-react";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -299,6 +299,77 @@ export async function HomepageRefresh() {
           <Button asChild className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]">
             <Link href="/register?callbackUrl=%2Fhost">Become a Host</Link>
           </Button>
+        </div>
+      </section>
+
+      <section className="waywork-shell mt-14">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Legal</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)] md:text-3xl">
+              Guest and host terms, right on the homepage
+            </h2>
+            <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
+              We keep the core legal pages visible where guests start their search, so terms are
+              easy to find before anyone books or lists a property.
+            </p>
+          </div>
+          <Button variant="outline" asChild>
+            <Link href="/support">Open support</Link>
+          </Button>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <Link
+            href="/terms#guest-terms"
+            className="group rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--ww-secondary-green)]/40 hover:shadow-md"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+              <Lock className="size-3.5" />
+              Guest Terms
+            </div>
+            <h3 className="mt-4 text-xl font-semibold text-[var(--ww-primary-blue)]">
+              Booking rules for guests
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-[var(--ww-text-primary)]">
+              Covers checkout terms, cancellation, house rules, and the consumer protections that
+              stay in place for guest bookings.
+            </p>
+          </Link>
+
+          <Link
+            href="/terms#host-terms"
+            className="group rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--ww-secondary-green)]/40 hover:shadow-md"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-800">
+              <Scale className="size-3.5" />
+              Host Terms
+            </div>
+            <h3 className="mt-4 text-xl font-semibold text-[var(--ww-primary-blue)]">
+              Listing and payout terms
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-[var(--ww-text-primary)]">
+              Sets the commercial terms for hosts, including listing accuracy, commission,
+              liabilities, and the dispute venue.
+            </p>
+          </Link>
+
+          <Link
+            href="/privacy"
+            className="group rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--ww-secondary-green)]/40 hover:shadow-md"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-800">
+              <ShieldCheck className="size-3.5" />
+              Privacy
+            </div>
+            <h3 className="mt-4 text-xl font-semibold text-[var(--ww-primary-blue)]">
+              Data handling and rights
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-[var(--ww-text-primary)]">
+              Explains what we collect, why we collect it, how long we keep it, and the rights
+              available to guests and hosts.
+            </p>
+          </Link>
         </div>
       </section>
     </div>

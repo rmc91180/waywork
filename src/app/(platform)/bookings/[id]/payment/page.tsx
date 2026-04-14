@@ -2,7 +2,7 @@ import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,22 +21,24 @@ export default async function BookingPaymentPage({ params, searchParams }: Props
   const { id } = await params;
   const { cancelled } = await searchParams;
 
-  const booking = await db.booking.findUnique({
-    where: { id },
-    include: {
-      listing: {
-        include: {
-          host: {
-            select: {
-              name: true,
-              stripeConnectAccountId: true,
+  const booking = await withDbRetry((client) =>
+    client.booking.findUnique({
+      where: { id },
+      include: {
+        listing: {
+          include: {
+            host: {
+              select: {
+                name: true,
+                stripeConnectAccountId: true,
+              },
             },
+            images: { where: { isPrimary: true }, take: 1 },
           },
-          images: { where: { isPrimary: true }, take: 1 },
         },
       },
-    },
-  });
+    })
+  );
 
   if (!booking) notFound();
   if (booking.guestId !== session.user.id) notFound();

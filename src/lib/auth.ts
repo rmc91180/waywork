@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { db } from "@/lib/db";
+import { db, withDbRetry } from "@/lib/db";
 
 // Build providers list dynamically based on available env vars
 const providers: NextAuthConfig["providers"] = [];
@@ -39,17 +39,21 @@ if (isDemo) {
         const email = credentials?.email as string;
         if (!email) return null;
 
-        // Find or create a demo user
-        let user = await db.user.findUnique({ where: { email } });
-        if (!user) {
-          user = await db.user.create({
-            data: {
-              email,
-              name: email.split("@")[0],
-              role: "GUEST",
-            },
-          });
-        }
+        // Find or create a demo user with the retry-safe DB helper so local auth
+        // keeps working even when the underlying Prisma dev database restarts.
+        const user = await withDbRetry(async (client) => {
+          let existingUser = await client.user.findUnique({ where: { email } });
+          if (!existingUser) {
+            existingUser = await client.user.create({
+              data: {
+                email,
+                name: email.split("@")[0],
+                role: "GUEST",
+              },
+            });
+          }
+          return existingUser;
+        });
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     })
@@ -77,7 +81,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } else if (token) {
           // JWT strategy (credentials/demo)
           session.user.id = token.sub!;
-          const dbUser = await db.user.findUnique({ where: { id: token.sub! } });
+          const dbUser = await withDbRetry((client) =>
+            client.user.findUnique({ where: { id: token.sub! } })
+          );
           session.user.role = dbUser?.role || "GUEST";
         }
       }
