@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getApaleoRuntimeConfig, resolveApaleoValue } from "@/lib/pms/apaleo-config";
 import { buildApaleoAuthorizationUrl, createApaleoOAuthState } from "@/lib/pms/apaleo-oauth";
 import { isApaleoProviderActive } from "@/lib/pms/provider-mode";
 
@@ -27,15 +28,18 @@ export async function GET(request: Request) {
       apaleoClientId: true,
     },
   });
+  const apaleoRuntime = getApaleoRuntimeConfig();
+  const clientId = resolveApaleoValue(connection?.apaleoClientId ?? undefined, apaleoRuntime.clientId);
+  const identityBaseUrl = connection?.apaleoIdentityBaseUrl || apaleoRuntime.identityBaseUrl;
 
-  if (!connection?.apaleoClientId) {
+  if (!clientId) {
     return NextResponse.json(
       { error: "Configure apaleo client credentials before starting OAuth." },
       { status: 400 }
     );
   }
 
-  const redirectUri = process.env.APALEO_REDIRECT_URI;
+  const redirectUri = apaleoRuntime.redirectUri;
   if (!redirectUri) {
     return NextResponse.json(
       { error: "APALEO_REDIRECT_URI is not configured." },
@@ -50,8 +54,8 @@ export async function GET(request: Request) {
   });
 
   const authorizationUrl = buildApaleoAuthorizationUrl({
-    identityBaseUrl: connection.apaleoIdentityBaseUrl,
-    clientId: connection.apaleoClientId,
+    identityBaseUrl,
+    clientId,
     redirectUri,
     state,
   });

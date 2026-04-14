@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ApaleoClient } from "@/lib/pms/apaleo-client";
 import { encryptApaleoSecret } from "@/lib/pms/apaleo-crypto";
+import { getApaleoRuntimeConfig, resolveApaleoValue } from "@/lib/pms/apaleo-config";
 import { parseApaleoOAuthState } from "@/lib/pms/apaleo-oauth";
 import { isApaleoProviderActive } from "@/lib/pms/provider-mode";
 
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
   }
 
   const parsedState = parseApaleoOAuthState(state);
+  const apaleoRuntime = getApaleoRuntimeConfig();
 
   const connection = await db.pmsConnection.findFirst({
     where: {
@@ -54,14 +56,24 @@ export async function GET(request: Request) {
     },
   });
 
-  if (!connection?.apaleoClientId || !connection.apaleoClientSecret) {
+  const clientId = resolveApaleoValue(connection?.apaleoClientId ?? undefined, apaleoRuntime.clientId);
+  const clientSecret = resolveApaleoValue(
+    connection?.apaleoClientSecret ?? undefined,
+    apaleoRuntime.clientSecret
+  );
+  const apiBaseUrl = connection?.apaleoApiBaseUrl || apaleoRuntime.apiBaseUrl;
+  const identityBaseUrl = connection?.apaleoIdentityBaseUrl || apaleoRuntime.identityBaseUrl;
+  const accountCode =
+    connection?.apaleoAccountCode || apaleoRuntime.accountCode || "LIMEHOME-MADRID";
+
+  if (!clientId || !clientSecret) {
     return NextResponse.json(
       { error: "Apaleo connection is missing client credentials." },
       { status: 400 }
     );
   }
 
-  const redirectUri = process.env.APALEO_REDIRECT_URI;
+  const redirectUri = apaleoRuntime.redirectUri;
   if (!redirectUri) {
     return NextResponse.json(
       { error: "APALEO_REDIRECT_URI is not configured." },
@@ -69,26 +81,68 @@ export async function GET(request: Request) {
     );
   }
 
+  const ensuredConnection =
+    connection ||
+    (await db.pmsConnection.upsert({
+      where: {
+        userId_provider: {
+          userId: parsedState.userId,
+          provider: "APALEO",
+        },
+      },
+      create: {
+        userId: parsedState.userId,
+        provider: "APALEO",
+        enabled: false,
+        apaleoApiBaseUrl: apiBaseUrl,
+        apaleoIdentityBaseUrl: identityBaseUrl,
+        apaleoClientId: clientId,
+        apaleoClientSecret: clientSecret,
+        apaleoAccountCode: accountCode,
+        apaleoWebhookSecret: apaleoRuntime.webhookSecret,
+      },
+      update: {
+        apaleoApiBaseUrl: apiBaseUrl,
+        apaleoIdentityBaseUrl: identityBaseUrl,
+        apaleoClientId: clientId,
+        apaleoClientSecret: clientSecret,
+        apaleoAccountCode: accountCode,
+        apaleoWebhookSecret: apaleoRuntime.webhookSecret || undefined,
+      },
+      select: {
+        id: true,
+        apaleoApiBaseUrl: true,
+        apaleoIdentityBaseUrl: true,
+        apaleoClientId: true,
+        apaleoClientSecret: true,
+        apaleoAccountCode: true,
+      },
+    }));
+
   const client = new ApaleoClient({
-    apiBaseUrl: connection.apaleoApiBaseUrl,
-    identityBaseUrl: connection.apaleoIdentityBaseUrl,
-    clientId: connection.apaleoClientId,
-    clientSecret: connection.apaleoClientSecret,
+    apiBaseUrl,
+    identityBaseUrl,
+    clientId,
+    clientSecret,
     redirectUri,
   });
 
   const tokenResponse = await client.exchangeCodeForTokens(code);
   const accessPayload = decodeJwtPayload(tokenResponse.access_token);
-  const accountCode =
-    connection.apaleoAccountCode ||
+  const resolvedAccountCode =
+    ensuredConnection.apaleoAccountCode ||
     (typeof accessPayload?.account_code === "string" ? accessPayload.account_code : null) ||
     (typeof accessPayload?.accountCode === "string" ? accessPayload.accountCode : null);
 
   await db.pmsConnection.update({
-    where: { id: connection.id },
+    where: { id: ensuredConnection.id },
     data: {
       enabled: true,
-      apaleoAccountCode: accountCode,
+      apaleoApiBaseUrl: apiBaseUrl,
+      apaleoIdentityBaseUrl: identityBaseUrl,
+      apaleoClientId: clientId,
+      apaleoClientSecret: clientSecret,
+      apaleoAccountCode: resolvedAccountCode,
       apaleoRefreshToken: tokenResponse.refresh_token
         ? encryptApaleoSecret(tokenResponse.refresh_token)
         : undefined,

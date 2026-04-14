@@ -32,17 +32,17 @@ const fallbackImages: HeroImage[] = [
 ];
 
 export function HomeHero({ images, searchPanel }: HomeHeroProps) {
-  const slides = useMemo(() => (images.length >= 3 ? images : fallbackImages), [images]);
+  const slides = useMemo(() => (images.length > 0 ? images : fallbackImages), [images]);
   const leadImage = slides[0];
 
   return (
-    <section className="relative overflow-hidden pb-14 pt-8 md:pb-18 md:pt-10">
+    <section className="relative overflow-hidden pb-10 pt-6 md:pb-12 md:pt-8">
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={leadImage.url}
           alt={leadImage.alt}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-[center_42%]"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,32,52,0.28),rgba(6,32,52,0.6)_60%,rgba(6,32,52,0.78))]" />
       </div>
@@ -78,7 +78,7 @@ export function HomeHero({ images, searchPanel }: HomeHeroProps) {
           </div>
         </div>
 
-        {searchPanel ? <div className="mt-8 max-w-5xl">{searchPanel}</div> : null}
+        {searchPanel ? <div className="mt-6 max-w-5xl">{searchPanel}</div> : null}
       </div>
     </section>
   );

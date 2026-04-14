@@ -82,24 +82,14 @@ async function getHomepageData() {
       },
     });
 
-    const activeSpaceCount = await db.listing.count({ where: { status: "ACTIVE" } });
-    const bookingCount = await db.booking.count();
-    const reviewStats = await db.review.aggregate({ _avg: { overallRating: true } });
-
     return {
       featuredListings: pilotListings.length > 0 ? pilotListings : featuredListings,
       hasPilotLaunchCollection: pilotListings.length > 0,
-      bookingCount,
-      averageRating: reviewStats._avg.overallRating ?? 4.8,
-      activeSpaceCount,
     };
   } catch {
     return {
       featuredListings: [] as FeaturedListing[],
       hasPilotLaunchCollection: false,
-      bookingCount: 500,
-      averageRating: 4.8,
-      activeSpaceCount: 100,
     };
   }
 }
@@ -126,13 +116,23 @@ export async function HomepageRefresh() {
   noStore();
   const data = await getHomepageData();
 
-  const heroImages: HeroImage[] = data.featuredListings
-    .map((listing) => listing.images[0])
-    .filter(Boolean)
-    .map((image, index) => ({
-      url: image.url,
-      alt: image.alt || `Work-ready stay ${index + 1}`,
-    }));
+  const heroImages: HeroImage[] = [
+    {
+      url: "/images/homepage-hero.png",
+      alt: "Person working on a laptop beside a pool in a lush garden setting",
+    },
+    ...data.featuredListings.flatMap((listing, index) => {
+      const image = listing.images[0];
+      if (!image) return [];
+
+      return [
+        {
+          url: image.url,
+          alt: image.alt || `Work-ready stay ${index + 1}`,
+        },
+      ];
+    }),
+  ];
 
   return (
     <div className="pb-18">
@@ -155,44 +155,6 @@ export async function HomepageRefresh() {
           </div>
         }
       />
-
-      <section className="waywork-shell -mt-4 relative z-10">
-        <div className="grid gap-3 rounded-[32px] border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3 md:p-5">
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Active spaces
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
-              {data.activeSpaceCount}+
-            </p>
-            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
-              Residential stays curated for work.
-            </p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Guest rating
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
-              {data.averageRating.toFixed(1)}/5
-            </p>
-            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
-              Clearer work signals and easier booking.
-            </p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Bookings
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
-              {data.bookingCount}+
-            </p>
-            <p className="mt-1 text-sm text-[var(--ww-text-primary)]">
-              Trusted for focused stays and offsites.
-            </p>
-          </div>
-        </div>
-      </section>
 
       <section className="waywork-shell mt-14">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">

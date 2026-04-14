@@ -1,5 +1,6 @@
 import type { ApaleoPilotReadinessSummary } from "@/lib/pms/apaleo-pilot-readiness";
 import { getApaleoPilotReadinessSummary } from "@/lib/pms/apaleo-pilot-readiness";
+import { getApaleoRuntimeConfig, resolveApaleoValue } from "@/lib/pms/apaleo-config";
 
 type PreflightState = "ACTION_REQUIRED" | "READY_FOR_CREDENTIAL_INPUT" | "READY_FOR_LIVE_CUTOVER";
 type PreflightItemStatus = "READY" | "MISSING";
@@ -270,6 +271,7 @@ export function summarizeApaleoPilotPreflight(
 
 export async function getApaleoPilotPreflightSummary() {
   const { db } = await import("@/lib/db");
+  const apaleoRuntime = getApaleoRuntimeConfig();
   const [readiness, connection] = await Promise.all([
     getApaleoPilotReadinessSummary(),
     db.pmsConnection.findFirst({
@@ -304,10 +306,16 @@ export async function getApaleoPilotPreflightSummary() {
     },
     connection: {
       configured: Boolean(connection),
-      clientId: hasValue(connection?.apaleoClientId),
-      clientSecret: hasValue(connection?.apaleoClientSecret),
-      accountCode: hasValue(connection?.apaleoAccountCode),
-      webhookSecret: hasValue(connection?.apaleoWebhookSecret),
+      clientId: hasValue(resolveApaleoValue(connection?.apaleoClientId ?? undefined, apaleoRuntime.clientId)),
+      clientSecret: hasValue(
+        resolveApaleoValue(connection?.apaleoClientSecret ?? undefined, apaleoRuntime.clientSecret)
+      ),
+      accountCode: hasValue(
+        resolveApaleoValue(connection?.apaleoAccountCode ?? undefined, apaleoRuntime.accountCode)
+      ),
+      webhookSecret: hasValue(
+        resolveApaleoValue(connection?.apaleoWebhookSecret ?? undefined, apaleoRuntime.webhookSecret)
+      ),
       refreshToken: hasValue(connection?.apaleoRefreshToken),
     },
     host: {

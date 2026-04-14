@@ -61,194 +61,156 @@ export async function getApaleoPilotReadinessSummary(): Promise<ApaleoPilotReadi
     city: { equals: "Madrid", mode: "insensitive" as const },
   };
 
-  const [
-    configuredConnections,
-    enabledConnections,
-    connectedConnections,
-    missingOAuthCredentials,
-    expiringAccessTokens,
-    missingWebhookSecret,
-    missingWebhookSubscription,
-    missingAriSubscriptions,
-    importedMadrid,
-    publishableMadrid,
-    needsReviewMadrid,
-    rejectedMadrid,
-    pendingAdminReviewMadrid,
-    activeMadrid,
-    unmappedMadrid,
-    listingsWithSyncErrors,
-    staleActiveSync,
-    activeMissingStripeConnect,
-    inboundFailures24h,
-    outboundFailures24h,
-    lastInboundSuccess,
-    lastOutboundSuccess,
-  ] = await db.$transaction([
-    db.pmsConnection.count({
-      where: { provider: "APALEO" },
-    }),
-    db.pmsConnection.count({
-      where: { provider: "APALEO", enabled: true },
-    }),
-    db.pmsConnection.count({
-      where: {
-        provider: "APALEO",
-        enabled: true,
-        apaleoConnectedAt: { not: null },
+  const configuredConnections = await db.pmsConnection.count({
+    where: { provider: "APALEO" },
+  });
+  const enabledConnections = await db.pmsConnection.count({
+    where: { provider: "APALEO", enabled: true },
+  });
+  const connectedConnections = await db.pmsConnection.count({
+    where: {
+      provider: "APALEO",
+      enabled: true,
+      apaleoConnectedAt: { not: null },
+    },
+  });
+  const missingOAuthCredentials = await db.pmsConnection.count({
+    where: {
+      provider: "APALEO",
+      enabled: true,
+      OR: [{ apaleoClientId: null }, { apaleoClientSecret: null }, { apaleoRefreshToken: null }],
+    },
+  });
+  const expiringAccessTokens = await db.pmsConnection.count({
+    where: {
+      provider: "APALEO",
+      enabled: true,
+      apaleoAccessTokenExpiresAt: {
+        lte: tokenExpiryCutoff,
       },
-    }),
-    db.pmsConnection.count({
-      where: {
-        provider: "APALEO",
-        enabled: true,
-        OR: [
-          { apaleoClientId: null },
-          { apaleoClientSecret: null },
-          { apaleoRefreshToken: null },
-        ],
+    },
+  });
+  const missingWebhookSecret = await db.pmsConnection.count({
+    where: {
+      provider: "APALEO",
+      enabled: true,
+      OR: [{ apaleoWebhookSecret: null }, { apaleoWebhookSecret: "" }],
+    },
+  });
+  const missingWebhookSubscription = await db.pmsConnection.count({
+    where: {
+      provider: "APALEO",
+      enabled: true,
+      OR: [{ apaleoWebhookSubscriptionId: null }, { apaleoWebhookSubscriptionId: "" }],
+    },
+  });
+  const missingAriSubscriptions = await db.pmsConnection.count({
+    where: {
+      provider: "APALEO",
+      enabled: true,
+      OR: [{ apaleoAriSubscriptionId: null }, { apaleoAriSubscriptionId: "" }],
+    },
+  });
+  const importedMadrid = await db.listing.count({
+    where: madridListingWhere,
+  });
+  const publishableMadrid = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      curationStatus: "PUBLISHABLE",
+    },
+  });
+  const needsReviewMadrid = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      curationStatus: "NEEDS_REVIEW",
+    },
+  });
+  const rejectedMadrid = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      curationStatus: "REJECTED",
+    },
+  });
+  const pendingAdminReviewMadrid = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      status: "PENDING_REVIEW",
+    },
+  });
+  const activeMadrid = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      status: "ACTIVE",
+    },
+  });
+  const unmappedMadrid = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      OR: [
+        { pmsConnectionId: null },
+        { pmsExternalPropertyId: null },
+        { pmsExternalUnitGroupId: null },
+        { pmsExternalRatePlanId: null },
+      ],
+    },
+  });
+  const listingsWithSyncErrors = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      OR: [{ pmsSyncStatus: "FAILED" }, { pmsSyncError: { not: null } }],
+    },
+  });
+  const staleActiveSync = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      status: "ACTIVE",
+      OR: [{ pmsLastSyncedAt: null }, { pmsLastSyncedAt: { lt: staleSyncCutoff } }],
+    },
+  });
+  const activeMissingStripeConnect = await db.listing.count({
+    where: {
+      ...madridListingWhere,
+      status: "ACTIVE",
+      host: {
+        stripeConnectAccountId: null,
       },
-    }),
-    db.pmsConnection.count({
-      where: {
-        provider: "APALEO",
-        enabled: true,
-        apaleoAccessTokenExpiresAt: {
-          lte: tokenExpiryCutoff,
-        },
-      },
-    }),
-    db.pmsConnection.count({
-      where: {
-        provider: "APALEO",
-        enabled: true,
-        OR: [{ apaleoWebhookSecret: null }, { apaleoWebhookSecret: "" }],
-      },
-    }),
-    db.pmsConnection.count({
-      where: {
-        provider: "APALEO",
-        enabled: true,
-        OR: [
-          { apaleoWebhookSubscriptionId: null },
-          { apaleoWebhookSubscriptionId: "" },
-        ],
-      },
-    }),
-    db.pmsConnection.count({
-      where: {
-        provider: "APALEO",
-        enabled: true,
-        OR: [
-          { apaleoAriSubscriptionId: null },
-          { apaleoAriSubscriptionId: "" },
-        ],
-      },
-    }),
-    db.listing.count({
-      where: madridListingWhere,
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        curationStatus: "PUBLISHABLE",
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        curationStatus: "NEEDS_REVIEW",
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        curationStatus: "REJECTED",
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        status: "PENDING_REVIEW",
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        status: "ACTIVE",
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        OR: [
-          { pmsConnectionId: null },
-          { pmsExternalPropertyId: null },
-          { pmsExternalUnitGroupId: null },
-          { pmsExternalRatePlanId: null },
-        ],
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        OR: [{ pmsSyncStatus: "FAILED" }, { pmsSyncError: { not: null } }],
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        status: "ACTIVE",
-        OR: [
-          { pmsLastSyncedAt: null },
-          { pmsLastSyncedAt: { lt: staleSyncCutoff } },
-        ],
-      },
-    }),
-    db.listing.count({
-      where: {
-        ...madridListingWhere,
-        status: "ACTIVE",
-        host: {
-          stripeConnectAccountId: null,
-        },
-      },
-    }),
-    db.pmsSyncEvent.count({
-      where: {
-        connection: { provider: "APALEO" },
-        direction: "INBOUND",
-        success: false,
-        createdAt: { gte: recentEventCutoff },
-      },
-    }),
-    db.pmsSyncEvent.count({
-      where: {
-        connection: { provider: "APALEO" },
-        direction: "OUTBOUND",
-        success: false,
-        createdAt: { gte: recentEventCutoff },
-      },
-    }),
-    db.pmsSyncEvent.findFirst({
-      where: {
-        connection: { provider: "APALEO" },
-        direction: "INBOUND",
-        success: true,
-      },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
-    }),
-    db.pmsSyncEvent.findFirst({
-      where: {
-        connection: { provider: "APALEO" },
-        direction: "OUTBOUND",
-        success: true,
-      },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
-    }),
-  ]);
+    },
+  });
+  const inboundFailures24h = await db.pmsSyncEvent.count({
+    where: {
+      connection: { provider: "APALEO" },
+      direction: "INBOUND",
+      success: false,
+      createdAt: { gte: recentEventCutoff },
+    },
+  });
+  const outboundFailures24h = await db.pmsSyncEvent.count({
+    where: {
+      connection: { provider: "APALEO" },
+      direction: "OUTBOUND",
+      success: false,
+      createdAt: { gte: recentEventCutoff },
+    },
+  });
+  const lastInboundSuccess = await db.pmsSyncEvent.findFirst({
+    where: {
+      connection: { provider: "APALEO" },
+      direction: "INBOUND",
+      success: true,
+    },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+  });
+  const lastOutboundSuccess = await db.pmsSyncEvent.findFirst({
+    where: {
+      connection: { provider: "APALEO" },
+      direction: "OUTBOUND",
+      success: true,
+    },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+  });
 
   const blockers: string[] = [];
   const warnings: string[] = [];

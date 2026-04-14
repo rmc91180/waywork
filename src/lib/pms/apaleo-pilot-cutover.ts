@@ -13,6 +13,10 @@ import {
   DEFAULT_BOOKING_COMMISSION_BPS,
   bookingCommissionPercentToBps,
 } from "@/lib/payout-config";
+import {
+  getApaleoRuntimeConfig,
+  resolveApaleoValue,
+} from "@/lib/pms/apaleo-config";
 
 export interface PrepareApaleoPilotCutoverInput {
   hostEmail: string;
@@ -52,6 +56,7 @@ function resolveDefaultHostCommissionBps(value: number | null | undefined) {
 export async function prepareApaleoPilotCutover(
   input: PrepareApaleoPilotCutoverInput
 ): Promise<PrepareApaleoPilotCutoverResult> {
+  const apaleoRuntime = getApaleoRuntimeConfig();
   const host = await db.user.upsert({
     where: { email: input.hostEmail },
     update: {
@@ -88,16 +93,13 @@ export async function prepareApaleoPilotCutover(
     },
     update: {
       enabled: refreshToken ? true : undefined,
-      apaleoApiBaseUrl: "https://api.apaleo.com",
-      apaleoIdentityBaseUrl: "https://identity.apaleo.com",
-      apaleoClientId:
-        input.clientId !== undefined ? cleanValue(input.clientId) : undefined,
-      apaleoClientSecret:
-        input.clientSecret !== undefined ? cleanValue(input.clientSecret) : undefined,
-      apaleoAccountCode:
-        input.accountCode !== undefined ? cleanValue(input.accountCode) : undefined,
+      apaleoApiBaseUrl: apaleoRuntime.apiBaseUrl,
+      apaleoIdentityBaseUrl: apaleoRuntime.identityBaseUrl,
+      apaleoClientId: resolveApaleoValue(input.clientId, apaleoRuntime.clientId),
+      apaleoClientSecret: resolveApaleoValue(input.clientSecret, apaleoRuntime.clientSecret),
+      apaleoAccountCode: resolveApaleoValue(input.accountCode, apaleoRuntime.accountCode) || undefined,
       apaleoWebhookSecret:
-        input.webhookSecret !== undefined ? cleanValue(input.webhookSecret) : undefined,
+        resolveApaleoValue(input.webhookSecret, apaleoRuntime.webhookSecret) || undefined,
       apaleoRefreshToken:
         refreshToken !== null ? encryptApaleoSecret(refreshToken) : undefined,
       apaleoConnectedAt: refreshToken ? new Date() : undefined,
@@ -110,12 +112,14 @@ export async function prepareApaleoPilotCutover(
       userId: host.id,
       provider: "APALEO",
       enabled: Boolean(refreshToken),
-      apaleoApiBaseUrl: "https://api.apaleo.com",
-      apaleoIdentityBaseUrl: "https://identity.apaleo.com",
-      apaleoClientId: cleanValue(input.clientId),
-      apaleoClientSecret: cleanValue(input.clientSecret),
-      apaleoAccountCode: cleanValue(input.accountCode) || "LIMEHOME-MADRID",
-      apaleoWebhookSecret: cleanValue(input.webhookSecret),
+      apaleoApiBaseUrl: apaleoRuntime.apiBaseUrl,
+      apaleoIdentityBaseUrl: apaleoRuntime.identityBaseUrl,
+      apaleoClientId: resolveApaleoValue(input.clientId, apaleoRuntime.clientId),
+      apaleoClientSecret: resolveApaleoValue(input.clientSecret, apaleoRuntime.clientSecret),
+      apaleoAccountCode:
+        resolveApaleoValue(input.accountCode, apaleoRuntime.accountCode) || "LIMEHOME-MADRID",
+      apaleoWebhookSecret:
+        resolveApaleoValue(input.webhookSecret, apaleoRuntime.webhookSecret),
       apaleoRefreshToken: refreshToken ? encryptApaleoSecret(refreshToken) : null,
       apaleoConnectedAt: refreshToken ? new Date() : null,
       bookingCommissionBps: bookingCommissionPercentToBps(input.bookingCommissionPercent),
