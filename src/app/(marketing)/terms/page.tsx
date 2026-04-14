@@ -55,7 +55,7 @@ export default function TermsPage() {
         </p>
       </section>
 
-      <section className="mt-10 max-w-4xl">
+      <section id="guest-terms" className="mt-10 max-w-4xl scroll-mt-24">
         <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">1. Guest Terms</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
           These terms apply when a guest searches, books, pays for, or stays in a listing on Way Work.
@@ -78,7 +78,7 @@ export default function TermsPage() {
         </div>
       </section>
 
-      <section className="mt-10 max-w-4xl">
+      <section id="host-terms" className="mt-10 max-w-4xl scroll-mt-24">
         <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">2. Host Terms</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
           These terms apply when a host creates, publishes, manages, or receives bookings for a listing
@@ -102,7 +102,7 @@ export default function TermsPage() {
         </div>
       </section>
 
-      <section className="mt-10 max-w-4xl">
+      <section id="platform-terms" className="mt-10 max-w-4xl scroll-mt-24">
         <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">3. Platform Terms</h2>
         <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
           {platformTerms.map((item) => (
@@ -111,7 +111,7 @@ export default function TermsPage() {
         </ul>
       </section>
 
-      <section className="mt-10 max-w-4xl">
+      <section id="disputes" className="mt-10 max-w-4xl scroll-mt-24">
         <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">4. Priority, Governing Law, and Disputes</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
           For hosts, these terms, together with any signed schedule or commercial addendum, govern the
@@ -136,7 +136,7 @@ export default function TermsPage() {
         </div>
       </section>
 
-      <section className="mt-10 max-w-4xl">
+      <section id="review" className="mt-10 max-w-4xl scroll-mt-24">
         <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">5. Final Review</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
           This draft is designed to be practical, platform-friendly, and commercially robust, but it is

@@ -61,18 +61,26 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/privacy"
+                  href="/terms#guest-terms"
                   className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
-                  Privacy
+                  Guest Terms
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/terms"
+                  href="/terms#host-terms"
                   className="text-sm text-slate-600 transition-colors hover:text-slate-900"
                 >
-                  Terms
+                  Host Terms
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
+                >
+                  Privacy
                 </Link>
               </li>
             </ul>
