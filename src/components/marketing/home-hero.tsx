@@ -78,7 +78,7 @@ export function HomeHero({ images, searchPanel }: HomeHeroProps) {
           </div>
         </div>
 
-        {searchPanel ? <div className="mt-6 max-w-5xl">{searchPanel}</div> : null}
+        {searchPanel ? <div className="mt-8 max-w-[760px] md:mt-10">{searchPanel}</div> : null}
       </div>
     </section>
   );
