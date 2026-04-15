@@ -34,7 +34,7 @@ async function getHomepageData() {
         slug: { startsWith: "limehome-madrid-" },
       },
       orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
-      take: 3,
+      take: 4,
       select: {
         id: true,
         title: true,
@@ -58,7 +58,7 @@ async function getHomepageData() {
     const featuredListings = await db.listing.findMany({
       where: { status: "ACTIVE" },
       orderBy: [{ reviewCount: "desc" }, { workScore: "desc" }, { createdAt: "desc" }],
-      take: 3,
+      take: 4,
       select: {
         id: true,
         title: true,
@@ -178,7 +178,7 @@ export async function HomepageRefresh() {
           </Button>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {data.featuredListings.length > 0 ? (
             data.featuredListings.map((listing) => {
               const pilotMeta = getLimehomePilotMeta({ slug: listing.slug });
@@ -206,28 +206,28 @@ export async function HomepageRefresh() {
                     )}
                   </div>
 
-                  <div className="space-y-4 p-5">
-                    <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-2.5">
                       <div className="min-w-0">
                         {pilotMeta ? (
-                          <Badge variant="secondary" className="mb-2 bg-cyan-50 text-cyan-800">
+                          <Badge variant="secondary" className="mb-1.5 bg-cyan-50 text-cyan-800">
                             {pilotMeta.badge}
                           </Badge>
                         ) : null}
-                        <p className="text-sm text-slate-500">
+                        <p className="text-[13px] text-slate-500">
                           {listing.city}
                           {listing.state ? `, ${listing.state}` : ""}, {listing.country}
                         </p>
-                        <h3 className="mt-1 line-clamp-2 text-xl font-semibold text-[var(--ww-primary-blue)]">
+                        <h3 className="mt-1 line-clamp-2 text-lg font-semibold leading-tight text-[var(--ww-primary-blue)]">
                           {listing.title}
                         </h3>
                       </div>
-                      <p className="shrink-0 text-sm font-semibold text-[var(--ww-primary-blue)]">
+                      <p className="shrink-0 text-[13px] font-semibold text-[var(--ww-primary-blue)]">
                         {formatCurrency(listing.pricePerDay)}/day
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 text-xs text-slate-700">
+                    <div className="flex flex-wrap gap-1.5 text-[11px] text-slate-700">
                       <span className="ww-trust-pill inline-flex items-center gap-1.5">
                         <Wifi className="size-3.5" />
                         {listing.connectivityProfile?.declaredDownloadMbps ?? 0} Mbps
