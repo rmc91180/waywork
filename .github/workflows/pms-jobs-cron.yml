@@ -28,6 +28,23 @@ jobs:
             exit 1
           fi
 
+          mode_endpoint="${APP_URL%/}/api/health/pms"
+          mode_body_file="$(mktemp)"
+          mode_status_code=$(curl -sS -L -o "$mode_body_file" -w "%{http_code}" "$mode_endpoint")
+
+          if [ "$mode_status_code" != "200" ]; then
+            echo "Expected HTTP 200 from $mode_endpoint, got $mode_status_code"
+            cat "$mode_body_file"
+            exit 1
+          fi
+
+          mode="$(node -e "const fs=require('fs'); const payload=JSON.parse(fs.readFileSync(process.argv[1],'utf8')); process.stdout.write(String(payload.mode || 'UNKNOWN'));" "$mode_body_file")"
+
+          if [ "$mode" != "SITEMINDER" ]; then
+            echo "Skipping SiteMinder job processor because PMS mode is $mode."
+            exit 0
+          fi
+
           endpoint="${APP_URL%/}/api/pms/siteminder/jobs/process"
           body_file="$(mktemp)"
           status_code=$(curl -sS -L -o "$body_file" -w "%{http_code}" \
