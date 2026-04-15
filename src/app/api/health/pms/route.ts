@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, withDbRetry } from "@/lib/db";
 import { getApaleoPilotPreflightSummary } from "@/lib/pms/apaleo-pilot-preflight";
 import { getApaleoPilotReadinessSummary } from "@/lib/pms/apaleo-pilot-readiness";
 import { getActivePmsProviderMode } from "@/lib/pms/provider-mode";
@@ -104,40 +104,42 @@ export async function GET() {
     } as const;
 
     const [enabledConnections, pending, processing, failed, deadLetter, stale, recentErrors, lastSuccess] =
-      await db.$transaction([
-        db.pmsConnection.count({
-          where: {
-            provider: dbBackedProvider,
-            enabled: true,
-          },
-        }),
-        db.pmsSyncJob.count({ where: { ...queueWhere, status: "PENDING" } }),
-        db.pmsSyncJob.count({ where: { ...queueWhere, status: "PROCESSING" } }),
-        db.pmsSyncJob.count({ where: { ...queueWhere, status: "FAILED" } }),
-        db.pmsSyncJob.count({ where: { ...queueWhere, status: "DEAD_LETTER" } }),
-        db.pmsSyncJob.count({
-          where: {
-            ...queueWhere,
-            status: { in: ["PENDING", "FAILED"] },
-            nextAttemptAt: { lte: staleCutoff },
-          },
-        }),
-        db.pmsSyncEvent.count({
-          where: {
-            connection: { provider: dbBackedProvider },
-            success: false,
-            createdAt: { gte: recentWindowStart },
-          },
-        }),
-        db.pmsSyncEvent.findFirst({
-          where: {
-            connection: { provider: dbBackedProvider },
-            success: true,
-          },
-          orderBy: { createdAt: "desc" },
-          select: { createdAt: true, action: true },
-        }),
-      ]);
+      await withDbRetry((client) =>
+        client.$transaction([
+          client.pmsConnection.count({
+            where: {
+              provider: dbBackedProvider,
+              enabled: true,
+            },
+          }),
+          client.pmsSyncJob.count({ where: { ...queueWhere, status: "PENDING" } }),
+          client.pmsSyncJob.count({ where: { ...queueWhere, status: "PROCESSING" } }),
+          client.pmsSyncJob.count({ where: { ...queueWhere, status: "FAILED" } }),
+          client.pmsSyncJob.count({ where: { ...queueWhere, status: "DEAD_LETTER" } }),
+          client.pmsSyncJob.count({
+            where: {
+              ...queueWhere,
+              status: { in: ["PENDING", "FAILED"] },
+              nextAttemptAt: { lte: staleCutoff },
+            },
+          }),
+          client.pmsSyncEvent.count({
+            where: {
+              connection: { provider: dbBackedProvider },
+              success: false,
+              createdAt: { gte: recentWindowStart },
+            },
+          }),
+          client.pmsSyncEvent.findFirst({
+            where: {
+              connection: { provider: dbBackedProvider },
+              success: true,
+            },
+            orderBy: { createdAt: "desc" },
+            select: { createdAt: true, action: true },
+          }),
+        ])
+      );
 
     const warnings: string[] = [];
     if (enabledConnections === 0) {

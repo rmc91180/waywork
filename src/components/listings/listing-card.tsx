@@ -71,7 +71,7 @@ export function ListingCard({
 
   return (
     <Link
-      href={`/spaces/${listing.id}`}
+      href={`/spaces/${listing.slug}`}
       className="block"
       onClick={() =>
         trackEvent({

@@ -12,6 +12,7 @@ import {
 import { searchListingsWithFacets, type SearchFacets } from "@/lib/search-query";
 import { getSearchUiVariant } from "@/lib/experiments";
 import { WORKSPACE_TYPES } from "@/lib/constants";
+import { getDemoSearchFallbackResult } from "@/lib/demo-fallback";
 
 export const metadata = {
   title: "Search Workspaces",
@@ -189,7 +190,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   let locationContext: Awaited<
     ReturnType<typeof searchListingsWithFacets>
   >["locationContext"] = null;
-  let searchLoadFailed = false;
 
   try {
     const result = await searchListingsWithFacets(filters);
@@ -198,8 +198,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     facets = result.facets;
     locationContext = result.locationContext;
   } catch (error) {
-    searchLoadFailed = true;
     console.error("[search/page] failed to load search listings", error);
+    const fallback =
+      getDemoSearchFallbackResult(filters) as unknown as Awaited<
+        ReturnType<typeof searchListingsWithFacets>
+      >;
+    listings = fallback.listings;
+    total = fallback.total;
+    facets = fallback.facets;
+    locationContext = fallback.locationContext;
   }
 
   const totalPages = Math.max(1, Math.ceil(total / filters.limit));
@@ -236,13 +243,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </Link>
           ))}
         </div>
-
-        {searchLoadFailed ? (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Search is temporarily unavailable. You can still browse pages, and we&apos;re retrying
-            listing data in the background.
-          </div>
-        ) : null}
 
         <div className="mt-6 min-w-0">
           <SearchResultsClient

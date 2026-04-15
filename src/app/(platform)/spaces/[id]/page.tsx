@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,23 +21,157 @@ import { InquiryButton } from "@/components/messaging/inquiry-button";
 import { PropertyAnalyticsTracker } from "@/components/listings/property-analytics-tracker";
 import { TeamStayPlanner } from "@/components/listings/team-stay-planner";
 import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
+import { getDemoSpaceFallbackData } from "@/lib/demo-fallback";
+import { withDbRetry } from "@/lib/db";
+import type { PrismaClient } from "@/generated/prisma";
 import type { Metadata } from "next";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const listing = await db.listing.findUnique({
-    where: { id, status: "ACTIVE" },
+async function loadSpaceMetadataFromDb(client: PrismaClient, id: string) {
+  return client.listing.findFirst({
+    where: {
+      status: "ACTIVE",
+      OR: [{ id }, { slug: id }],
+    },
     select: {
+      id: true,
+      slug: true,
       title: true,
       description: true,
       city: true,
       images: { where: { isPrimary: true }, take: 1, select: { url: true, alt: true } },
     },
   });
+}
+
+async function loadSpacePageDataFromDb(client: PrismaClient, id: string) {
+  const listing = await client.listing.findFirst({
+    where: {
+      status: "ACTIVE",
+      OR: [{ id }, { slug: id }],
+    },
+    include: {
+      images: { orderBy: { order: "asc" } },
+      amenities: { orderBy: { category: "asc" } },
+      connectivityProfile: true,
+      activities: { orderBy: [{ distanceKm: "asc" }, { title: "asc" }] },
+      host: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          bio: true,
+          createdAt: true,
+        },
+      },
+      reviews: {
+        include: { author: { select: { name: true, image: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      },
+      _count: { select: { reviews: true, bookings: true } },
+    },
+  });
+
+  if (!listing) {
+    return null;
+  }
+
+  const relatedListings = await client.listing.findMany({
+    where: {
+      status: "ACTIVE",
+      id: { not: listing.id },
+      OR: [{ city: listing.city }, { country: listing.country }],
+    },
+    orderBy: [{ reviewCount: "desc" }, { workScore: "desc" }],
+    take: 4,
+    select: {
+      id: true,
+      title: true,
+      city: true,
+      state: true,
+      pricePerDay: true,
+      workScore: true,
+      images: {
+        where: { isPrimary: true },
+        take: 1,
+        select: { url: true, alt: true },
+      },
+    },
+  });
+
+  const sameBuildingListings = listing.pmsExternalPropertyId
+    ? await client.listing.findMany({
+        where: {
+          status: "ACTIVE",
+          id: { not: listing.id },
+          pmsExternalPropertyId: listing.pmsExternalPropertyId,
+        },
+        orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
+        take: 3,
+        select: {
+          id: true,
+          title: true,
+          maxGuests: true,
+          pricePerDay: true,
+          workspaceType: true,
+          images: {
+            where: { isPrimary: true },
+            take: 1,
+            select: { url: true, alt: true },
+          },
+        },
+      })
+    : [];
+
+  const portfolioTeamStayListings =
+    sameBuildingListings.length === 0
+      ? await client.listing.findMany({
+          where: {
+            status: "ACTIVE",
+            id: { not: listing.id },
+            city: listing.city,
+            hostId: listing.hostId,
+            ...(listing.pmsConnectionId ? { pmsConnectionId: listing.pmsConnectionId } : {}),
+          },
+          orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
+          take: 3,
+          select: {
+            id: true,
+            title: true,
+            maxGuests: true,
+            pricePerDay: true,
+            workspaceType: true,
+            images: {
+              where: { isPrimary: true },
+              take: 1,
+              select: { url: true, alt: true },
+            },
+          },
+        })
+      : [];
+
+  return {
+    listing,
+    relatedListings,
+    sameBuildingListings,
+    portfolioTeamStayListings,
+  };
+}
+
+type SpacePageData = NonNullable<Awaited<ReturnType<typeof loadSpacePageDataFromDb>>>;
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
+  const listing =
+    (await withDbRetry((client) => loadSpaceMetadataFromDb(client, id)).catch((error) => {
+      console.error("[spaces/[id]] failed to load metadata listing", error);
+      return null;
+    })) ?? getDemoSpaceFallbackData(id)?.listing;
 
   if (!listing) return { title: "Space Not Found" };
 
@@ -67,108 +200,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SpaceDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const listing = await db.listing.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { order: "asc" } },
-      amenities: { orderBy: { category: "asc" } },
-      connectivityProfile: true,
-      activities: { orderBy: [{ distanceKm: "asc" }, { title: "asc" }] },
-      host: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          bio: true,
-          createdAt: true,
-        },
-      },
-      reviews: {
-        include: { author: { select: { name: true, image: true } } },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-      },
-      _count: { select: { reviews: true, bookings: true } },
-    },
-  });
+  const pageData =
+    (await withDbRetry((client) => loadSpacePageDataFromDb(client, id)).catch((error) => {
+      console.error("[spaces/[id]] failed to load listing page", error);
+      return null;
+    })) ?? (getDemoSpaceFallbackData(id) as SpacePageData | null);
 
-  if (!listing || listing.status !== "ACTIVE") {
+  if (!pageData) {
     notFound();
   }
 
-  const relatedListings = await db.listing.findMany({
-    where: {
-      status: "ACTIVE",
-      id: { not: listing.id },
-      OR: [{ city: listing.city }, { country: listing.country }],
-    },
-    orderBy: [{ reviewCount: "desc" }, { workScore: "desc" }],
-    take: 4,
-    select: {
-      id: true,
-      title: true,
-      city: true,
-      state: true,
-      pricePerDay: true,
-      workScore: true,
-      images: {
-        where: { isPrimary: true },
-        take: 1,
-        select: { url: true, alt: true },
-      },
-    },
-  });
-  const sameBuildingListings = listing.pmsExternalPropertyId
-    ? await db.listing.findMany({
-        where: {
-          status: "ACTIVE",
-          id: { not: listing.id },
-          pmsExternalPropertyId: listing.pmsExternalPropertyId,
-        },
-        orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
-        take: 3,
-        select: {
-          id: true,
-          title: true,
-          maxGuests: true,
-          pricePerDay: true,
-          workspaceType: true,
-          images: {
-            where: { isPrimary: true },
-            take: 1,
-            select: { url: true, alt: true },
-          },
-        },
-      })
-    : [];
-  const portfolioTeamStayListings =
-    sameBuildingListings.length === 0
-      ? await db.listing.findMany({
-          where: {
-            status: "ACTIVE",
-            id: { not: listing.id },
-            city: listing.city,
-            hostId: listing.hostId,
-            ...(listing.pmsConnectionId
-              ? { pmsConnectionId: listing.pmsConnectionId }
-              : {}),
-          },
-          orderBy: [{ workScore: "desc" }, { pricePerDay: "asc" }],
-          take: 3,
-          select: {
-            id: true,
-            title: true,
-            maxGuests: true,
-            pricePerDay: true,
-            workspaceType: true,
-            images: {
-              where: { isPrimary: true },
-              take: 1,
-              select: { url: true, alt: true },
-            },
-          },
-        })
-      : [];
+  const { listing, relatedListings, sameBuildingListings, portfolioTeamStayListings } = pageData;
   const teamStayListings =
     sameBuildingListings.length > 0 ? sameBuildingListings : portfolioTeamStayListings;
   const teamStayMode =
@@ -393,17 +435,17 @@ export default async function SpaceDetailPage({ params }: Props) {
           </div>
 
           {teamStayMode ? (
-            <TeamStayPlanner
-              listingId={listing.id}
-              listingTitle={listing.title}
-              hostName={listing.host.name || "Host"}
-              city={listing.city}
-              currency={listing.currency}
-              baseMaxGuests={listing.maxGuests}
-              basePricePerDay={listing.pricePerDay}
-              mode={teamStayMode}
-              candidates={teamStayListings}
-            />
+          <TeamStayPlanner
+            listingId={listing.id}
+            listingTitle={listing.title}
+            hostName={listing.host.name || "Host"}
+            city={listing.city}
+            currency={listing.currency}
+            baseMaxGuests={listing.maxGuests}
+            basePricePerDay={listing.pricePerDay}
+            mode={teamStayMode}
+            candidates={teamStayListings}
+          />
           ) : null}
 
           {/* Work Score */}

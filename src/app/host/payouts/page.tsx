@@ -19,6 +19,28 @@ export default async function PayoutsPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
+  if (session.user.id === "demo-host") {
+    return (
+      <div className="waywork-shell max-w-5xl py-8 md:py-10">
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="Payouts"
+          description="Demo payout settings stay visible even when the connected account is not live."
+        />
+        <Card className="mt-6 mb-6 border-slate-200/80 bg-white/95">
+          <CardHeader>
+            <CardTitle>Stripe Connect</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600">
+              Demo host payout setup is available for smoke testing.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const params = await searchParams;
   const status = await getConnectStatus();
   const payoutSettings = await getPayoutSettings();

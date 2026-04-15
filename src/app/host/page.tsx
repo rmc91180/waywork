@@ -47,6 +47,33 @@ export default async function HostDashboardPage() {
     redirect("/login?callbackUrl=%2Fhost");
   }
 
+  if (session.user.id === "demo-host") {
+    return (
+      <div className="waywork-shell py-8 md:py-10">
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="Welcome back"
+          description="Demo host mode keeps the dashboard stable even while the database is recovering."
+          aside={<Badge variant="outline">Demo mode</Badge>}
+        />
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {[
+            { label: "Listings", value: "5", detail: "Seeded Madrid pilot homes" },
+            { label: "Bookings", value: "3", detail: "Upcoming demo reservations" },
+            { label: "PMS", value: "Live", detail: "Apaleo demo connection" },
+          ].map((item) => (
+            <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-5">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{item.value}</p>
+              <p className="mt-1 text-sm text-slate-600">{item.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const hostId = session.user.id;
   let listings: Array<{
     id: string;

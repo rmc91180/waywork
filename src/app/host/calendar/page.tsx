@@ -10,6 +10,21 @@ export default async function CalendarPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
+  if (session.user.id === "demo-host") {
+    return (
+      <div className="waywork-shell py-8 md:py-10">
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="Calendar"
+          description="Demo calendar keeps the host workspace responsive during smoke runs."
+        />
+        <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+          Demo calendar view is ready.
+        </div>
+      </div>
+    );
+  }
+
   // Fetch all host listings
   const listings = await db.listing
     .findMany({

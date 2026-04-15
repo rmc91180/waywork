@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseSearchFilterParams } from "@/lib/search-filters";
 import { searchListingsWithFacets } from "@/lib/search-query";
+import { getDemoSearchFallbackResult } from "@/lib/demo-fallback";
 
 function toRawParams(searchParams: URLSearchParams): Record<string, string | string[] | undefined> {
   const record: Record<string, string | string[] | undefined> = {};
@@ -25,7 +26,10 @@ export async function GET(request: NextRequest) {
   try {
     const rawParams = toRawParams(request.nextUrl.searchParams);
     const filters = parseSearchFilterParams(rawParams);
-    const { listings, total } = await searchListingsWithFacets(filters);
+    const { listings, total } = await searchListingsWithFacets(filters).catch((error) => {
+      console.error("[api/search] failed to fetch search listings", error);
+      return getDemoSearchFallbackResult(filters);
+    });
     const totalPages = Math.max(1, Math.ceil(total / filters.limit));
 
     return NextResponse.json({
@@ -42,4 +46,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

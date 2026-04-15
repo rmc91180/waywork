@@ -29,6 +29,26 @@ export default async function HostListingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
+  if (session.user.id === "demo-host") {
+    return (
+      <div className="waywork-shell py-8 md:py-10">
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="Listings"
+          description="Demo host inventory stays visible even when the live database is unavailable."
+        />
+        <Card className="waywork-section mt-6">
+          <CardContent className="py-14 text-center">
+            <h3 className="font-display text-xl font-semibold text-slate-900">Demo listings ready</h3>
+            <p className="mt-2 text-slate-600">
+              The seeded Madrid pilot inventory is available in demo mode for smoke testing.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const listings = await db.listing
     .findMany({
       where: buildHostListingScope(session.user.id),
@@ -45,19 +65,24 @@ export default async function HostListingsPage() {
     })
     .catch(async (error) => {
       console.error("[host/listings] fallback to owner-only scope", error);
-      const fallbackListings = await db.listing.findMany({
-        where: { hostId: session.user.id },
-        include: {
-          images: { where: { isPrimary: true }, take: 1 },
-          _count: { select: { bookings: true, reviews: true } },
-        },
-        orderBy: { updatedAt: "desc" },
-      });
+      try {
+        const fallbackListings = await db.listing.findMany({
+          where: { hostId: session.user.id },
+          include: {
+            images: { where: { isPrimary: true }, take: 1 },
+            _count: { select: { bookings: true, reviews: true } },
+          },
+          orderBy: { updatedAt: "desc" },
+        });
 
-      return fallbackListings.map((listing) => ({
-        ...listing,
-        teamMembers: [],
-      }));
+        return fallbackListings.map((listing) => ({
+          ...listing,
+          teamMembers: [],
+        }));
+      } catch (fallbackError) {
+        console.error("[host/listings] empty fallback after db failure", fallbackError);
+        return [];
+      }
     });
 
   const activeCount = listings.filter((listing) => listing.status === "ACTIVE").length;

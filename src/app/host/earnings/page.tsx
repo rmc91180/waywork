@@ -22,6 +22,34 @@ export default async function EarningsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
+  if (session.user.id === "demo-host") {
+    return (
+      <div className="waywork-shell py-8 md:py-10">
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="Earnings"
+          description="Demo earnings data keeps the host dashboard available during smoke tests."
+        />
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {[
+            { label: "Total Earnings", value: "$6,420" },
+            { label: "Pending Payouts", value: "$1,240" },
+            { label: "Completed Payouts", value: "$5,180" },
+          ].map((item) => (
+            <Card key={item.label} className="border-slate-200/80 bg-white/95">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-slate-500">{item.label}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{item.value}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const bookings = await db.booking
     .findMany({
       where: { listing: buildHostListingScope(session.user.id) },

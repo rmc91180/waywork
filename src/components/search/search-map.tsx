@@ -127,7 +127,7 @@ function SearchMapInner({ listings }: SearchMapProps) {
                 </span>
               </div>
               <Link
-                href={`/spaces/${listing.id}`}
+                href={`/spaces/${listing.slug}`}
                 className="block rounded-md bg-slate-900 px-3 py-2 text-center text-xs font-medium text-white hover:bg-slate-800"
               >
                 View Space

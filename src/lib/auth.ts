@@ -39,6 +39,21 @@ if (isDemo) {
         const email = credentials?.email as string;
         if (!email) return null;
 
+        if (isDemo) {
+          const isHostDemo = email.toLowerCase().includes("host");
+          const id = isHostDemo ? "demo-host" : "demo-guest";
+          const role = isHostDemo ? "HOST" : "GUEST";
+          const name = isHostDemo ? "Demo Host" : "Demo Guest";
+
+          return {
+            id,
+            email,
+            name,
+            image: null,
+            role,
+          };
+        }
+
         // Find or create a demo user with the retry-safe DB helper so local auth
         // keeps working even when the underlying Prisma dev database restarts.
         const user = await withDbRetry(async (client) => {
@@ -61,7 +76,9 @@ if (isDemo) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter: isDemo ? undefined : PrismaAdapter(db),
+  secret: process.env.AUTH_SECRET,
+  trustHost: true,
   session: {
     strategy: isDemo ? "jwt" : "database",
   },
@@ -72,6 +89,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/login",
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = (user as unknown as Record<string, unknown>).role || "GUEST";
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = user.image;
+      } else if (isDemo && !token.role) {
+        token.role = "GUEST";
+      }
+      return token;
+    },
     async session({ session, user, token }) {
       if (session.user) {
         if (user) {
@@ -80,11 +108,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.role = (user as unknown as Record<string, unknown>).role as string;
         } else if (token) {
           // JWT strategy (credentials/demo)
-          session.user.id = token.sub!;
-          const dbUser = await withDbRetry((client) =>
-            client.user.findUnique({ where: { id: token.sub! } })
-          );
-          session.user.role = dbUser?.role || "GUEST";
+          session.user.id = token.sub || (token as unknown as Record<string, string>).id || "";
+          session.user.role = (token as unknown as Record<string, string>).role || "GUEST";
         }
       }
       return session;

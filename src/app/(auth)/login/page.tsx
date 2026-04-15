@@ -88,8 +88,11 @@ export default function LoginPage() {
     if (!hasCredentials) return;
     setLoading(true);
     try {
+      const demoEmail = callbackUrl.startsWith("/host")
+        ? "demo-host@waywork.com"
+        : "demo-guest@waywork.com";
       await signIn("credentials", {
-        email: "demo@waywork.com",
+        email: demoEmail,
         callbackUrl,
       });
     } finally {

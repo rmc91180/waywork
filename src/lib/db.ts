@@ -101,15 +101,14 @@ function resolveDatabaseConnectionString(connectionString: string) {
 
 function createPool(connectionString: string) {
   const parsed = new URL(connectionString);
-  const isLocalPgliteFallback =
-    parsed.hostname === "127.0.0.1" &&
-    parsed.port === "51255";
+  const isLocalHost = isLocalDatabaseHost(parsed.hostname);
+  const isLocalPgliteFallback = parsed.hostname === "127.0.0.1" && parsed.port === "51255";
 
   return new Pool({
     connectionString,
-    // The local PGlite socket fallback is much less tolerant of parallel clients
-    // than a normal Postgres instance, so keep the pool intentionally tiny there.
-    max: isLocalPgliteFallback ? 1 : 10,
+    // Local dev databases (and especially PGlite-backed pools) can become unstable
+    // under high concurrency, so keep local pools intentionally small.
+    max: isLocalHost || isLocalPgliteFallback ? 1 : 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
     allowExitOnIdle: process.env.NODE_ENV !== "production",
@@ -135,9 +134,36 @@ function getPrismaClient() {
   return prisma;
 }
 
+function createRetryingModelProxy(modelName: string, modelDelegate: object) {
+  return new Proxy(modelDelegate, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver);
+      if (typeof value !== "function") {
+        return value;
+      }
+
+      if (typeof prop !== "string" || prop.startsWith("$")) {
+        return value.bind(target);
+      }
+
+      return (...args: unknown[]) =>
+        withDbRetry((client) => {
+          const freshModel = Reflect.get(client, modelName) as Record<string, unknown>;
+          const freshMethod = freshModel[prop];
+          if (typeof freshMethod !== "function") {
+            throw new Error(`Prisma model method ${modelName}.${prop} is not available`);
+          }
+          return (freshMethod as (...methodArgs: unknown[]) => Promise<unknown>).apply(
+            freshModel,
+            args
+          );
+        });
+    },
+  });
+}
+
 async function resetPrismaClient() {
   await globalForPrisma.prisma?.$disconnect().catch(() => undefined);
-  await globalForPgPool.wayWorkPgPool?.end().catch(() => undefined);
   globalForPrisma.prisma = undefined;
   globalForPgPool.wayWorkPgPool = undefined;
 }
@@ -153,7 +179,8 @@ function isRetryableConnectionError(error: unknown) {
     prismaCode === "P1017" ||
     message.includes("server has closed the connection") ||
     message.includes("connection terminated unexpectedly") ||
-    message.includes("socket hang up")
+    message.includes("socket hang up") ||
+    message.includes("cannot use a pool after calling end on the pool")
   );
 }
 
@@ -163,7 +190,7 @@ async function sleep(ms: number) {
 
 export async function withDbRetry<T>(
   operation: (client: PrismaClient) => Promise<T>,
-  maxAttempts = 2
+  maxAttempts = 6
 ) {
   let attempt = 1;
 
@@ -176,7 +203,7 @@ export async function withDbRetry<T>(
       }
 
       await resetPrismaClient();
-      await sleep(150 * attempt);
+      await sleep(500 * attempt);
       attempt += 1;
     }
   }
@@ -186,6 +213,14 @@ export const db = new Proxy({} as PrismaClient, {
   get(_target, prop, receiver) {
     const client = getPrismaClient();
     const value = Reflect.get(client, prop, receiver);
-    return typeof value === "function" ? value.bind(client) : value;
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+
+    if (typeof prop === "string" && prop in client && typeof value === "object" && value) {
+      return createRetryingModelProxy(prop, value);
+    }
+
+    return value;
   },
 }) as PrismaClient;

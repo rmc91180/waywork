@@ -25,6 +25,21 @@ export default async function HostBookingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost");
 
+  if (session.user.id === "demo-host") {
+    return (
+      <div className="waywork-shell py-8 md:py-10">
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="Bookings"
+          description="Demo bookings stay accessible without a live database connection."
+        />
+        <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+          No upcoming bookings in demo mode.
+        </div>
+      </div>
+    );
+  }
+
   const bookings = await db.booking
     .findMany({
       where: {

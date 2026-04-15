@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@/generated/prisma";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 
 interface AnalyticsRequestBody {
   event?: string;
@@ -30,6 +29,20 @@ function inferBookingIdFromPath(path: string | undefined) {
   return null;
 }
 
+function shouldPersistAnalytics() {
+  if (process.env.FORCE_ANALYTICS_PERSISTENCE === "1") return true;
+
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) return false;
+
+  try {
+    const parsed = new URL(databaseUrl);
+    return !(parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1");
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as AnalyticsRequestBody;
@@ -41,33 +54,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const eventName = body.event;
     const path = body.path || request.nextUrl.pathname;
-    const session = await auth();
     const listingId =
       getStringValue(body.properties?.listingId) || inferListingIdFromPath(path);
     const bookingId =
       getStringValue(body.properties?.bookingId) || inferBookingIdFromPath(path);
     const properties = (body.properties || {}) as Prisma.InputJsonValue;
 
-    await db.analyticsEvent
-      .create({
-        data: {
-          userId: session?.user?.id || null,
-          listingId,
-          bookingId,
-          event: body.event,
-          path,
-          search: body.search || "",
-          sessionId: body.sessionId || "unknown",
-          userAgent: request.headers.get("user-agent") || "unknown",
-          referrer: request.headers.get("referer") || null,
-          properties,
-          createdAt: body.timestamp ? new Date(body.timestamp) : undefined,
-        },
-      })
-      .catch((error) => {
+    if (shouldPersistAnalytics()) {
+      await withDbRetry((client) =>
+        client.analyticsEvent.create({
+          data: {
+            userId: null,
+            listingId,
+            bookingId,
+            event: eventName,
+            path,
+            search: body.search || "",
+            sessionId: body.sessionId || "unknown",
+            userAgent: request.headers.get("user-agent") || "unknown",
+            referrer: request.headers.get("referer") || null,
+            properties,
+            ...(body.timestamp ? { createdAt: new Date(body.timestamp) } : {}),
+          },
+        })
+      ).catch((error) => {
         console.error("[analytics] persistence error", error);
       });
+    }
 
     console.info("[analytics]", {
       event: body.event,
@@ -77,7 +92,7 @@ export async function POST(request: NextRequest) {
       timestamp: body.timestamp || new Date().toISOString(),
       properties: body.properties || {},
       userAgent: request.headers.get("user-agent") || "unknown",
-      userId: session?.user?.id || "anonymous",
+      userId: "anonymous",
       listingId,
       bookingId,
     });

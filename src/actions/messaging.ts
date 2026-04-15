@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db, withDbRetry } from "@/lib/db";
 import { createThreadSchema, sendMessageSchema } from "@/lib/validators";
 import { z } from "zod";
 
@@ -18,68 +18,87 @@ export async function createThread(
 
   const parsed = createThreadSchema.parse(data);
 
-  // Find the listing to get the host
-  const listing = await db.listing.findUnique({
-    where: { id: parsed.listingId },
-    select: { id: true, hostId: true },
-  });
-
-  if (!listing) {
-    throw new Error("Listing not found");
-  }
-
-  // Prevent host from messaging themselves
-  if (listing.hostId === session.user.id) {
-    throw new Error("You cannot send an inquiry to your own listing");
-  }
-
-  // Check if an existing thread already exists between this guest and host for this listing
-  const existingThread = await db.messageThread.findFirst({
-    where: {
-      listingId: parsed.listingId,
-      guestId: session.user.id,
-      hostId: listing.hostId,
-    },
-  });
-
-  if (existingThread) {
-    // Reuse existing thread: add the message to it
-    await db.message.create({
-      data: {
-        threadId: existingThread.id,
-        senderId: session.user.id,
-        content: parsed.message,
+  return withDbRetry(async (client) => {
+    await client.user.upsert({
+      where: { id: session.user.id },
+      update: {
+        email: session.user.email || `${session.user.id}@waywork.local`,
+        name: session.user.name || "Way Work User",
+        role: (session.user.role as "GUEST" | "HOST" | "ADMIN") || "GUEST",
+      },
+      create: {
+        id: session.user.id,
+        email: session.user.email || `${session.user.id}@waywork.local`,
+        name: session.user.name || "Way Work User",
+        role: (session.user.role as "GUEST" | "HOST" | "ADMIN") || "GUEST",
       },
     });
 
-    await db.messageThread.update({
-      where: { id: existingThread.id },
-      data: { lastMessageAt: new Date() },
+    // Find the listing to get the host
+    const listing = await client.listing.findFirst({
+      where: {
+        OR: [{ id: parsed.listingId }, { slug: parsed.listingId }],
+      },
+      select: { id: true, hostId: true },
     });
 
-    revalidatePath("/messages");
-    return { threadId: existingThread.id };
-  }
+    if (!listing) {
+      throw new Error("Listing not found");
+    }
 
-  // Create a new thread with the first message
-  const thread = await db.messageThread.create({
-    data: {
-      listingId: parsed.listingId,
-      guestId: session.user.id,
-      hostId: listing.hostId,
-      type: "INQUIRY",
-      lastMessageAt: new Date(),
-      messages: {
-        create: {
+    // Prevent host from messaging themselves
+    if (listing.hostId === session.user.id) {
+      throw new Error("You cannot send an inquiry to your own listing");
+    }
+
+    // Check if an existing thread already exists between this guest and host for this listing
+    const existingThread = await client.messageThread.findFirst({
+      where: {
+        listingId: listing.id,
+        guestId: session.user.id,
+        hostId: listing.hostId,
+      },
+    });
+
+    if (existingThread) {
+      // Reuse existing thread: add the message to it
+      await client.message.create({
+        data: {
+          threadId: existingThread.id,
           senderId: session.user.id,
           content: parsed.message,
         },
-      },
-    },
-  });
+      });
 
-  revalidatePath("/messages");
-  return { threadId: thread.id };
+      await client.messageThread.update({
+        where: { id: existingThread.id },
+        data: { lastMessageAt: new Date() },
+      });
+
+      revalidatePath("/messages");
+      return { threadId: existingThread.id };
+    }
+
+    // Create a new thread with the first message
+    const thread = await client.messageThread.create({
+      data: {
+        listingId: listing.id,
+        guestId: session.user.id,
+        hostId: listing.hostId,
+        type: "INQUIRY",
+        lastMessageAt: new Date(),
+        messages: {
+          create: {
+            senderId: session.user.id,
+            content: parsed.message,
+          },
+        },
+      },
+    });
+
+    revalidatePath("/messages");
+    return { threadId: thread.id };
+  });
 }
 
 // ============================================================================

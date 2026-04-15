@@ -115,7 +115,7 @@ const WORKSPACE_TYPES: WorkspaceType[] = [
   "HYBRID_SPACE",
 ];
 const POLICIES: CancellationPolicy[] = ["FLEXIBLE", "MODERATE", "STRICT"];
-const LIMEHOME_MADRID_SAMPLES: LimehomeSample[] = [
+export const LIMEHOME_MADRID_SAMPLES: LimehomeSample[] = [
   {
     title: "Limehome Madrid Doctor Fleming Team Apartment",
     slug: "limehome-madrid-doctor-fleming-team-apartment",

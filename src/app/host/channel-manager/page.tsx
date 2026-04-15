@@ -17,6 +17,21 @@ export default async function HostChannelManagerPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=%2Fhost%2Fchannel-manager");
 
+  if (session.user.id === "demo-host") {
+    return (
+      <div className="waywork-shell py-8 md:py-10">
+        <HostPageHeader
+          eyebrow="Host workspace"
+          title="PMS Setup"
+          description="Demo PMS setup stays available without the live sync backend."
+        />
+        <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+          Demo PMS controls are ready.
+        </div>
+      </div>
+    );
+  }
+
   const hostId = session.user.id;
 
   const [listings, siteMinderConnection, apaleoConnection] = await Promise.all([
