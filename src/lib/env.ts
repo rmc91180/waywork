@@ -42,6 +42,7 @@ const envSchema = z.object({
   APALEO_REDIRECT_URI: z.string().url().optional(),
   APALEO_WEBHOOK_SECRET: z.string().optional(),
   PMS_SYNC_CRON_SECRET: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
   SENTRY_TRACES_SAMPLE_RATE: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),

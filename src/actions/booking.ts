@@ -13,6 +13,12 @@ import { assertListingAccess, buildHostListingScope } from "@/lib/host-access";
 import { createBookingSchema } from "@/lib/validators";
 import { differenceInDays, addDays, startOfDay, isBefore } from "date-fns";
 import { z } from "zod";
+import {
+  sendBookingConfirmedGuest,
+  sendNewBookingHost,
+  sendBookingCancelled,
+} from "@/lib/email";
+import { formatCurrency } from "@/lib/stripe";
 
 // ============================================================================
 // HELPERS
@@ -282,7 +288,14 @@ export async function confirmBooking(
 ) {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: { listing: true },
+    include: {
+      listing: {
+        include: {
+          host: { select: { id: true, name: true, email: true } },
+        },
+      },
+      guest: { select: { id: true, name: true, email: true } },
+    },
   });
 
   if (!booking) throw new Error("Booking not found");
@@ -314,6 +327,41 @@ export async function confirmBooking(
   revalidatePath("/bookings");
   revalidatePath(`/host/bookings`);
   await scheduleMewsBookingSync(bookingId, "UPSERT");
+
+  // Send confirmation emails (non-blocking — don't fail the booking if email fails)
+  const currency = booking.listing.currency ?? "USD";
+  const totalFormatted = formatCurrency(booking.totalPrice, currency);
+  const payoutFormatted = formatCurrency(booking.hostPayout, currency);
+
+  if (booking.guest?.email) {
+    sendBookingConfirmedGuest({
+      guestName: booking.guest.name ?? "Guest",
+      guestEmail: booking.guest.email,
+      listingTitle: booking.listing.title,
+      listingCity: booking.listing.city,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      numberOfDays: booking.numberOfDays,
+      totalPrice: totalFormatted,
+      bookingId: booking.id,
+      cancellationPolicy: booking.listing.cancellationPolicy,
+    }).catch((err) => console.error("[Email] guest confirmation failed:", err));
+  }
+
+  if (booking.listing.host?.email) {
+    sendNewBookingHost({
+      hostName: booking.listing.host.name ?? "Host",
+      hostEmail: booking.listing.host.email,
+      guestName: booking.guest?.name ?? "A guest",
+      listingTitle: booking.listing.title,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      numberOfDays: booking.numberOfDays,
+      hostPayout: payoutFormatted,
+      bookingId: booking.id,
+      specialRequests: booking.specialRequests ?? undefined,
+    }).catch((err) => console.error("[Email] host new booking failed:", err));
+  }
 }
 
 // ============================================================================
@@ -326,7 +374,12 @@ export async function cancelBooking(bookingId: string) {
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: { listing: true },
+    include: {
+      listing: {
+        include: { host: { select: { name: true, email: true } } },
+      },
+      guest: { select: { name: true, email: true } },
+    },
   });
 
   if (!booking) throw new Error("Booking not found");
@@ -401,6 +454,35 @@ export async function cancelBooking(bookingId: string) {
   revalidatePath("/bookings");
   revalidatePath("/host/bookings");
   await scheduleMewsBookingSync(bookingId, "CANCEL");
+
+  // Send cancellation emails (non-blocking)
+  const currency = booking.listing.currency ?? "USD";
+  const refundFormatted = refundAmount > 0 ? formatCurrency(refundAmount, currency) : undefined;
+
+  const sharedCancelData = {
+    listingTitle: booking.listing.title,
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
+    cancelledBy: "guest" as const,
+    bookingId: booking.id,
+  };
+
+  if (booking.guest?.email) {
+    sendBookingCancelled({
+      ...sharedCancelData,
+      recipientName: booking.guest.name ?? "Guest",
+      recipientEmail: booking.guest.email,
+      refundAmount: refundFormatted,
+    }).catch((err) => console.error("[Email] guest cancellation failed:", err));
+  }
+
+  if (booking.listing.host?.email) {
+    sendBookingCancelled({
+      ...sharedCancelData,
+      recipientName: booking.listing.host.name ?? "Host",
+      recipientEmail: booking.listing.host.email,
+    }).catch((err) => console.error("[Email] host cancellation notice failed:", err));
+  }
 }
 
 // ============================================================================
@@ -413,7 +495,12 @@ export async function hostCancelBooking(bookingId: string) {
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: { listing: { select: { id: true } } },
+    include: {
+      listing: {
+        include: { host: { select: { name: true, email: true } } },
+      },
+      guest: { select: { name: true, email: true } },
+    },
   });
 
   if (!booking) throw new Error("Booking not found");
@@ -448,10 +535,38 @@ export async function hostCancelBooking(bookingId: string) {
   revalidatePath("/bookings");
   revalidatePath("/host/bookings");
   await scheduleMewsBookingSync(bookingId, "CANCEL");
-}
 
-// ============================================================================
-// 5. GET BOOKING DETAILS
+  // Send cancellation emails — host cancelled so guest gets full refund notice (non-blocking)
+  const currency = booking.listing.currency ?? "USD";
+  const refundFormatted = booking.totalPrice > 0
+    ? formatCurrency(booking.totalPrice, currency)
+    : undefined;
+
+  const sharedCancelData = {
+    listingTitle: booking.listing.title,
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
+    cancelledBy: "host" as const,
+    bookingId: booking.id,
+  };
+
+  if (booking.guest?.email) {
+    sendBookingCancelled({
+      ...sharedCancelData,
+      recipientName: booking.guest.name ?? "Guest",
+      recipientEmail: booking.guest.email,
+      refundAmount: refundFormatted,
+    }).catch((err) => console.error("[Email] host-cancel guest notice failed:", err));
+  }
+
+  if (booking.listing.host?.email) {
+    sendBookingCancelled({
+      ...sharedCancelData,
+      recipientName: booking.listing.host.name ?? "Host",
+      recipientEmail: booking.listing.host.email,
+    }).catch((err) => console.error("[Email] host-cancel host copy failed:", err));
+  }
+}
 // ============================================================================
 
 export async function getBookingDetails(bookingId: string) {

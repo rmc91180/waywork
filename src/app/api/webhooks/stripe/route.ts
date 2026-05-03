@@ -3,7 +3,58 @@ import { getStripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { syncBookingToApaleo } from "@/lib/pms/apaleo-booking";
 import { enqueueBookingSyncJob, processPendingMewsSyncJobs } from "@/lib/pms/mews-sync-queue";
+import { sendBookingConfirmedGuest, sendNewBookingHost } from "@/lib/email";
+import { formatCurrency } from "@/lib/stripe";
 import type Stripe from "stripe";
+
+async function sendBookingConfirmationEmails(bookingId: string) {
+  try {
+    const booking = await db.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        listing: {
+          include: { host: { select: { name: true, email: true } } },
+        },
+        guest: { select: { name: true, email: true } },
+      },
+    });
+    if (!booking) return;
+
+    const currency = booking.listing.currency ?? "USD";
+
+    if (booking.guest?.email) {
+      sendBookingConfirmedGuest({
+        guestName: booking.guest.name ?? "Guest",
+        guestEmail: booking.guest.email,
+        listingTitle: booking.listing.title,
+        listingCity: booking.listing.city,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        numberOfDays: booking.numberOfDays,
+        totalPrice: formatCurrency(booking.totalPrice, currency),
+        bookingId: booking.id,
+        cancellationPolicy: booking.listing.cancellationPolicy,
+      }).catch((err) => console.error("[Webhook/Email] guest confirmation failed:", err));
+    }
+
+    if (booking.listing.host?.email) {
+      sendNewBookingHost({
+        hostName: booking.listing.host.name ?? "Host",
+        hostEmail: booking.listing.host.email,
+        guestName: booking.guest?.name ?? "A guest",
+        listingTitle: booking.listing.title,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        numberOfDays: booking.numberOfDays,
+        hostPayout: formatCurrency(booking.hostPayout, currency),
+        bookingId: booking.id,
+        specialRequests: booking.specialRequests ?? undefined,
+      }).catch((err) => console.error("[Webhook/Email] host new booking failed:", err));
+    }
+  } catch (err) {
+    console.error("[Webhook/Email] failed to load booking for emails:", err);
+  }
+}
 
 async function releaseBookingInventory(
   bookingId: string,
@@ -195,6 +246,7 @@ export async function POST(request: NextRequest) {
             });
             await syncStripeSettlementMetadata(stripe, bookingId, paymentIntentId);
             console.log(`Booking ${bookingId} confirmed and captured after apaleo sync`);
+            void sendBookingConfirmationEmails(bookingId);
           } catch (captureError) {
             console.error("Stripe capture failed after apaleo sync:", captureError);
             await syncBookingToApaleo(bookingId, "CANCEL");
@@ -219,6 +271,7 @@ export async function POST(request: NextRequest) {
 
         await enqueueBookingSyncJob(bookingId, "UPSERT");
         void processPendingMewsSyncJobs(5);
+        void sendBookingConfirmationEmails(bookingId);
         console.log(`Booking ${bookingId} confirmed via Stripe`);
         break;
       }
