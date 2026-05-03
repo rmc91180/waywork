@@ -211,6 +211,27 @@ export default async function SpaceDetailPage({ params }: Props) {
   }
 
   const { listing, relatedListings, sameBuildingListings, portfolioTeamStayListings } = pageData;
+
+  // Fetch blocked dates for this listing (next 12 months) to show in the booking calendar
+  const blockedDates: string[] = await (async () => {
+    try {
+      const { db } = await import("@/lib/db");
+      const today = new Date();
+      const oneYearOut = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+      const rows = await db.blockedDate.findMany({
+        where: {
+          listingId: listing.id,
+          date: { gte: today, lte: oneYearOut },
+        },
+        select: { date: true },
+        orderBy: { date: "asc" },
+      });
+      return rows.map((r: { date: Date }) => r.date.toISOString().split("T")[0]);
+    } catch {
+      return [];
+    }
+  })();
+
   const teamStayListings =
     sameBuildingListings.length > 0 ? sameBuildingListings : portfolioTeamStayListings;
   const teamStayMode =
@@ -806,6 +827,8 @@ export default async function SpaceDetailPage({ params }: Props) {
             cleaningFee={listing.cleaningFee}
             maxGuests={listing.maxGuests}
             cancellationPolicy={listing.cancellationPolicy}
+            currency={listing.currency}
+            blockedDates={blockedDates}
           />
           <InquiryButton
             listingId={listing.id}
