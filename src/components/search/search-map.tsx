@@ -6,6 +6,7 @@ import L from "leaflet";
 import Link from "next/link";
 import "leaflet/dist/leaflet.css";
 import { getWorkScoreColor } from "@/lib/work-score";
+import { formatCurrency } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
 
 export interface MapListing {
@@ -14,6 +15,7 @@ export interface MapListing {
   lat: number;
   lng: number;
   pricePerDay: number;
+  currency?: string;
   workScore: number;
   slug: string;
   city: string;
@@ -25,8 +27,8 @@ interface SearchMapProps {
   listings: MapListing[];
 }
 
-function createPriceIcon(pricePerDay: number): L.DivIcon {
-  const label = `$${Math.round(pricePerDay / 100)}`;
+function createPriceIcon(pricePerDay: number, currency = "USD"): L.DivIcon {
+  const label = formatCurrency(pricePerDay, currency);
   return L.divIcon({
     className: "waywork-map-marker",
     html: `<div style="
@@ -102,7 +104,7 @@ function SearchMapInner({ listings }: SearchMapProps) {
         <Marker
           key={listing.id}
           position={[listing.lat, listing.lng]}
-          icon={createPriceIcon(listing.pricePerDay)}
+          icon={createPriceIcon(listing.pricePerDay, listing.currency)}
         >
           <Popup>
             <div className="min-w-[220px] space-y-2">
@@ -120,7 +122,7 @@ function SearchMapInner({ listings }: SearchMapProps) {
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">
-                  ${Math.round(listing.pricePerDay / 100)}/day
+                  {formatCurrency(listing.pricePerDay, listing.currency ?? "USD")}/day
                 </span>
                 <span className={cn("text-xs font-bold", getWorkScoreColor(listing.workScore))}>
                   Score {listing.workScore}

@@ -7,6 +7,7 @@ import { BED_SIZE_OPTIONS, WORKSPACE_TYPES } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
 import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
 import { getWorkScoreColor } from "@/lib/work-score";
+import { formatCurrency } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
 import type { SearchUiVariant } from "@/lib/experiments";
 
@@ -21,6 +22,7 @@ export interface ListingCardData {
   state: string | null;
   country: string;
   pricePerDay: number;
+  currency?: string;
   cleaningFee: number;
   maxGuests: number;
   bedroomCount: number;
@@ -140,7 +142,7 @@ export function ListingCard({
               </p>
             </div>
             <div className="rounded-md bg-black/45 px-2 py-1 text-right backdrop-blur-sm">
-              <p className="text-sm font-semibold">${(listing.pricePerDay / 100).toFixed(0)}/day</p>
+              <p className="text-sm font-semibold">{formatCurrency(listing.pricePerDay, listing.currency ?? "USD")}/day</p>
             </div>
           </div>
         </div>

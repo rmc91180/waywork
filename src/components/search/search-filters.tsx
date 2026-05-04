@@ -464,8 +464,8 @@ function SearchFiltersFormContent({
           </div>
           {facets.price.max > 0 && (
             <p className="text-xs text-slate-500">
-              Typical range: ${Math.round(facets.price.min / 100)} to $
-              {Math.round(facets.price.max / 100)}
+              Typical range: {Math.round(facets.price.min / 100)} to{" "}
+              {Math.round(facets.price.max / 100)} per day
             </p>
           )}
         </section>

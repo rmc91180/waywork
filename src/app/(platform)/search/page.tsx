@@ -57,6 +57,7 @@ function toListingCardData(
     state: listing.state,
     country: listing.country,
     pricePerDay: listing.pricePerDay,
+    currency: listing.currency ?? "USD",
     cleaningFee: listing.cleaningFee,
     maxGuests: listing.maxGuests,
     bedroomCount: listing.bedroomCount,
@@ -144,7 +145,7 @@ function buildQuickRefinementLinks(filters: SearchFilterState, facets: SearchFac
   }
 
   if (!filters.maxPrice && facets.price.max >= 15_000) {
-    pushLink("Under $150", {
+    pushLink("Under 150/day", {
       ...filters,
       maxPrice: "150",
       sortBy: "price_asc",

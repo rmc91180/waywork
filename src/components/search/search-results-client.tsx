@@ -38,6 +38,7 @@ function toMapListings(listings: ListingCardData[]) {
     lat: listing.lat ?? 0,
     lng: listing.lng ?? 0,
     pricePerDay: listing.pricePerDay,
+    currency: listing.currency ?? "USD",
     workScore: listing.workScore,
     slug: listing.slug,
     city: listing.city,
