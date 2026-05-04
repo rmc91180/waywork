@@ -491,36 +491,52 @@ export default async function SpaceDetailPage({ params }: Props) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
-                { label: "Connectivity", score: workScore.connectivity, max: 30 },
-                { label: "Desk Setup", score: workScore.deskSetup, max: 20 },
-                { label: "Meeting Space", score: workScore.meetingSpace, max: 15 },
-                { label: "Quiet", score: workScore.quietEnvironment, max: 15 },
-                { label: "Ergonomics", score: workScore.ergonomics, max: 10 },
-                { label: "AV Ready", score: workScore.avReadiness, max: 10 },
+                { label: "Connectivity", score: workScore.connectivity, max: 30, tip: "Internet speed, network type, and backup connection" },
+                { label: "Desk Setup", score: workScore.deskSetup, max: 20, tip: "Dedicated desk, monitor, and standing desk availability" },
+                { label: "Meeting Space", score: workScore.meetingSpace, max: 15, tip: "Conference table, whiteboard, and collaboration area" },
+                { label: "Quiet", score: workScore.quietEnvironment, max: 15, tip: "Private rooms and low-noise environment for focus work" },
+                { label: "Ergonomics", score: workScore.ergonomics, max: 10, tip: "Ergonomic chair, adjustable desk, and proper lighting" },
+                { label: "AV Ready", score: workScore.avReadiness, max: 10, tip: "Webcam, speaker, external monitor, and presentation screen" },
               ].map((item) => (
-                <div key={item.label} className="text-center">
-                  <div className="text-xs text-gray-500">{item.label}</div>
-                  <div className="mt-1">
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full",
-                          item.score / item.max >= 0.7
-                            ? "bg-green-500"
-                            : item.score / item.max >= 0.4
-                              ? "bg-yellow-500"
-                              : "bg-orange-500"
-                        )}
-                        style={{
-                          width: `${(item.score / item.max) * 100}%`,
-                        }}
-                      />
+                <Tooltip key={item.label}>
+                  <TooltipTrigger asChild>
+                    <div className="text-center cursor-help">
+                      <div className="text-xs text-gray-500">{item.label}</div>
+                      {item.score === 0 ? (
+                        <div className="mt-1">
+                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full w-0" />
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5 italic">Not assessed</div>
+                        </div>
+                      ) : (
+                        <div className="mt-1">
+                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={cn(
+                                "h-full rounded-full",
+                                item.score / item.max >= 0.7
+                                  ? "bg-green-500"
+                                  : item.score / item.max >= 0.4
+                                    ? "bg-yellow-500"
+                                    : "bg-orange-500"
+                              )}
+                              style={{ width: `${(item.score / item.max) * 100}%` }}
+                            />
+                          </div>
+                          <div className="text-xs font-medium mt-0.5">
+                            {item.score}/{item.max}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs font-medium mt-0.5">
-                      {item.score}/{item.max}
-                    </div>
-                  </div>
-                </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[180px] text-center text-xs">
+                    <p className="font-semibold mb-0.5">{item.label} (/{item.max} pts)</p>
+                    <p>{item.tip}</p>
+                    {item.score === 0 && <p className="mt-1 text-slate-400 italic">Host hasn&apos;t specified these amenities yet.</p>}
+                  </TooltipContent>
+                </Tooltip>
               ))}
             </div>
           </div>

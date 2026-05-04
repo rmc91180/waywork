@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Instagram, Linkedin, Send, Twitter } from "lucide-react";
+import { Instagram, Linkedin, Twitter } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
+import { NewsletterForm } from "@/components/shared/newsletter-form";
 
 export function Footer() {
   return (
@@ -90,27 +91,7 @@ export function Footer() {
             <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
               Get Workation Deals
             </h4>
-            <form action="/register" className="space-y-2">
-              <label htmlFor="workation-email" className="sr-only">
-                Email address
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="workation-email"
-                  type="email"
-                  required
-                  placeholder="you@company.com"
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] transition hover:brightness-95"
-                  aria-label="Submit email"
-                >
-                  <Send className="size-4" />
-                </button>
-              </div>
-            </form>
+            <NewsletterForm />
             <div className="mt-4 flex items-center gap-2">
               <Link
                 href="https://x.com"
