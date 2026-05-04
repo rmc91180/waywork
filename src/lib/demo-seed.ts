@@ -149,6 +149,355 @@ export const LIMEHOME_MADRID_SAMPLES: LimehomeSample[] = [
       backupType: "5G backup router",
       verified: true,
     },
+    // Score target ~91: connectivity 30 + desk 20 + meeting 15 + quiet 15 + ergonomics 8 + av 3
+    amenities: [
+      { category: "DESK", name: "Dedicated desk", quantity: 2 },
+      { category: "DESK", name: "Standing desk option", quantity: 1 },
+      { category: "MONITOR", name: "External monitor 27\"", quantity: 1 },
+      { category: "MEETING", name: "Conference table for team working sessions", quantity: 1 },
+      { category: "MEETING", name: "Whiteboard", quantity: 1 },
+      { category: "CONNECTIVITY", name: "High-speed WiFi", quantity: 1 },
+      { category: "QUIET", name: "Quiet bedrooms", quantity: 3 },
+      { category: "ERGONOMICS", name: "Ergonomic chair", quantity: 2 },
+      { category: "ERGONOMICS", name: "Adjustable desk lamp", quantity: 2 },
+      { category: "AV", name: "Smart TV for presentations", quantity: 1 },
+      { category: "KITCHEN", name: "Full kitchen", quantity: 1 },
+    ],
+    activities: [
+      {
+        title: "Bernabeu evening walk",
+        category: "Culture",
+        description: "Easy neighborhood reset after work near Chamartin.",
+        durationMinutes: 70,
+        distanceKm: 1.4,
+        indoor: false,
+      },
+      {
+        title: "Team tapas dinner",
+        category: "Food",
+        description: "Casual group dinner option within a short taxi ride.",
+        durationMinutes: 100,
+        distanceKm: 2.1,
+        indoor: true,
+      },
+    ],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Doctor Fleming Team Apartment workspace",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Doctor Fleming Team Apartment lounge",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Doctor Fleming Team Apartment kitchen",
+      },
+    ],
+  },
+  {
+    title: "Limehome Madrid Plaza de Espana Residence",
+    slug: "limehome-madrid-plaza-de-espana-residence",
+    description:
+      "Central Madrid apartment with a calm residential feel, strong connectivity, and enough room for a pair or compact project team.",
+    workspaceType: "HOME_OFFICE",
+    address: "Calle de Leganitos 32",
+    city: "Madrid",
+    state: "Community of Madrid",
+    country: "Spain",
+    postalCode: "28013",
+    lat: 40.4237,
+    lng: -3.7122,
+    maxGuests: 3,
+    bedroomCount: 1,
+    bedSize: "QUEEN",
+    propertySizeSqm: 58,
+    pricePerDay: 17200,
+    cleaningFee: 3200,
+    currency: "EUR",
+    cancellationPolicy: "FLEXIBLE",
+    pmsExternalPropertyId: "limehome-madrid-centro",
+    pmsExternalListingId: "limehome-madrid-plaza-de-espana-residence",
+    pmsExternalUnitGroupId: "ug-plaza-de-espana-residence",
+    pmsExternalRatePlanId: "rp-plaza-de-espana-flex",
+    connectivity: {
+      declaredDownloadMbps: 310,
+      declaredUploadMbps: 90,
+      networkType: "WIFI",
+      hasBackupConnection: false,
+      verified: true,
+    },
+    // Score target ~68: connectivity 30 + desk 10 + meeting 0 + quiet 15 + ergonomics 8 + av 5
+    amenities: [
+      { category: "DESK", name: "Window-side desk", quantity: 1 },
+      { category: "ERGONOMICS", name: "Ergonomic chair", quantity: 1 },
+      { category: "ERGONOMICS", name: "Adjustable task light", quantity: 1 },
+      { category: "CONNECTIVITY", name: "High-speed WiFi", quantity: 1 },
+      { category: "QUIET", name: "Quiet sleeping area", quantity: 1 },
+      { category: "AV", name: "Webcam for video calls", quantity: 1 },
+      { category: "KITCHEN", name: "Kitchenette", quantity: 1 },
+    ],
+    activities: [
+      {
+        title: "Plaza de Espana sunset walk",
+        category: "Nature",
+        description: "Quick decompression loop after a focused work block.",
+        durationMinutes: 45,
+        distanceKm: 0.6,
+        indoor: false,
+      },
+    ],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Plaza de Espana Residence workspace",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Plaza de Espana Residence lounge",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Plaza de Espana Residence bedroom",
+      },
+    ],
+  },
+  {
+    title: "Limehome Madrid Delicias Offsite Flat",
+    slug: "limehome-madrid-delicias-offsite-flat",
+    description:
+      "Bright apartment for small offsite stays with a large table, kitchen access, and strong internet near Atocha and Delicias.",
+    workspaceType: "HOME_OFFICE",
+    address: "Paseo de las Delicias 82",
+    city: "Madrid",
+    state: "Community of Madrid",
+    country: "Spain",
+    postalCode: "28045",
+    lat: 40.3988,
+    lng: -3.6937,
+    maxGuests: 5,
+    bedroomCount: 2,
+    bedSize: "QUEEN",
+    propertySizeSqm: 84,
+    pricePerDay: 18800,
+    cleaningFee: 3900,
+    currency: "EUR",
+    cancellationPolicy: "MODERATE",
+    pmsExternalPropertyId: "limehome-madrid-centro",
+    pmsExternalListingId: "limehome-madrid-delicias-offsite-flat",
+    pmsExternalUnitGroupId: "ug-delicias-offsite-flat",
+    pmsExternalRatePlanId: "rp-delicias-standard",
+    connectivity: {
+      declaredDownloadMbps: 360,
+      declaredUploadMbps: 110,
+      networkType: "BOTH",
+      hasBackupConnection: true,
+      backupType: "Secondary ISP",
+      verified: true,
+    },
+    // Score target ~83: connectivity 30 + desk 15 + meeting 11 + quiet 15 + ergonomics 5 + av 7
+    amenities: [
+      { category: "DESK", name: "Dedicated desk", quantity: 2 },
+      { category: "DESK", name: "Standing desk option", quantity: 1 },
+      { category: "MEETING", name: "Large table for workshops", quantity: 1 },
+      { category: "CONNECTIVITY", name: "High-speed WiFi", quantity: 1 },
+      { category: "QUIET", name: "Separate quiet bedrooms", quantity: 2 },
+      { category: "ERGONOMICS", name: "Ergonomic chair", quantity: 1 },
+      { category: "AV", name: "Webcam for video calls", quantity: 1 },
+      { category: "AV", name: "Bluetooth speaker", quantity: 1 },
+      { category: "KITCHEN", name: "Full kitchen", quantity: 1 },
+      { category: "OTHER", name: "Self check-in", quantity: 1 },
+    ],
+    activities: [
+      {
+        title: "Matadero Madrid visit",
+        category: "Culture",
+        description: "Creative venue for after-work downtime nearby.",
+        durationMinutes: 80,
+        distanceKm: 1.2,
+        indoor: true,
+      },
+    ],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Delicias Offsite Flat living area",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Delicias Offsite Flat workspace",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Delicias Offsite Flat bedroom",
+      },
+    ],
+  },
+  {
+    title: "Limehome Madrid Quevedo Work Loft",
+    slug: "limehome-madrid-quevedo-work-loft",
+    description:
+      "Quiet loft-style stay in Chamberi with a focused desk setup and enough flexibility for a productive work trip for two.",
+    workspaceType: "PRIVATE_OFFICE",
+    address: "Calle de Bravo Murillo 14",
+    city: "Madrid",
+    state: "Community of Madrid",
+    country: "Spain",
+    postalCode: "28015",
+    lat: 40.4335,
+    lng: -3.7046,
+    maxGuests: 2,
+    bedroomCount: 1,
+    bedSize: "DOUBLE",
+    propertySizeSqm: 41,
+    pricePerDay: 16500,
+    cleaningFee: 2800,
+    currency: "EUR",
+    cancellationPolicy: "FLEXIBLE",
+    pmsExternalPropertyId: "limehome-madrid-chamberi",
+    pmsExternalListingId: "limehome-madrid-quevedo-work-loft",
+    pmsExternalUnitGroupId: "ug-quevedo-work-loft",
+    pmsExternalRatePlanId: "rp-quevedo-flex",
+    connectivity: {
+      declaredDownloadMbps: 330,
+      declaredUploadMbps: 95,
+      networkType: "WIFI",
+      hasBackupConnection: false,
+      verified: true,
+    },
+    // Score target ~58: connectivity 30 + desk 10 + meeting 0 + quiet 15 + ergonomics 3 + av 0
+    amenities: [
+      { category: "DESK", name: "Dedicated desk", quantity: 1 },
+      { category: "ERGONOMICS", name: "Ergonomic chair", quantity: 1 },
+      { category: "CONNECTIVITY", name: "High-speed WiFi", quantity: 1 },
+      { category: "QUIET", name: "Private room", quantity: 1 },
+      { category: "KITCHEN", name: "Kitchenette", quantity: 1 },
+    ],
+    activities: [
+      {
+        title: "Chamberi coffee break route",
+        category: "Food",
+        description: "A short loop of neighborhood cafes for meetings and resets.",
+        durationMinutes: 60,
+        distanceKm: 0.9,
+        indoor: true,
+      },
+    ],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Quevedo Work Loft desk setup",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Quevedo Work Loft bedroom",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Quevedo Work Loft kitchen",
+      },
+    ],
+  },
+  {
+    title: "Limehome Madrid Julian Camarillo Studio",
+    slug: "limehome-madrid-julian-camarillo-studio",
+    description:
+      "Compact east-Madrid studio for solo work trips, with a strong desk setup, kitchen access, and reliable internet.",
+    workspaceType: "STUDIO",
+    address: "Calle de Julian Camarillo 19",
+    city: "Madrid",
+    state: "Community of Madrid",
+    country: "Spain",
+    postalCode: "28037",
+    lat: 40.4349,
+    lng: -3.6324,
+    maxGuests: 2,
+    bedroomCount: 1,
+    bedSize: "DOUBLE",
+    propertySizeSqm: 34,
+    pricePerDay: 14200,
+    cleaningFee: 2400,
+    currency: "EUR",
+    cancellationPolicy: "FLEXIBLE",
+    pmsExternalPropertyId: "limehome-madrid-east",
+    pmsExternalListingId: "limehome-madrid-julian-camarillo-studio",
+    pmsExternalUnitGroupId: "ug-julian-camarillo-studio",
+    pmsExternalRatePlanId: "rp-julian-camarillo-flex",
+    connectivity: {
+      declaredDownloadMbps: 290,
+      declaredUploadMbps: 80,
+      networkType: "WIFI",
+      hasBackupConnection: false,
+      verified: false,
+    },
+    // Score target ~45: connectivity 22 + desk 10 + meeting 0 + quiet 15 + ergonomics 0 + av 0
+    // (290 Mbps = 22pts, no ergonomic chair, no AV)
+    amenities: [
+      { category: "DESK", name: "Dedicated desk", quantity: 1 },
+      { category: "CONNECTIVITY", name: "High-speed WiFi", quantity: 1 },
+      { category: "QUIET", name: "Private room", quantity: 1 },
+      { category: "KITCHEN", name: "Kitchenette", quantity: 1 },
+    ],
+    activities: [
+      {
+        title: "Parque Quinta de los Molinos walk",
+        category: "Nature",
+        description: "Simple outdoor reset close to the apartment.",
+        durationMinutes: 50,
+        distanceKm: 1.3,
+        indoor: false,
+      },
+    ],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Julian Camarillo Studio overview",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Julian Camarillo Studio workspace",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1486304873000-235643847519?auto=format&fit=crop&w=1200&q=80",
+        alt: "Limehome Madrid Julian Camarillo Studio kitchen",
+      },
+    ],
+  },
+];
+  {
+    title: "Limehome Madrid Doctor Fleming Team Apartment",
+    slug: "limehome-madrid-doctor-fleming-team-apartment",
+    description:
+      "Large Chamartin apartment set up for focused work trips and small team offsites, with strong WiFi, a dining-work table, and quiet bedrooms.",
+    workspaceType: "HYBRID_SPACE",
+    address: "Calle del Doctor Fleming 37",
+    city: "Madrid",
+    state: "Community of Madrid",
+    country: "Spain",
+    postalCode: "28036",
+    lat: 40.4586,
+    lng: -3.6863,
+    maxGuests: 6,
+    bedroomCount: 3,
+    bedSize: "QUEEN",
+    propertySizeSqm: 108,
+    pricePerDay: 21500,
+    cleaningFee: 4500,
+    currency: "EUR",
+    cancellationPolicy: "MODERATE",
+    pmsExternalPropertyId: "limehome-madrid-chamartin",
+    pmsExternalListingId: "limehome-madrid-doctor-fleming-team-apartment",
+    pmsExternalUnitGroupId: "ug-doctor-fleming-team-apartment",
+    pmsExternalRatePlanId: "rp-doctor-fleming-flex",
+    connectivity: {
+      declaredDownloadMbps: 420,
+      declaredUploadMbps: 120,
+      networkType: "BOTH",
+      hasBackupConnection: true,
+      backupType: "5G backup router",
+      verified: true,
+    },
     amenities: [
       { category: "DESK", name: "Dedicated desk", quantity: 2 },
       { category: "MEETING", name: "Dining table for team working sessions", quantity: 1 },
@@ -467,11 +816,103 @@ function slugify(value: string) {
     .slice(0, 80);
 }
 
-function buildImages(seed: string, title: string) {
+// Curated Unsplash photo pools per workspace type — 12 per pool so index variation
+// gives different photos across listings without repeating.
+const WORKSPACE_PHOTO_POOLS: Record<string, string[]> = {
+  HOME_OFFICE: [
+    "photo-1593642632559-0c6d3fc62b89", // bright home office corner
+    "photo-1527192491265-7e15c55b1ed2", // desk by window sunlight
+    "photo-1524758631624-e2822e304c36", // minimal white desk setup
+    "photo-1585771724684-38269d6639fd", // modern home workspace
+    "photo-1499750310107-5fef28a66643", // laptop on clean desk
+    "photo-1432888498266-38ffec3eaf0a", // notebook and coffee desk
+    "photo-1616587226960-4a03badbe8bf", // cozy home office natural light
+    "photo-1505330622279-bf7d7fc918f4", // wooden desk warm light
+    "photo-1547393947-1849a9bc0e7e", // home office plant corner
+    "photo-1610465299996-30f240ac2b1c", // laptop and notepad bright
+    "photo-1486312338219-ce68d2c6f44d", // home desk setup wide
+    "photo-1497366858526-0766cadbe8fa", // clean minimal workspace
+  ],
+  PRIVATE_OFFICE: [
+    "photo-1497366216548-37526070297c", // corporate glass office
+    "photo-1497366811353-6870744d04b2", // clean open office space
+    "photo-1504384308090-c894fdcc538d", // bright private office
+    "photo-1568992687947-868a62a9f521", // modern office interior
+    "photo-1497215728101-856f4ea42174", // private workspace setup
+    "photo-1462826303086-329426d1aef5", // small conference room
+    "photo-1541746972996-4e0b0f43e02a", // desk in private room
+    "photo-1434626881859-194d67b2b86f", // laptop focused workspace
+    "photo-1423666639041-f56000c27a9a", // office whiteboard wall
+    "photo-1522202176988-66273c2fd55f", // collaborative office space
+    "photo-1531482615713-2afd69097998", // modern office lounge
+    "photo-1513128034602-7814ccaddd4e", // sleek private desk
+  ],
+  MEETING_ROOM: [
+    "photo-1524178232363-1fb2b075b655", // conference table setup
+    "photo-1553877522-43269d4ea984", // modern boardroom
+    "photo-1582719471384-894fbb16e074", // whiteboard meeting room
+    "photo-1515187029135-18ee286d815b", // team around table
+    "photo-1517502884422-41eaead166d4", // glass-walled meeting room
+    "photo-1491438590914-bc09fcaaf77a", // collaborative session
+    "photo-1542744173-8e7e53415bb0", // digital nomad meeting
+    "photo-1537151608828-ea2b11777ee8", // small team workspace
+    "photo-1560250097-0b93528c311a", // video call setup
+    "photo-1546074177-ffdda98d214f", // modern cowork meeting
+    "photo-1583321500900-82807e458f3c", // bright conference space
+    "photo-1559136555-9303baea8ebd", // startup meeting room
+  ],
+  HYBRID_SPACE: [
+    "photo-1556909114-f6e7ad7d3136", // hybrid living-work space
+    "photo-1600607687920-4e2a09cf159d", // open plan apartment work
+    "photo-1560448204-603b3fc33ddc", // living room work corner
+    "photo-1555041469-a586c61ea9bc", // sofa with work desk area
+    "photo-1600566752355-35792bedcfea", // bright hybrid flat
+    "photo-1584622650111-993a426fbf0a", // apartment work nook
+    "photo-1565182999561-18d7dc61c393", // hybrid workspace kitchen
+    "photo-1617806118233-18e1de247200", // loft work lounge mix
+    "photo-1602872030490-4a484a7b3ba6", // scandinavian home office
+    "photo-1600210492486-724fe5c67fb0", // modern flat desk setup
+    "photo-1615874959474-d609969a20ed", // apartment workspace light
+    "photo-1598928506311-c55ded91a20c", // cozy work corner
+  ],
+  STUDIO: [
+    "photo-1536376072261-38c75010e6c9", // studio apartment overview
+    "photo-1505691938895-1758d7feb511", // compact studio workspace
+    "photo-1522771739844-6a9f6d5f14af", // studio bedroom/office
+    "photo-1583847268964-b28dc8f51f92", // studio efficient layout
+    "photo-1574362848149-11496d93a7c7", // open studio creative
+    "photo-1598928506311-c55ded91a20c", // studio desk corner
+    "photo-1550957565-b9210aced1c9", // minimalist studio
+    "photo-1493663284031-b7e3aefcae8e", // bright studio interior
+    "photo-1587815073078-f636169821e3", // small studio flat
+    "photo-1587993444290-5dd8e0e30b46", // studio work nook
+    "photo-1507652313519-d4e9174996dd", // neat studio apartment
+    "photo-1486304873000-235643847519", // studio kitchen workspace
+  ],
+};
+
+const LOUNGE_PHOTOS = [
+  "photo-1555041469-a586c61ea9bc",
+  "photo-1555041469-a586c61ea9bc",
+  "photo-1493809842364-78817add7ffb",
+  "photo-1484101403633-562f891dc89a",
+  "photo-1556228453-efd6c1ff04f6",
+  "photo-1560185007-c5ca9d2c014d",
+  "photo-1598928506311-c55ded91a20c",
+  "photo-1555985900-8cfe0ea9f283",
+];
+
+function buildImages(seed: string, title: string, workspaceType?: string) {
+  // Use a numeric hash of the slug for deterministic but varied pool indexing
+  const hashCode = seed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const pool = WORKSPACE_PHOTO_POOLS[workspaceType ?? "HOME_OFFICE"] ?? WORKSPACE_PHOTO_POOLS.HOME_OFFICE;
+  const primary = pool[hashCode % pool.length];
+  const secondary = pool[(hashCode + 3) % pool.length];
+  const lounge = LOUNGE_PHOTOS[(hashCode + 1) % LOUNGE_PHOTOS.length];
   return [
-    { url: `https://picsum.photos/seed/${seed}-1/1600/1066`, alt: `${title} - workspace` },
-    { url: `https://picsum.photos/seed/${seed}-2/1600/1066`, alt: `${title} - lounge` },
-    { url: `https://picsum.photos/seed/${seed}-3/1600/1066`, alt: `${title} - amenities` },
+    { url: `https://images.unsplash.com/${primary}?auto=format&fit=crop&w=1200&q=80`, alt: `${title} - workspace` },
+    { url: `https://images.unsplash.com/${secondary}?auto=format&fit=crop&w=1200&q=80`, alt: `${title} - details` },
+    { url: `https://images.unsplash.com/${lounge}?auto=format&fit=crop&w=1200&q=80`, alt: `${title} - lounge` },
   ];
 }
 
@@ -622,7 +1063,7 @@ function generateListing(index: number, hub: Hub, hostId: string) {
     amenities,
     connectivity,
     activities,
-    images: buildImages(slug, title),
+    images: buildImages(slug, title, workspaceType),
   };
 }
 
