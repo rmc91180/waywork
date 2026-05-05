@@ -122,10 +122,10 @@ export function WorkScorePreview({ amenities, connectivity, currentStep = 0 }: W
   return (
     <div className="sticky top-24 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-[var(--ww-primary-blue)] px-5 py-4">
+      <div className="bg-[var(--ww-ink)] px-5 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-200">
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-100/70">
               Work Score preview
             </p>
             <div className="mt-1 flex items-baseline gap-1.5">

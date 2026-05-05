@@ -103,8 +103,8 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-md border-slate-200 bg-white/95 shadow-lg">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-[var(--ww-primary-blue)]">Welcome back</CardTitle>
-        <CardDescription className="text-[var(--ww-text-primary)]">
+        <CardTitle className="text-2xl text-[var(--ww-ink)]">Welcome back</CardTitle>
+        <CardDescription className="text-[var(--ww-celadon)]">
           Sign in to continue your next work wonder.
         </CardDescription>
       </CardHeader>
@@ -158,7 +158,7 @@ export default function LoginPage() {
               Preview Mode — Try WayWork with a demo account
             </p>
             <Button
-              className="w-full bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+              className="w-full bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]"
               onClick={handleDemoLogin}
               disabled={loading}
             >
@@ -206,7 +206,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link
             href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-            className="text-[var(--ww-primary-blue)] hover:underline"
+            className="text-[var(--ww-ink)] hover:underline"
           >
             Sign up
           </Link>

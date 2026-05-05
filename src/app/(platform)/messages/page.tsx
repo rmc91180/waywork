@@ -76,7 +76,7 @@ export default async function MessagesPage() {
 
       {threadsWithMeta.length === 0 ? (
         <div className="waywork-section py-16 text-center">
-          <MessageCircleMore className="mx-auto mb-4 size-10 text-[var(--ww-secondary-green)]" />
+          <MessageCircleMore className="mx-auto mb-4 size-10 text-[var(--ww-celadon)]" />
           <p className="mb-2 text-slate-600">No messages yet</p>
           <p className="text-sm text-slate-500">
             When you message a host or receive an inquiry, it will appear here.

@@ -99,7 +99,7 @@ export default async function HostListingsPage() {
         title="Listings"
         description="Keep your inventory clean, current, and easy to manage."
         actions={
-          <Button className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]" asChild>
+          <Button className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]" asChild>
             <Link href="/host/listings/new">
               <Plus className="size-4" />
               New Listing

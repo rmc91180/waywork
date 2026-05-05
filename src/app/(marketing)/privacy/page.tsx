@@ -42,8 +42,8 @@ const rights = [
 export default function PrivacyPage() {
   return (
     <div className="waywork-shell py-12">
-      <h1 className="text-4xl font-semibold text-[var(--ww-primary-blue)]">Privacy Policy</h1>
-      <p className="mt-4 max-w-4xl text-sm leading-7 text-[var(--ww-text-primary)]">
+      <h1 className="text-4xl font-semibold text-[var(--ww-ink)]">Privacy Policy</h1>
+      <p className="mt-4 max-w-4xl text-sm leading-7 text-[var(--ww-celadon)]">
         Effective date: April 14, 2026. This policy explains how Way Work collects, uses, shares, and
         protects personal data for guests, hosts, and site visitors.
       </p>
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
         <p>
           This policy is written to align with the UK GDPR and the Data Protection Act 2018. If you have
           a privacy request, please start with the{" "}
-          <Link href="/support" className="font-semibold text-[var(--ww-primary-blue)] underline">
+          <Link href="/support" className="font-semibold text-[var(--ww-ink)] underline">
             support page
           </Link>{" "}
           or the account contact channel connected to your reservation or host account.
@@ -60,12 +60,12 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">1. Controller and Contact</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">1. Controller and Contact</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           Way Work is the controller for personal data collected through the website and platform unless a
           host or external partner is clearly acting as an independent controller for its own purposes.
           For privacy requests, questions, or complaints, use the{" "}
-          <Link href="/support" className="font-semibold text-[var(--ww-primary-blue)] underline">
+          <Link href="/support" className="font-semibold text-[var(--ww-ink)] underline">
             support page
           </Link>{" "}
           or the account contact channel linked to your reservation or host account.
@@ -73,8 +73,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">2. Data We Collect</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">2. Data We Collect</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-celadon)]">
           {dataCategories.map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -82,8 +82,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">3. How We Use Data</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">3. How We Use Data</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-celadon)]">
           {purposes.map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -91,8 +91,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">4. Lawful Bases</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">4. Lawful Bases</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-celadon)]">
           {lawfulBases.map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -100,8 +100,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">5. Sharing and Processors</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">5. Sharing and Processors</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           We share personal data only where needed to operate the service or where law requires it. This
           can include payment processors, identity or fraud vendors, cloud hosting and infrastructure
           providers, communication tools, analytics partners, channel managers, and professional
@@ -111,8 +111,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">6. International Transfers</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">6. International Transfers</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           Some service providers may process data outside the UK or EEA. When that happens, we use
           appropriate safeguards such as the UK International Data Transfer Agreement, the UK Addendum,
           standard contractual clauses, or equivalent lawful transfer mechanisms, together with
@@ -121,8 +121,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">7. Retention</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">7. Retention</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           We keep personal data only as long as reasonably necessary for the purposes described in this
           policy, including contract performance, legal compliance, tax and accounting retention,
           dispute resolution, fraud prevention, and enforcement of our agreements. When data is no longer
@@ -131,8 +131,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">8. Your Rights</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">8. Your Rights</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-celadon)]">
           {rights.map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -140,15 +140,15 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">9. Automated Checks, Security, and Children</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">9. Automated Checks, Security, and Children</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           We may use automated or semi-automated checks for fraud prevention, payment risk, account
           integrity, and policy enforcement. We do not make decisions that produce solely legal or
           similarly significant effects without human review where the law requires it. We also use
           technical and organizational safeguards designed to protect personal data against unauthorized
           access, loss, misuse, or disclosure.
         </p>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           Way Work is not intended for children under 18. We do not knowingly collect personal data from
           children, and if we learn that a child has provided personal data, we will take appropriate
           steps to remove or protect that information.
@@ -156,8 +156,8 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10 max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">10. Updates</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">10. Updates</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           We may update this policy from time to time to reflect changes in law, our service, or our data
           practices. If changes are material, we will provide notice through the platform or by other
           reasonable means.

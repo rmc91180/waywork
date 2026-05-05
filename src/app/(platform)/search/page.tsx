@@ -238,7 +238,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <Link
               key={link.label}
               href={link.href}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-[var(--ww-secondary-green)]/40 hover:text-[var(--ww-primary-blue)]"
+              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-[var(--ww-gold)]/60 hover:text-[var(--ww-ink)]"
             >
               {link.label}
             </Link>

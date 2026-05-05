@@ -11,10 +11,10 @@ export function HostAirbnbImportCard() {
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-celadon)]">
         Listing Bootstrap
       </p>
-      <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+      <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-ink)]">
         Import from Airbnb
       </h2>
       <p className="mt-1 text-sm text-slate-600">
@@ -29,7 +29,7 @@ export function HostAirbnbImportCard() {
         />
         <Button
           type="button"
-          className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+          className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]"
           onClick={() => {
             const next = url.trim();
             router.push(

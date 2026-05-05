@@ -202,7 +202,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
                   <div className="flex flex-wrap gap-3">
                     <Button
                       asChild
-                      className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+                      className="bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95"
                     >
                       <Link href={`/bookings/${booking.id}/payment`}>Book now</Link>
                     </Button>

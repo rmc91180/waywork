@@ -147,7 +147,7 @@ function SearchDateField({
             </button>
             <button
               type="button"
-              className="text-xs font-medium text-[var(--ww-primary-blue)] transition hover:text-[var(--ww-secondary-green)]"
+              className="text-xs font-medium text-[var(--ww-ink)] transition hover:text-[var(--ww-celadon)]"
               onClick={() => setOpen(false)}
             >
               Done
@@ -299,7 +299,7 @@ export function SearchTopBar({
 
         <Button
           type="submit"
-          className="h-full min-h-14 rounded-2xl bg-[var(--ww-primary-blue)] px-5 text-white hover:bg-[var(--ww-secondary-green)]"
+          className="h-full min-h-14 rounded-2xl bg-[var(--ww-ink)] px-5 text-white hover:bg-[var(--ww-celadon)]"
         >
           <Search className="size-4" />
           Search

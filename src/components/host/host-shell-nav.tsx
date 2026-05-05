@@ -30,7 +30,7 @@ export function HostShellNav() {
                 className={cn(
                   "rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
                   active
-                    ? "bg-[var(--ww-primary-blue)] text-white"
+                    ? "bg-[var(--ww-ink)] text-white"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 )}
               >

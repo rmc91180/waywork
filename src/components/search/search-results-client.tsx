@@ -240,7 +240,7 @@ export function SearchResultsClient({
                 Clear all filters
               </Link>
             </Button>
-            <Button className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95" asChild>
+            <Button className="bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95" asChild>
               <Link
                 href={nearbyHref}
                 onClick={() =>
@@ -274,7 +274,7 @@ export function SearchResultsClient({
             </p>
             {hasMore ? (
               <Button
-                className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+                className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]"
                 onClick={() => void loadNextPage()}
                 disabled={loadingNextPage}
               >

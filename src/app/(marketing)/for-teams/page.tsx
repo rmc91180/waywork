@@ -159,26 +159,26 @@ export default function ForTeamsPage() {
         <div className="waywork-grid-bg absolute inset-0 opacity-40" />
 
         {/* Decorative blobs */}
-        <div className="pointer-events-none absolute -right-32 -top-32 size-[500px] rounded-full bg-[var(--ww-accent-orange)]/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 size-[400px] rounded-full bg-[var(--ww-secondary-green)]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 -top-32 size-[500px] rounded-full bg-[var(--ww-terra)]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-20 size-[400px] rounded-full bg-[var(--ww-celadon)]/10 blur-3xl" />
 
         <div className="waywork-shell relative">
-          <Badge className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-primary-blue)]">
+          <Badge className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-ink)]">
             For Teams
           </Badge>
 
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-[1.12] tracking-tight text-[var(--ww-primary-blue)] md:text-6xl">
+          <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-[1.12] tracking-tight text-[var(--ww-ink)] md:text-6xl">
             Your next company offsite,{" "}
             <span className="relative inline-block">
               <span className="relative z-10">in a home that works.</span>
               <span
-                className="absolute bottom-1 left-0 -z-0 h-3 w-full rounded-sm bg-[var(--ww-accent-orange)]/30"
+                className="absolute bottom-1 left-0 -z-0 h-3 w-full rounded-sm bg-[var(--ww-terra)]/30"
                 aria-hidden
               />
             </span>
           </h1>
 
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--ww-text-primary)] md:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--ww-celadon)] md:text-lg">
             Private work-ready homes for teams of 3 to 30. Verified internet, desk setups, and
             a concierge who handles all the coordination — so you arrive focused, not frazzled.
           </p>
@@ -186,7 +186,7 @@ export default function ForTeamsPage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button
               size="lg"
-              className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] shadow-md shadow-orange-300/40 hover:brightness-95"
+              className="bg-[var(--ww-terra)] text-[var(--ww-ink)] shadow-md shadow-orange-300/40 hover:brightness-95"
               asChild
             >
               <a href="#intake">Plan your offsite →</a>
@@ -203,7 +203,7 @@ export default function ForTeamsPage() {
                 key={s.label}
                 className="rounded-2xl border border-slate-200/80 bg-white/70 px-5 py-4 backdrop-blur"
               >
-                <p className="text-2xl font-bold text-[var(--ww-primary-blue)]">{s.value}</p>
+                <p className="text-2xl font-bold text-[var(--ww-ink)]">{s.value}</p>
                 <p className="mt-0.5 text-xs text-slate-500">{s.label}</p>
               </div>
             ))}
@@ -214,10 +214,10 @@ export default function ForTeamsPage() {
       {/* ── How it works ─────────────────────────────────────────── */}
       <section className="waywork-shell mt-16 md:mt-20">
         <div className="mb-10 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-celadon)]">
             How it works
           </p>
-          <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
+          <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-ink)] md:text-4xl">
             From idea to offsite in 48 hours
           </h2>
         </div>
@@ -233,14 +233,14 @@ export default function ForTeamsPage() {
                 )}
                 <div className="waywork-section relative z-10 h-full p-6">
                   <div className="mb-4 flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold tracking-widest text-[var(--ww-accent-orange)]">
+                    <span className="font-mono text-xs font-bold tracking-widest text-[var(--ww-terra)]">
                       {step.step}
                     </span>
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--ww-primary-blue)]/8">
-                      <Icon className="size-4 text-[var(--ww-primary-blue)]" />
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--ww-ink)]/8">
+                      <Icon className="size-4 text-[var(--ww-ink)]" />
                     </div>
                   </div>
-                  <h3 className="text-base font-semibold text-[var(--ww-primary-blue)]">
+                  <h3 className="text-base font-semibold text-[var(--ww-ink)]">
                     {step.title}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">{step.detail}</p>
@@ -255,10 +255,10 @@ export default function ForTeamsPage() {
       <section className="waywork-shell mt-16 md:mt-20">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-16">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-celadon)]">
               Why not just book a hotel?
             </p>
-            <h2 className="mt-2 text-3xl font-semibold leading-tight text-[var(--ww-primary-blue)] md:text-4xl">
+            <h2 className="mt-2 text-3xl font-semibold leading-tight text-[var(--ww-ink)] md:text-4xl">
               Hotels are built for sleep. <br />
               We're built for work.
             </h2>
@@ -271,7 +271,7 @@ export default function ForTeamsPage() {
             <div className="mt-6 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white overflow-hidden">
               <div className="grid grid-cols-3 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
                 <span className="col-span-1">Feature</span>
-                <span className="text-center text-[var(--ww-secondary-green)]">WayWork</span>
+                <span className="text-center text-[var(--ww-celadon)]">WayWork</span>
                 <span className="text-center">Hotel</span>
               </div>
               {VS_HOTEL.map((row) => (
@@ -305,13 +305,13 @@ export default function ForTeamsPage() {
               return (
                 <div
                   key={item.title}
-                  className="flex gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 transition hover:border-[var(--ww-secondary-green)]/40 hover:shadow-sm"
+                  className="flex gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 transition hover:border-[var(--ww-celadon)]/40 hover:shadow-sm"
                 >
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ww-primary-blue)]/8">
-                    <Icon className="size-5 text-[var(--ww-primary-blue)]" />
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ww-ink)]/8">
+                    <Icon className="size-5 text-[var(--ww-ink)]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[var(--ww-primary-blue)]">{item.title}</h3>
+                    <h3 className="font-semibold text-[var(--ww-ink)]">{item.title}</h3>
                     <p className="mt-1 text-sm leading-relaxed text-slate-600">{item.detail}</p>
                   </div>
                 </div>
@@ -322,7 +322,7 @@ export default function ForTeamsPage() {
       </section>
 
       {/* ── Testimonials ─────────────────────────────────────────── */}
-      <section className="mt-16 bg-[var(--ww-primary-blue)] py-14 md:mt-20 md:py-18">
+      <section className="mt-16 bg-[var(--ww-ink)] py-14 md:mt-20 md:py-18">
         <div className="waywork-shell">
           <div className="grid gap-6 md:grid-cols-2">
             {TESTIMONIALS.map((t) => (
@@ -335,7 +335,7 @@ export default function ForTeamsPage() {
                 </p>
                 <div className="mt-5 border-t border-white/15 pt-4">
                   <p className="text-sm font-semibold text-white">{t.author}</p>
-                  <p className="mt-0.5 text-xs text-blue-200">
+                  <p className="mt-0.5 text-xs text-blue-100/70">
                     {t.company} · {t.size}
                   </p>
                 </div>
@@ -349,10 +349,10 @@ export default function ForTeamsPage() {
       <section id="intake" className="waywork-shell mt-16 md:mt-20 scroll-mt-24">
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 text-center">
-            <Badge className="bg-[var(--ww-accent-orange)]/15 text-[var(--ww-primary-blue)]">
+            <Badge className="bg-[var(--ww-terra)]/15 text-[var(--ww-ink)]">
               Plan your offsite
             </Badge>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
+            <h2 className="mt-3 text-3xl font-semibold text-[var(--ww-ink)] md:text-4xl">
               Tell us what you need
             </h2>
             <p className="mt-3 text-base text-slate-600">
@@ -369,7 +369,7 @@ export default function ForTeamsPage() {
       <section className="waywork-shell mt-14">
         <div className="flex flex-col items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-8 py-10 text-center md:flex-row md:text-left">
           <div className="flex-1">
-            <h3 className="text-xl font-semibold text-[var(--ww-primary-blue)]">
+            <h3 className="text-xl font-semibold text-[var(--ww-ink)]">
               Rather browse first?
             </h3>
             <p className="mt-1 text-sm text-slate-600">
@@ -379,7 +379,7 @@ export default function ForTeamsPage() {
           </div>
           <Button
             variant="outline"
-            className="shrink-0 border-[var(--ww-primary-blue)]/40 text-[var(--ww-primary-blue)]"
+            className="shrink-0 border-[var(--ww-ink)]/40 text-[var(--ww-ink)]"
             asChild
           >
             <Link href="/search?minGuests=4">

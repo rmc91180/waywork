@@ -119,7 +119,7 @@ export default async function CityPage({ params }: Props) {
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
               size="lg"
-              className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] font-semibold hover:brightness-95"
+              className="bg-[var(--ww-terra)] text-[var(--ww-ink)] font-semibold hover:brightness-95"
               asChild
             >
               <Link href={`/search?city=${encodeURIComponent(city.name)}`}>
@@ -145,8 +145,8 @@ export default async function CityPage({ params }: Props) {
               { label: "Time zone", value: city.timezone, icon: Clock },
             ].map(({ label, value, icon: Icon }) => (
               <div key={label} className="px-6 py-5 text-center">
-                <Icon className="mx-auto mb-1.5 size-4 text-[var(--ww-secondary-green)]" />
-                <p className="text-xl font-bold text-[var(--ww-primary-blue)]">{value}</p>
+                <Icon className="mx-auto mb-1.5 size-4 text-[var(--ww-celadon)]" />
+                <p className="text-xl font-bold text-[var(--ww-ink)]">{value}</p>
                 <p className="text-xs text-slate-500">{label}</p>
               </div>
             ))}
@@ -158,10 +158,10 @@ export default async function CityPage({ params }: Props) {
       <section className="waywork-shell mt-12 md:mt-16">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-celadon)]">
               Why {city.name}?
             </p>
-            <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">
+            <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-ink)]">
               Why remote workers choose {city.name}
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-600">{city.whyWork}</p>
@@ -180,7 +180,7 @@ export default async function CityPage({ params }: Props) {
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
               >
                 <span className="text-2xl">{h.icon}</span>
-                <h3 className="mt-2 text-sm font-semibold text-[var(--ww-primary-blue)]">{h.title}</h3>
+                <h3 className="mt-2 text-sm font-semibold text-[var(--ww-ink)]">{h.title}</h3>
                 <p className="mt-1 text-xs leading-relaxed text-slate-600">{h.detail}</p>
               </div>
             ))}
@@ -190,7 +190,7 @@ export default async function CityPage({ params }: Props) {
 
       {/* ── Neighbourhoods ───────────────────────────────────────── */}
       <section className="waywork-shell mt-12 md:mt-16">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">
           Neighbourhoods in {city.name}
         </h2>
         <p className="mt-2 text-sm text-slate-500">
@@ -202,7 +202,7 @@ export default async function CityPage({ params }: Props) {
               key={n.name}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
-              <h3 className="font-semibold text-[var(--ww-primary-blue)]">{n.name}</h3>
+              <h3 className="font-semibold text-[var(--ww-ink)]">{n.name}</h3>
               <p className="mt-1 text-xs text-slate-500 italic">{n.vibe}</p>
               <div className="mt-3 flex items-start gap-1.5 text-xs text-slate-700">
                 <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
@@ -217,7 +217,7 @@ export default async function CityPage({ params }: Props) {
       <section className="waywork-shell mt-12 md:mt-16">
         <div className="grid gap-8 lg:grid-cols-2">
           <div>
-            <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">
+            <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">
               Practical information
             </h2>
             <div className="mt-4 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white overflow-hidden">
@@ -231,7 +231,7 @@ export default async function CityPage({ params }: Props) {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">
+            <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">
               Things to do after work
             </h2>
             <div className="mt-4 grid gap-2">
@@ -240,7 +240,7 @@ export default async function CityPage({ params }: Props) {
                   key={a}
                   className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-4 py-3 text-sm text-slate-700"
                 >
-                  <CheckCircle2 className="size-4 shrink-0 text-[var(--ww-secondary-green)]" />
+                  <CheckCircle2 className="size-4 shrink-0 text-[var(--ww-celadon)]" />
                   {a}
                 </div>
               ))}
@@ -251,17 +251,17 @@ export default async function CityPage({ params }: Props) {
 
       {/* ── Browse CTA ───────────────────────────────────────────── */}
       <section className="waywork-shell mt-12 md:mt-16">
-        <div className="rounded-3xl bg-[var(--ww-primary-blue)] px-8 py-12 text-center text-white">
+        <div className="rounded-3xl bg-[var(--ww-ink)] px-8 py-12 text-center text-white">
           <h2 className="text-2xl font-bold md:text-3xl">
             Ready to book a space in {city.name}?
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm text-blue-200">
+          <p className="mx-auto mt-3 max-w-lg text-sm text-blue-100/70">
             {city.listingCount} verified, work-ready apartments — each with a tested Work Score and real internet speeds.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button
               size="lg"
-              className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] font-semibold hover:brightness-95"
+              className="bg-[var(--ww-terra)] text-[var(--ww-ink)] font-semibold hover:brightness-95"
               asChild
             >
               <Link href={`/search?city=${encodeURIComponent(city.name)}`}>
@@ -277,7 +277,7 @@ export default async function CityPage({ params }: Props) {
 
       {/* ── Other cities ─────────────────────────────────────────── */}
       <section className="waywork-shell mt-12 md:mt-16">
-        <h2 className="text-xl font-semibold text-[var(--ww-primary-blue)]">
+        <h2 className="text-xl font-semibold text-[var(--ww-ink)]">
           Other workation destinations
         </h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -285,7 +285,7 @@ export default async function CityPage({ params }: Props) {
             <Link
               key={c.slug}
               href={`/cities/${c.slug}`}
-              className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-[var(--ww-secondary-green)]/40 hover:shadow-sm"
+              className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-[var(--ww-celadon)]/40 hover:shadow-sm"
             >
               <img
                 src={c.heroImage}
@@ -293,7 +293,7 @@ export default async function CityPage({ params }: Props) {
                 className="size-14 rounded-xl object-cover"
               />
               <div className="min-w-0">
-                <p className="font-semibold text-[var(--ww-primary-blue)]">{c.name}</p>
+                <p className="font-semibold text-[var(--ww-ink)]">{c.name}</p>
                 <p className="text-xs text-slate-500">{c.country} · {c.listingCount} spaces</p>
               </div>
               <ChevronRight className="ml-auto size-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5" />
@@ -301,7 +301,7 @@ export default async function CityPage({ params }: Props) {
           ))}
         </div>
         <div className="mt-5 text-center">
-          <Link href="/cities" className="text-sm font-medium text-[var(--ww-secondary-green)] hover:underline">
+          <Link href="/cities" className="text-sm font-medium text-[var(--ww-celadon)] hover:underline">
             View all destinations →
           </Link>
         </div>

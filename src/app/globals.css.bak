@@ -1,0 +1,203 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-display: var(--font-playfair);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.875rem;
+  --background: #ffffff;
+  --foreground: #033f63;
+  --card: #ffffff;
+  --card-foreground: #033f63;
+  --popover: #ffffff;
+  --popover-foreground: #033f63;
+  --primary: #033f63;
+  --primary-foreground: #ffffff;
+  --secondary: #a1cca6;
+  --secondary-foreground: #033f63;
+  --muted: #f0f0f0;
+  --muted-foreground: #28666e;
+  --accent: #fca47c;
+  --accent-foreground: #033f63;
+  --destructive: #b42318;
+  --border: #dbe6da;
+  --input: #dbe6da;
+  --ring: #28666e;
+  --chart-1: #033f63;
+  --chart-2: #28666e;
+  --chart-3: #fca47c;
+  --chart-4: #f9d779;
+  --chart-5: #097c87;
+  --sidebar: #f0f0f0;
+  --sidebar-foreground: #033f63;
+  --sidebar-primary: #033f63;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f9d779;
+  --sidebar-accent-foreground: #033f63;
+  --sidebar-border: #dbe6da;
+  --sidebar-ring: #28666e;
+
+  --ww-primary-blue: #033f63;
+  --ww-secondary-green: #28666e;
+  --ww-accent-orange: #fca47c;
+  --ww-neutral-light: #f9d779;
+  --ww-neutral-dark: #a1cca6;
+  --ww-text-primary: #097c87;
+  --ww-bg-white: #ffffff;
+  --ww-off-white: #f0f0f0;
+}
+
+.dark {
+  --background: #0b2231;
+  --foreground: #f0f0f0;
+  --card: #113247;
+  --card-foreground: #f0f0f0;
+  --popover: #113247;
+  --popover-foreground: #f0f0f0;
+  --primary: #fca47c;
+  --primary-foreground: #052236;
+  --secondary: #1d4a50;
+  --secondary-foreground: #f0f0f0;
+  --muted: #15384b;
+  --muted-foreground: #d4e5db;
+  --accent: #f9d779;
+  --accent-foreground: #052236;
+  --destructive: #f04438;
+  --border: #2f5761;
+  --input: #2f5761;
+  --ring: #a1cca6;
+  --chart-1: #fca47c;
+  --chart-2: #a1cca6;
+  --chart-3: #f9d779;
+  --chart-4: #74bdc4;
+  --chart-5: #ffffff;
+  --sidebar: #0f2a3c;
+  --sidebar-foreground: #f0f0f0;
+  --sidebar-primary: #fca47c;
+  --sidebar-primary-foreground: #052236;
+  --sidebar-accent: #1d4a50;
+  --sidebar-accent-foreground: #f0f0f0;
+  --sidebar-border: #2f5761;
+  --sidebar-ring: #a1cca6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(249, 215, 121, 0.38), transparent 32%),
+      radial-gradient(circle at 92% 7%, rgba(252, 164, 124, 0.25), transparent 34%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 250, 248, 0.98));
+    background-attachment: fixed;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-playfair), var(--font-inter), serif;
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 38%, white 62%);
+    color: var(--primary-foreground);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-playfair), var(--font-inter), serif;
+  }
+
+  .waywork-shell {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .waywork-glass {
+    @apply border border-white/60 bg-white/80 shadow-sm backdrop-blur-xl;
+  }
+
+  .waywork-grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .waywork-hero-gradient {
+    background:
+      radial-gradient(1000px circle at 8% 5%, rgba(249, 215, 121, 0.36), transparent 44%),
+      radial-gradient(900px circle at 92% 6%, rgba(252, 164, 124, 0.3), transparent 41%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 248, 246, 0.98));
+  }
+
+  .waywork-section {
+    @apply rounded-3xl border border-slate-200/70 bg-white/90 shadow-sm;
+  }
+
+  .waywork-elevated {
+    box-shadow:
+      0 6px 20px -16px rgba(3, 63, 99, 0.4),
+      0 22px 35px -28px rgba(40, 102, 110, 0.35);
+  }
+
+  .ww-trust-pill {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-wide;
+    border-color: color-mix(in srgb, var(--ww-secondary-green) 35%, white 65%);
+    color: var(--ww-secondary-green);
+    background: color-mix(in srgb, var(--ww-secondary-green) 8%, white 92%);
+  }
+}

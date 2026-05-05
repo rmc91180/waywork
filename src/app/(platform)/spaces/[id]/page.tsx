@@ -166,6 +166,7 @@ type SpacePageData = NonNullable<Awaited<ReturnType<typeof loadSpacePageDataFrom
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://waywork.com";
 
   const listing =
     (await withDbRetry((client) => loadSpaceMetadataFromDb(client, id)).catch((error) => {
@@ -176,24 +177,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!listing) return { title: "Space Not Found" };
 
   const primaryImage = listing.images[0];
+  const url = `${APP_URL}/spaces/${id}`;
+  const title = `${listing.title} — ${listing.city} | Way Work`;
+  const description = `Work-ready ${listing.workspaceType.toLowerCase().replace(/_/g, " ")} in ${listing.city}. ${listing.description.slice(0, 130)}`;
 
   return {
-    title: `${listing.title} - ${listing.city}`,
-    description: listing.description.slice(0, 160),
+    title,
+    description,
+    alternates: { canonical: url },
     openGraph: {
-      title: `${listing.title} - ${listing.city}`,
-      description: listing.description.slice(0, 160),
+      type: "website",
+      url,
+      title,
+      description,
       ...(primaryImage?.url
-        ? {
-            images: [
-              {
-                url: primaryImage.url,
-                alt: primaryImage.alt || listing.title,
-              },
-            ],
-          }
+        ? { images: [{ url: primaryImage.url, alt: primaryImage.alt || listing.title, width: 1200, height: 800 }] }
         : {}),
     },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
@@ -312,7 +313,43 @@ export default async function SpaceDetailPage({ params }: Props) {
     },
   ];
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://waywork.com";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: listing.title,
+    description: listing.description,
+    url: `${APP_URL}/spaces/${listing.id}`,
+    image: listing.images.map((img) => img.url),
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: listing.address,
+      addressLocality: listing.city,
+      addressRegion: listing.state,
+      postalCode: listing.postalCode,
+      addressCountry: listing.country,
+    },
+    geo: listing.lat && listing.lng
+      ? { "@type": "GeoCoordinates", latitude: listing.lat, longitude: listing.lng }
+      : undefined,
+    priceRange: `€${Math.round(listing.pricePerDay / 100)}/night`,
+    numberOfRooms: listing.bedroomCount,
+    amenityFeature: listing.amenities?.map((a) => ({
+      "@type": "LocationFeatureSpecification",
+      name: a.name,
+      value: true,
+    })),
+    aggregateRating: listing.reviewCount > 0
+      ? { "@type": "AggregateRating", ratingValue: listing.averageRating, reviewCount: listing.reviewCount }
+      : undefined,
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="waywork-shell py-8 md:py-10">
       <PropertyAnalyticsTracker
         listingId={listing.id}
@@ -337,14 +374,14 @@ export default async function SpaceDetailPage({ params }: Props) {
         <div className="flex-1">
           {/* Title section */}
           <div className="waywork-section mb-6 p-5 md:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-celadon)]">
               {listing.city}
               {listing.state ? `, ${listing.state}` : ""} · {listing.country}
             </p>
             <div className="mb-2 mt-3 flex flex-wrap items-center gap-2">
               <Badge variant="outline">{wsType?.label}</Badge>
               {listing.connectivityProfile?.verified && (
-                <Badge className="bg-[var(--ww-secondary-green)]">Verified Internet</Badge>
+                <Badge className="bg-[var(--ww-celadon)]">Verified Internet</Badge>
               )}
               <Badge variant="secondary" className="bg-slate-100 text-slate-700">
                 {cancelPolicy?.label || listing.cancellationPolicy}
@@ -367,47 +404,91 @@ export default async function SpaceDetailPage({ params }: Props) {
               {listing.state ? `, ${listing.state}` : ""}, {listing.country}
             </p>
             {limehomePilotMeta ? (
-              <p className="mt-3 text-sm font-medium text-[var(--ww-secondary-green)]">
+              <p className="mt-3 text-sm font-medium text-[var(--ww-celadon)]">
                 {limehomePilotMeta.neighborhood} · {limehomePilotMeta.bestFor}
               </p>
             ) : null}
             <p className="mt-4 max-w-3xl text-base text-slate-700">{fitSummary}</p>
           </div>
 
-          {/* Image gallery */}
+          {/* Image gallery — Airbnb-style split hero */}
           <div className="mb-8">
             {listing.images.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 rounded-lg overflow-hidden">
-                {listing.images.slice(0, 4).map((img, i) => (
-                  <div
-                    key={img.id}
-                    className={cn(
-                      "bg-gray-100",
-                      i === 0 ? "md:row-span-2 aspect-square md:aspect-auto" : "aspect-video"
-                    )}
-                  >
-                    {img.url.startsWith("http") ? (
+              <div
+                className="relative overflow-hidden rounded-2xl"
+                style={{ height: "460px", display: "grid", gap: "4px", gridTemplateColumns: "1.6fr 1fr", gridTemplateRows: "1fr 1fr" }}
+              >
+                {/* Primary — large left */}
+                <div
+                  className="relative overflow-hidden"
+                  style={{ gridRow: "1 / -1", background: "var(--ww-mist)" }}
+                >
+                  {listing.images[0]?.url.startsWith("http") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={listing.images[0].url}
+                      alt={listing.images[0].alt || listing.title}
+                      className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-6xl">{wsType?.icon || "🏢"}</div>
+                  )}
+                </div>
+
+                {/* Secondary top-right */}
+                {listing.images[1] && (
+                  <div className="relative overflow-hidden" style={{ background: "var(--ww-mist)" }}>
+                    {listing.images[1].url.startsWith("http") ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={img.url}
-                        alt={img.alt || listing.title}
-                        className="w-full h-full object-cover"
+                        src={listing.images[1].url}
+                        alt={listing.images[1].alt || listing.title}
+                        className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
                       />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-4xl">
-                        {wsType?.icon || "🏢"}
+                    ) : <div className="flex h-full items-center justify-center" style={{ color: "#b8afa4" }}>·</div>}
+                  </div>
+                )}
+
+                {/* Tertiary bottom-right */}
+                {listing.images[2] ? (
+                  <div className="relative overflow-hidden" style={{ background: "var(--ww-mist)" }}>
+                    {listing.images[2].url.startsWith("http") ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={listing.images[2].url}
+                        alt={listing.images[2].alt || listing.title}
+                        className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                      />
+                    ) : <div className="flex h-full items-center justify-center" style={{ color: "#b8afa4" }}>·</div>}
+
+                    {/* Show all photos button */}
+                    {listing.images.length > 3 && (
+                      <div className="absolute bottom-3 right-3">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition hover:-translate-y-0.5"
+                          style={{
+                            background: "rgba(250,248,244,0.92)",
+                            borderColor: "var(--ww-mist)",
+                            color: "var(--ww-ink)",
+                            backdropFilter: "blur(12px)",
+                            boxShadow: "0 2px 8px rgba(13,31,45,0.12)",
+                          }}
+                        >
+                          ⊞ All {listing.images.length} photos
+                        </button>
                       </div>
                     )}
                   </div>
-                ))}
-                {listing.images.length === 0 && (
-                  <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-6xl col-span-2">
-                    {wsType?.icon || "🏢"}
-                  </div>
+                ) : (
+                  <div style={{ background: "var(--ww-parchment)" }} />
                 )}
               </div>
             ) : (
-              <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-6xl">
+              <div
+                className="flex items-center justify-center rounded-2xl text-6xl"
+                style={{ height: "280px", background: "var(--ww-gold-light)" }}
+              >
                 {wsType?.icon || "🏢"}
               </div>
             )}
@@ -415,25 +496,27 @@ export default async function SpaceDetailPage({ params }: Props) {
 
           {/* Quick read */}
           <div className="mb-8 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
-                Why this place works
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+            <div className="waywork-section p-6">
+              <p className="ww-eyebrow mb-2">Why this place works</p>
+              <h2 className="font-display text-2xl font-semibold" style={{ color: "var(--ww-ink)" }}>
                 Fast read before you book
               </h2>
               {limehomePilotMeta ? (
-                <p className="mt-3 text-sm font-medium text-slate-900">
+                <p className="mt-3 text-sm font-semibold" style={{ color: "var(--ww-ink)" }}>
                   {limehomePilotMeta.summary}
                 </p>
               ) : null}
-              <p className="mt-3 text-sm leading-6 text-slate-700">{descriptionTeaser}</p>
+              <p className="mt-3 text-sm leading-relaxed" style={{ color: "#4a4540" }}>{descriptionTeaser}</p>
               {highlightedAmenities.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {highlightedAmenities.map((amenity) => (
-                    <Badge key={amenity.id} variant="secondary" className="bg-slate-100 text-slate-700">
+                    <span
+                      key={amenity.id}
+                      className="rounded-lg px-2.5 py-1 text-xs font-medium"
+                      style={{ background: "var(--ww-gold-light)", color: "var(--ww-ink)" }}
+                    >
                       {amenity.name}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
               )}
@@ -443,13 +526,17 @@ export default async function SpaceDetailPage({ params }: Props) {
               {quickFacts.map((fact) => (
                 <div
                   key={fact.label}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  className="rounded-2xl p-4 transition hover:shadow-sm"
+                  style={{ background: "var(--ww-warm-white)", border: "1px solid var(--ww-mist)" }}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                    {fact.label}
+                  <p className="ww-eyebrow">{fact.label}</p>
+                  <p
+                    className="mt-2 text-lg font-bold"
+                    style={{ color: "var(--ww-ink)", fontFamily: "var(--font-mono, monospace)" }}
+                  >
+                    {fact.value}
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900">{fact.value}</p>
-                  <p className="mt-1 text-sm text-slate-600">{fact.detail}</p>
+                  <p className="mt-1 text-xs leading-relaxed" style={{ color: "#7a6e62" }}>{fact.detail}</p>
                 </div>
               ))}
             </div>
@@ -471,17 +558,25 @@ export default async function SpaceDetailPage({ params }: Props) {
 
           {/* Work Score */}
           <div className="waywork-section mb-8 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Work Readiness Breakdown</h2>
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="ww-eyebrow mb-1">Work Readiness</p>
+                <h2 className="font-display text-xl font-semibold" style={{ color: "var(--ww-ink)" }}>
+                  Work Score breakdown
+                </h2>
+              </div>
               <Tooltip>
                 <TooltipTrigger>
                   <div
-                    className={cn(
-                      "text-3xl font-bold",
-                      getWorkScoreColor(workScore.total)
-                    )}
+                    className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl shadow-sm"
+                    style={{
+                      background: "var(--ww-ink)",
+                      color: workScore.total >= 80 ? "#c9a84c" : workScore.total >= 65 ? "#7ecba1" : "#b8afa4",
+                      fontFamily: "var(--font-mono, monospace)",
+                    }}
                   >
-                    {workScore.total}/100
+                    <span className="text-2xl font-bold leading-none">{workScore.total}</span>
+                    <span className="text-[10px] font-medium opacity-60 mt-0.5">/100</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -500,41 +595,47 @@ export default async function SpaceDetailPage({ params }: Props) {
               ].map((item) => (
                 <Tooltip key={item.label}>
                   <TooltipTrigger asChild>
-                    <div className="text-center cursor-help">
-                      <div className="text-xs text-gray-500">{item.label}</div>
+                    <div
+                      className="cursor-help rounded-xl p-3 transition hover:shadow-sm"
+                      style={{ background: "var(--ww-parchment)", border: "1px solid var(--ww-mist)" }}
+                    >
+                      <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#7a6e62" }}>
+                        {item.label}
+                      </div>
                       {item.score === 0 ? (
-                        <div className="mt-1">
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full w-0" />
-                          </div>
-                          <div className="text-xs text-gray-400 mt-0.5 italic">Not assessed</div>
-                        </div>
+                        <>
+                          <div className="h-1.5 w-full rounded-full" style={{ background: "var(--ww-mist)" }} />
+                          <div className="text-xs mt-1.5 italic" style={{ color: "#b8afa4" }}>Not assessed</div>
+                        </>
                       ) : (
-                        <div className="mt-1">
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <>
+                          <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "var(--ww-mist)" }}>
                             <div
-                              className={cn(
-                                "h-full rounded-full",
-                                item.score / item.max >= 0.7
-                                  ? "bg-green-500"
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{
+                                width: `${(item.score / item.max) * 100}%`,
+                                background: item.score / item.max >= 0.7
+                                  ? "var(--ww-celadon)"
                                   : item.score / item.max >= 0.4
-                                    ? "bg-yellow-500"
-                                    : "bg-orange-500"
-                              )}
-                              style={{ width: `${(item.score / item.max) * 100}%` }}
+                                    ? "var(--ww-gold)"
+                                    : "var(--ww-terra)",
+                              }}
                             />
                           </div>
-                          <div className="text-xs font-medium mt-0.5">
-                            {item.score}/{item.max}
+                          <div
+                            className="text-xs font-bold mt-1.5"
+                            style={{ color: "var(--ww-ink)", fontFamily: "var(--font-mono, monospace)" }}
+                          >
+                            {item.score}<span className="font-normal opacity-50">/{item.max}</span>
                           </div>
-                        </div>
+                        </>
                       )}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[180px] text-center text-xs">
                     <p className="font-semibold mb-0.5">{item.label} (/{item.max} pts)</p>
                     <p>{item.tip}</p>
-                    {item.score === 0 && <p className="mt-1 text-slate-400 italic">Host hasn&apos;t specified these amenities yet.</p>}
+                    {item.score === 0 && <p className="mt-1 opacity-60 italic">Host hasn&apos;t specified these amenities yet.</p>}
                   </TooltipContent>
                 </Tooltip>
               ))}
@@ -639,7 +740,7 @@ export default async function SpaceDetailPage({ params }: Props) {
                 </div>
               </div>
               {listing.connectivityProfile.verified && (
-                <p className="text-xs text-[var(--ww-secondary-green)] mt-2">
+                <p className="text-xs text-[var(--ww-celadon)] mt-2">
                   Speed verified by WayWork
                 </p>
               )}
@@ -793,7 +894,7 @@ export default async function SpaceDetailPage({ params }: Props) {
 
           {relatedListings.length > 0 ? (
             <div className="mt-10">
-              <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">Similar Spots You May Love</h2>
+              <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">Similar Spots You May Love</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {relatedListings.map((related) => (
                   <Link
@@ -824,7 +925,7 @@ export default async function SpaceDetailPage({ params }: Props) {
                         {related.city}
                         {related.state ? `, ${related.state}` : ""}
                       </p>
-                      <p className="text-sm font-semibold text-[var(--ww-primary-blue)]">
+                      <p className="text-sm font-semibold text-[var(--ww-ink)]">
                         ${(related.pricePerDay / 100).toFixed(0)}/day · Work Score {related.workScore}
                       </p>
                     </div>
@@ -853,5 +954,6 @@ export default async function SpaceDetailPage({ params }: Props) {
         </div>
       </div>
     </div>
+    </>
   );
 }

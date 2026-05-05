@@ -31,25 +31,25 @@ export default function CitiesPage() {
       {/* Hero */}
       <section className="waywork-hero-gradient relative overflow-hidden pb-14 pt-14 md:pb-18 md:pt-20">
         <div className="waywork-grid-bg absolute inset-0 opacity-40" />
-        <div className="pointer-events-none absolute -right-40 -top-40 size-[500px] rounded-full bg-[var(--ww-secondary-green)]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-40 -top-40 size-[500px] rounded-full bg-[var(--ww-celadon)]/10 blur-3xl" />
 
         <div className="waywork-shell relative text-center">
           <div className="flex justify-center">
-            <Badge className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-primary-blue)]">
+            <Badge className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-ink)]">
               <Globe2 className="mr-1.5 size-3.5" />
               {CITIES.length} cities worldwide
             </Badge>
           </div>
-          <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-[var(--ww-primary-blue)] md:text-5xl">
+          <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-[var(--ww-ink)] md:text-5xl">
             The world&apos;s best cities for remote work
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[var(--ww-text-primary)] md:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[var(--ww-celadon)] md:text-lg">
             Every city below has been editorially reviewed for internet infrastructure,
             cost-of-living value, and workation lifestyle. Curated apartments with verified
             Work Scores available in each market.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button size="lg" className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95" asChild>
+            <Button size="lg" className="bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95" asChild>
               <Link href="/search">Browse all spaces</Link>
             </Button>
             <Button size="lg" variant="outline" className="bg-white/80" asChild>
@@ -64,7 +64,7 @@ export default function CitiesPage() {
         {byRegion.map(({ region, cities }) => (
           <div key={region}>
             <div className="mb-6 flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-[var(--ww-primary-blue)]">{region}</h2>
+              <h2 className="text-xl font-semibold text-[var(--ww-ink)]">{region}</h2>
               <div className="h-px flex-1 bg-slate-200" />
             </div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -98,15 +98,15 @@ export default function CitiesPage() {
 
                     <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                       <div className="rounded-xl bg-slate-50 px-2 py-2">
-                        <p className="text-base font-bold text-[var(--ww-primary-blue)]">{city.avgWorkScore}</p>
+                        <p className="text-base font-bold text-[var(--ww-ink)]">{city.avgWorkScore}</p>
                         <p className="text-[10px] text-slate-500">Avg score</p>
                       </div>
                       <div className="rounded-xl bg-slate-50 px-2 py-2">
-                        <p className="text-base font-bold text-[var(--ww-primary-blue)]">{city.listingCount}</p>
+                        <p className="text-base font-bold text-[var(--ww-ink)]">{city.listingCount}</p>
                         <p className="text-[10px] text-slate-500">Spaces</p>
                       </div>
                       <div className="rounded-xl bg-slate-50 px-2 py-2">
-                        <p className="text-base font-bold text-[var(--ww-primary-blue)]">€{city.avgPricePerNight}</p>
+                        <p className="text-base font-bold text-[var(--ww-ink)]">€{city.avgPricePerNight}</p>
                         <p className="text-[10px] text-slate-500">Avg/night</p>
                       </div>
                     </div>
@@ -124,7 +124,7 @@ export default function CitiesPage() {
                           </span>
                         )}
                       </div>
-                      <ChevronRight className="size-4 text-slate-400 transition group-hover:translate-x-1 group-hover:text-[var(--ww-primary-blue)]" />
+                      <ChevronRight className="size-4 text-slate-400 transition group-hover:translate-x-1 group-hover:text-[var(--ww-ink)]" />
                     </div>
                   </div>
                 </Link>
@@ -136,14 +136,14 @@ export default function CitiesPage() {
 
       {/* Host CTA */}
       <div className="waywork-shell mt-14">
-        <div className="rounded-3xl bg-[var(--ww-primary-blue)] px-8 py-10 text-center text-white">
-          <Star className="mx-auto mb-3 size-8 text-[var(--ww-accent-orange)]" />
+        <div className="rounded-3xl bg-[var(--ww-ink)] px-8 py-10 text-center text-white">
+          <Star className="mx-auto mb-3 size-8 text-[var(--ww-terra)]" />
           <h3 className="text-2xl font-semibold">List your property in one of these cities</h3>
-          <p className="mx-auto mt-2 max-w-lg text-sm text-blue-200">
+          <p className="mx-auto mt-2 max-w-lg text-sm text-blue-100/70">
             Work travelers stay longer, treat properties better, and book shoulder seasons.
             Add your space and start earning with WayWork.
           </p>
-          <Button className="mt-6 bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95" asChild>
+          <Button className="mt-6 bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95" asChild>
             <Link href="/host/listings/new">List your property</Link>
           </Button>
         </div>

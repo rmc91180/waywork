@@ -28,11 +28,11 @@ export function HostPageHeader({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-3xl">
           {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ww-celadon)]">
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--ww-primary-blue)]">
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--ww-ink)]">
             {title}
           </h1>
           {description ? (

@@ -71,7 +71,7 @@ export default async function AdminAnalyticsPage() {
         </div>
         <Link
           href="/admin/dashboard"
-          className="text-sm font-medium text-[var(--ww-primary-blue)] hover:underline"
+          className="text-sm font-medium text-[var(--ww-ink)] hover:underline"
         >
           Back to admin dashboard
         </Link>

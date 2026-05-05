@@ -45,12 +45,12 @@ export function NewsletterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@company.com"
-          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-[var(--ww-celadon)] focus:ring-2 focus:ring-emerald-100"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] transition hover:brightness-95 disabled:opacity-60"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--ww-terra)] text-[var(--ww-ink)] transition hover:brightness-95 disabled:opacity-60"
           aria-label="Subscribe"
         >
           <Send className="size-4" />

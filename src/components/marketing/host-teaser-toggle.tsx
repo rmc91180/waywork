@@ -26,7 +26,7 @@ export function HostTeaserToggle() {
   return (
     <section
       id="host-teaser"
-      className="rounded-3xl border border-emerald-800/20 bg-[var(--ww-secondary-green)] px-6 py-6 text-white md:px-10 md:py-8"
+      className="rounded-3xl border border-emerald-800/20 bg-[var(--ww-celadon)] px-6 py-6 text-white md:px-10 md:py-8"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-semibold md:text-3xl">Hosts: Turn Downtime into Dollars</h2>
@@ -57,7 +57,7 @@ export function HostTeaserToggle() {
           </p>
           <Button
             size="lg"
-            className="mt-5 bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+            className="mt-5 bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95"
             asChild
           >
             <Link

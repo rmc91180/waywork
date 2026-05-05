@@ -9,8 +9,8 @@ export default function SupportPage() {
   return (
     <div className="waywork-shell py-12">
       <div className="max-w-3xl">
-        <h1 className="text-4xl font-semibold text-[var(--ww-primary-blue)]">Support</h1>
-        <p className="mt-2 text-[var(--ww-text-primary)]">
+        <h1 className="text-4xl font-semibold text-[var(--ww-ink)]">Support</h1>
+        <p className="mt-2 text-[var(--ww-celadon)]">
           Need help with booking, hosting, your account, or the legal terms that govern the platform?
           Start here.
         </p>
@@ -18,37 +18,37 @@ export default function SupportPage() {
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-          <h2 className="text-xl font-semibold text-[var(--ww-primary-blue)]">Guests</h2>
-          <p className="mt-2 text-sm text-[var(--ww-text-primary)]">
+          <h2 className="text-xl font-semibold text-[var(--ww-ink)]">Guests</h2>
+          <p className="mt-2 text-sm text-[var(--ww-celadon)]">
             Booking support, cancellation windows, and payment questions.
           </p>
           <Link
             href="/bookings"
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--ww-primary-blue)] underline"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--ww-ink)] underline"
           >
             View your bookings
           </Link>
         </article>
         <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-          <h2 className="text-xl font-semibold text-[var(--ww-primary-blue)]">Hosts</h2>
-          <p className="mt-2 text-sm text-[var(--ww-text-primary)]">
+          <h2 className="text-xl font-semibold text-[var(--ww-ink)]">Hosts</h2>
+          <p className="mt-2 text-sm text-[var(--ww-celadon)]">
             Listing setup, connectivity verification, and payout support.
           </p>
           <Link
             href="/host/listings"
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--ww-primary-blue)] underline"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--ww-ink)] underline"
           >
             Open host dashboard
           </Link>
         </article>
         <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-          <h2 className="text-xl font-semibold text-[var(--ww-primary-blue)]">Account</h2>
-          <p className="mt-2 text-sm text-[var(--ww-text-primary)]">
+          <h2 className="text-xl font-semibold text-[var(--ww-ink)]">Account</h2>
+          <p className="mt-2 text-sm text-[var(--ww-celadon)]">
             Profile updates, authentication, and account security preferences.
           </p>
           <Link
             href="/account"
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--ww-primary-blue)] underline"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--ww-ink)] underline"
           >
             Manage account
           </Link>
@@ -59,7 +59,7 @@ export default function SupportPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Legal</p>
-            <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+            <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-ink)]">
               Clear links to the core legal pages
             </h2>
           </div>
@@ -76,7 +76,7 @@ export default function SupportPage() {
             </p>
             <Link
               href="/terms#guest-terms"
-              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-ink)]"
             >
               Read guest terms
               <span aria-hidden>→</span>
@@ -94,7 +94,7 @@ export default function SupportPage() {
             </p>
             <Link
               href="/terms#host-terms"
-              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-ink)]"
             >
               Read host terms
               <span aria-hidden>→</span>
@@ -112,7 +112,7 @@ export default function SupportPage() {
             </p>
             <Link
               href="/privacy"
-              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-ink)]"
             >
               Read privacy policy
               <span aria-hidden>→</span>

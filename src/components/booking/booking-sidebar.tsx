@@ -187,7 +187,7 @@ export function BookingSidebar({
 
   return (
     <Card className="sticky top-24 overflow-hidden border-slate-200 py-0 shadow-lg">
-      <div className="bg-gradient-to-r from-[var(--ww-primary-blue)] via-[var(--ww-secondary-green)] to-[var(--ww-text-primary)] px-6 py-5 text-white">
+      <div className="bg-gradient-to-r from-[var(--ww-ink)] via-[#1a3a52] to-[var(--ww-ink)] px-6 py-5 text-white">
         <p className="text-xs uppercase tracking-[0.18em] text-cyan-100">Book this stay</p>
         <CardTitle className="mt-2 flex items-baseline gap-2">
           <span className="text-3xl font-bold">{fmt(pricePerDay)}</span>
@@ -205,7 +205,7 @@ export function BookingSidebar({
               <button
                 type="button"
                 className={cn(
-                  "flex w-full items-center justify-between rounded-lg border bg-white px-3 py-2.5 text-sm transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--ww-primary-blue)]/30",
+                  "flex w-full items-center justify-between rounded-lg border bg-white px-3 py-2.5 text-sm transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--ww-gold)]/25",
                   !checkIn && !checkOut ? "border-slate-200 text-slate-400" : "border-slate-300 text-slate-900"
                 )}
               >
@@ -253,7 +253,7 @@ export function BookingSidebar({
                   size="sm"
                   disabled={!checkIn || !checkOut}
                   onClick={() => setCalendarOpen(false)}
-                  className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+                  className="bg-[var(--ww-ink)] text-white hover:bg-[#1a3a52]"
                 >
                   Confirm
                 </Button>
@@ -276,7 +276,7 @@ export function BookingSidebar({
             id="guests"
             value={guests}
             onChange={(e) => setGuests(Number(e.target.value))}
-            className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-xs transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--ww-primary-blue)]/30"
+            className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-xs transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--ww-gold)]/25"
           >
             {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
@@ -303,7 +303,7 @@ export function BookingSidebar({
 
         {/* CTA */}
         <Button
-          className="w-full bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] font-semibold hover:brightness-95 disabled:opacity-60"
+          className="w-full bg-[var(--ww-terra)] text-white font-semibold hover:brightness-95 disabled:opacity-60"
           size="lg"
           onClick={handleBooking}
           disabled={loading || numberOfDays === 0}
@@ -340,7 +340,7 @@ export function BookingSidebar({
         )}
 
         {/* Trust signals */}
-        <div className="space-y-1.5 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 text-xs text-emerald-900">
+        <div className="space-y-1.5 rounded-xl p-3.5 text-xs" style={{ background: "var(--ww-celadon-light)", border: "1px solid rgba(45,106,79,0.2)", color: "var(--ww-celadon)" }}>
           <p className="flex items-start gap-2">
             <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
             {policyLabel}

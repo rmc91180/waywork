@@ -65,7 +65,7 @@ export default async function HostDashboardPage() {
           ].map((item) => (
             <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{item.value}</p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--ww-ink)]">{item.value}</p>
               <p className="mt-1 text-sm text-slate-600">{item.detail}</p>
             </div>
           ))}
@@ -357,7 +357,7 @@ export default async function HostDashboardPage() {
         description="Everything important in one place: listings, bookings, payouts, and PMS setup."
         actions={
           <>
-            <Button asChild className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]">
+            <Button asChild className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]">
               <Link href="/host/listings/new">
                 <PlusCircle className="size-4" />
                 New Listing
@@ -392,24 +392,24 @@ export default async function HostDashboardPage() {
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Listings</p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{totalListings}</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--ww-ink)]">{totalListings}</p>
           <p className="mt-1 text-sm text-slate-600">{activeListings} active</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Upcoming</p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{upcomingBookings}</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--ww-ink)]">{upcomingBookings}</p>
           <p className="mt-1 text-sm text-slate-600">confirmed bookings</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Pending</p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{pendingBookings}</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--ww-ink)]">{pendingBookings}</p>
           <p className="mt-1 text-sm text-slate-600">
             {totalBookings} total booking{totalBookings === 1 ? "" : "s"}
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Host revenue</p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)]">{formatCurrency(grossRevenue)}</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--ww-ink)]">{formatCurrency(grossRevenue)}</p>
           <p className="mt-1 text-sm text-slate-600">
             {failedSyncListings > 0
               ? `${failedSyncListings} sync issue${failedSyncListings === 1 ? "" : "s"} to review`
@@ -423,7 +423,7 @@ export default async function HostDashboardPage() {
 
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-[var(--ww-primary-blue)]">At a glance</h2>
+            <h2 className="text-lg font-semibold text-[var(--ww-ink)]">At a glance</h2>
             <Badge variant="outline">{mappedListings}/{totalListings} mapped</Badge>
           </div>
           <div className="space-y-3">
@@ -494,7 +494,7 @@ export default async function HostDashboardPage() {
       <section className="mt-6 grid gap-4 xl:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-[var(--ww-primary-blue)]">Listings</h2>
+            <h2 className="text-lg font-semibold text-[var(--ww-ink)]">Listings</h2>
             <Badge variant="outline">{totalListings}</Badge>
           </div>
           {listings.length === 0 ? (
@@ -537,7 +537,7 @@ export default async function HostDashboardPage() {
 
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--ww-primary-blue)]">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--ww-ink)]">
               <Activity className="size-4" />
               Recent activity
             </h2>
@@ -595,7 +595,7 @@ export default async function HostDashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
               Legal
             </p>
-            <h2 className="mt-2 text-xl font-semibold text-[var(--ww-primary-blue)]">
+            <h2 className="mt-2 text-xl font-semibold text-[var(--ww-ink)]">
               Host terms and privacy are right here
             </h2>
             <p className="mt-1 text-sm text-slate-600">
@@ -610,9 +610,9 @@ export default async function HostDashboardPage() {
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           <Link
             href="/terms#host-terms"
-            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-secondary-green)]/40 hover:bg-white"
+            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-celadon)]/40 hover:bg-white"
           >
-            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]">
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-ink)]">
               <Scale className="size-4" />
               Host Terms
             </div>
@@ -623,9 +623,9 @@ export default async function HostDashboardPage() {
           </Link>
           <Link
             href="/terms#guest-terms"
-            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-secondary-green)]/40 hover:bg-white"
+            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-celadon)]/40 hover:bg-white"
           >
-            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]">
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-ink)]">
               <Lock className="size-4" />
               Guest Terms
             </div>
@@ -636,9 +636,9 @@ export default async function HostDashboardPage() {
           </Link>
           <Link
             href="/privacy"
-            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-secondary-green)]/40 hover:bg-white"
+            className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[var(--ww-celadon)]/40 hover:bg-white"
           >
-            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-primary-blue)]">
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ww-ink)]">
               <ShieldCheck className="size-4" />
               Privacy Policy
             </div>

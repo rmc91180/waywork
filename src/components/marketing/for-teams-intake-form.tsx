@@ -43,8 +43,8 @@ function Chip({
       className={[
         "rounded-xl border px-3 py-1.5 text-sm font-medium transition-all",
         selected
-          ? "border-[var(--ww-primary-blue)] bg-[var(--ww-primary-blue)] text-white shadow-sm"
-          : "border-slate-200 bg-white text-slate-600 hover:border-[var(--ww-primary-blue)]/50",
+          ? "border-[var(--ww-ink)] bg-[var(--ww-ink)] text-white shadow-sm"
+          : "border-slate-200 bg-white text-slate-600 hover:border-[var(--ww-ink)]/50",
       ].join(" ")}
     >
       {label}
@@ -112,7 +112,7 @@ export function ForTeamsIntakeForm() {
             value={form.name}
             onChange={(e) => set("name")(e.target.value)}
             placeholder="Rafi Cohen"
-            className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+            className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-celadon)] focus:ring-2 focus:ring-emerald-100"
           />
         </div>
         <div className="space-y-1.5">
@@ -126,7 +126,7 @@ export function ForTeamsIntakeForm() {
             value={form.email}
             onChange={(e) => set("email")(e.target.value)}
             placeholder="rafi@company.com"
-            className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+            className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-celadon)] focus:ring-2 focus:ring-emerald-100"
           />
         </div>
       </div>
@@ -141,7 +141,7 @@ export function ForTeamsIntakeForm() {
           value={form.company}
           onChange={(e) => set("company")(e.target.value)}
           placeholder="Acme Inc."
-          className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+          className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-celadon)] focus:ring-2 focus:ring-emerald-100"
         />
       </div>
 
@@ -203,7 +203,7 @@ export function ForTeamsIntakeForm() {
           value={form.dates}
           onChange={(e) => set("dates")(e.target.value)}
           placeholder="e.g. Late September 2025, flexible within Q3"
-          className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-secondary-green)] focus:ring-2 focus:ring-emerald-100"
+          className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-[var(--ww-celadon)] focus:ring-2 focus:ring-emerald-100"
         />
       </div>
 
@@ -233,7 +233,7 @@ export function ForTeamsIntakeForm() {
         type="submit"
         size="lg"
         disabled={status === "loading" || !form.name || !form.email || !form.teamSize || !form.city}
-        className="w-full bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] font-semibold shadow-md shadow-orange-300/40 hover:brightness-95 disabled:opacity-60"
+        className="w-full bg-[var(--ww-terra)] text-[var(--ww-ink)] font-semibold shadow-md shadow-orange-300/40 hover:brightness-95 disabled:opacity-60"
       >
         {status === "loading" ? (
           <><Loader2 className="mr-2 size-4 animate-spin" /> Sending request...</>

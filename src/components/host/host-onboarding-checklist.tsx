@@ -26,10 +26,10 @@ export function HostOnboardingChecklist({ steps }: HostOnboardingChecklistProps)
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-celadon)]">
             Host Onboarding
           </p>
-          <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+          <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-ink)]">
             Launch Checklist
           </h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -44,7 +44,7 @@ export function HostOnboardingChecklist({ steps }: HostOnboardingChecklistProps)
       <div className="mt-4">
         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-[var(--ww-secondary-green)] transition-all"
+            className="h-full rounded-full bg-[var(--ww-celadon)] transition-all"
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -60,7 +60,7 @@ export function HostOnboardingChecklist({ steps }: HostOnboardingChecklistProps)
           <p className="text-sm text-cyan-800">{nextStep.description}</p>
           <Button
             size="sm"
-            className="mt-2 bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+            className="mt-2 bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]"
             asChild
           >
             <Link href={nextStep.href}>

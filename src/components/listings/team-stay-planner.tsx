@@ -266,7 +266,7 @@ export function TeamStayPlanner({
             setOpen(true);
           }}
           disabled={selectedUnits.length === 0}
-          className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+          className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]"
         >
           Request multiple units
         </Button>

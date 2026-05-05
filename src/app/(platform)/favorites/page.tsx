@@ -27,7 +27,7 @@ export default async function FavoritesPage() {
 
       {listings.length === 0 ? (
         <div className="waywork-section py-16 text-center">
-          <Heart className="mx-auto mb-4 size-10 text-[var(--ww-accent-orange)]" />
+          <Heart className="mx-auto mb-4 size-10 text-[var(--ww-terra)]" />
           <h3 className="text-lg font-semibold text-slate-900">No saved spaces yet</h3>
           <p className="mt-2 mb-4 text-slate-500">
             When you find a workspace you love, save it here for easy access.

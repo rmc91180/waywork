@@ -38,8 +38,8 @@ const platformTerms = [
 export default function TermsPage() {
   return (
     <div className="waywork-shell py-12">
-      <h1 className="text-4xl font-semibold text-[var(--ww-primary-blue)]">Terms and Conditions</h1>
-      <p className="mt-4 max-w-4xl text-sm leading-7 text-[var(--ww-text-primary)]">
+      <h1 className="text-4xl font-semibold text-[var(--ww-ink)]">Terms and Conditions</h1>
+      <p className="mt-4 max-w-4xl text-sm leading-7 text-[var(--ww-celadon)]">
         Effective date: April 14, 2026. These terms are drafted for Way Work&apos;s guest and host platform
         flows. They are intended as a strong operational baseline, but they should be reviewed and
         finalized by UK-qualified counsel before launch.
@@ -48,7 +48,7 @@ export default function TermsPage() {
       <section className="mt-8 max-w-4xl rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-700">
         <p>
           If you need to raise a legal or contractual question, start with the{" "}
-          <Link href="/support" className="font-semibold text-[var(--ww-primary-blue)] underline">
+          <Link href="/support" className="font-semibold text-[var(--ww-ink)] underline">
             support page
           </Link>{" "}
           or the account contact channel associated with your booking or host profile.
@@ -56,19 +56,19 @@ export default function TermsPage() {
       </section>
 
       <section id="guest-terms" className="mt-10 max-w-4xl scroll-mt-24">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">1. Guest Terms</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">1. Guest Terms</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           These terms apply when a guest searches, books, pays for, or stays in a listing on Way Work.
           The guest contract is primarily between the guest and the host, with Way Work operating the
           platform, communications layer, and payment flow unless a booking says otherwise.
         </p>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-celadon)]">
           {guestTerms.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
         <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-700">
-          <p className="font-semibold text-[var(--ww-primary-blue)]">Guest booking rules</p>
+          <p className="font-semibold text-[var(--ww-ink)]">Guest booking rules</p>
           <p className="mt-2">
             A guest only completes a booking when checkout is accepted and payment is authorized or
             captured through the applicable payment flow. Cancellation, refund, and no-show rights are
@@ -79,19 +79,19 @@ export default function TermsPage() {
       </section>
 
       <section id="host-terms" className="mt-10 max-w-4xl scroll-mt-24">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">2. Host Terms</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">2. Host Terms</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           These terms apply when a host creates, publishes, manages, or receives bookings for a listing
           on Way Work. The host is the merchant of record for the accommodation or stay services unless
           a separate written arrangement states otherwise.
         </p>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-celadon)]">
           {hostTerms.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
         <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-700">
-          <p className="font-semibold text-[var(--ww-primary-blue)]">Commission and payout</p>
+          <p className="font-semibold text-[var(--ww-ink)]">Commission and payout</p>
           <p className="mt-2">
             Unless a signed commercial agreement says otherwise, Way Work deducts its 15% commission,
             plus any applicable processing or tax adjustments disclosed at checkout or in the payout
@@ -103,8 +103,8 @@ export default function TermsPage() {
       </section>
 
       <section id="platform-terms" className="mt-10 max-w-4xl scroll-mt-24">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">3. Platform Terms</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">3. Platform Terms</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--ww-celadon)]">
           {platformTerms.map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -112,22 +112,22 @@ export default function TermsPage() {
       </section>
 
       <section id="disputes" className="mt-10 max-w-4xl scroll-mt-24">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">4. Priority, Governing Law, and Disputes</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">4. Priority, Governing Law, and Disputes</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           For hosts, these terms, together with any signed schedule or commercial addendum, govern the
           contractual relationship with Way Work. For guests, these terms apply together with the
           relevant listing and booking confirmation. If there is any conflict, the more specific
           booking, listing, or addendum terms prevail over these general terms to the extent of the
           conflict.
         </p>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           These terms are governed by the laws of England and Wales. Subject to any mandatory consumer
           rights that cannot be contracted out of, the courts of London shall have exclusive jurisdiction
           for disputes arising from the host relationship and, where permitted by law, disputes relating
           to platform use.
         </p>
         <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-          <p className="font-semibold text-[var(--ww-primary-blue)]">Consumer note</p>
+          <p className="font-semibold text-[var(--ww-ink)]">Consumer note</p>
           <p className="mt-2">
             Nothing in these terms is intended to reduce statutory consumer rights. If a guest is
             classified as a consumer under applicable law, mandatory rights and remedies remain available
@@ -137,8 +137,8 @@ export default function TermsPage() {
       </section>
 
       <section id="review" className="mt-10 max-w-4xl scroll-mt-24">
-        <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">5. Final Review</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--ww-text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">5. Final Review</h2>
+        <p className="mt-3 text-sm leading-7 text-[var(--ww-celadon)]">
           This draft is designed to be practical, platform-friendly, and commercially robust, but it is
           not a substitute for bespoke legal review. We should have UK counsel confirm the final version,
           especially the commission mechanics, liability allocation, adjudication wording, and any

@@ -84,10 +84,10 @@ export function HostSyncDiagnostics(props: HostSyncDiagnosticsProps) {
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-celadon)]">
             Sync Diagnostics
           </p>
-          <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-primary-blue)]">
+          <h2 className="mt-1 text-2xl font-semibold text-[var(--ww-ink)]">
             Mews Health & Queue
           </h2>
           <p className="mt-1 text-sm text-slate-600">

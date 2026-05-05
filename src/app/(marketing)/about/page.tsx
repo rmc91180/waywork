@@ -49,13 +49,13 @@ export default function AboutPage() {
       <section className="waywork-hero-gradient relative overflow-hidden py-14 md:py-18">
         <div className="waywork-grid-bg absolute inset-0 opacity-55" />
         <div className="waywork-shell relative">
-          <Badge className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-primary-blue)]">
+          <Badge className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-ink)]">
             About {BRAND.name}
           </Badge>
-          <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight text-[var(--ww-primary-blue)] md:text-6xl">
+          <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight text-[var(--ww-ink)] md:text-6xl">
             {BRAND.tagline}
           </h1>
-          <p className="mt-4 max-w-3xl text-base text-[var(--ww-text-primary)] md:text-lg">
+          <p className="mt-4 max-w-3xl text-base text-[var(--ww-celadon)] md:text-lg">
             {BRAND.descriptor} We built Way Work for people who want dependable productivity and
             real place-based experiences in one seamless stay.
           </p>
@@ -66,23 +66,23 @@ export default function AboutPage() {
         <div className="grid gap-5 md:grid-cols-2">
           <Card className="border-slate-200/75 bg-white/95">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">What We Solve</h2>
-              <p className="mt-3 text-[var(--ww-text-primary)]">
+              <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">What We Solve</h2>
+              <p className="mt-3 text-[var(--ww-celadon)]">
                 Remote workers and teams often choose between a fun location and a reliable setup.
                 Way Work removes that tradeoff with verified internet, practical workspace signals,
                 and residential comfort.
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--ww-text-primary)]">
+              <ul className="mt-4 space-y-2 text-sm text-[var(--ww-celadon)]">
                 <li className="inline-flex items-start gap-2">
-                  <Wifi className="mt-0.5 size-4 text-[var(--ww-secondary-green)]" />
+                  <Wifi className="mt-0.5 size-4 text-[var(--ww-celadon)]" />
                   Connectivity confidence before booking.
                 </li>
                 <li className="inline-flex items-start gap-2">
-                  <UsersRound className="mt-0.5 size-4 text-[var(--ww-secondary-green)]" />
+                  <UsersRound className="mt-0.5 size-4 text-[var(--ww-celadon)]" />
                   Team-ready layouts for offsites and strategy weeks.
                 </li>
                 <li className="inline-flex items-start gap-2">
-                  <Compass className="mt-0.5 size-4 text-[var(--ww-secondary-green)]" />
+                  <Compass className="mt-0.5 size-4 text-[var(--ww-celadon)]" />
                   Local experiences layered into every stay.
                 </li>
               </ul>
@@ -91,22 +91,22 @@ export default function AboutPage() {
 
           <Card className="border-slate-200/75 bg-white/95">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-semibold text-[var(--ww-primary-blue)]">How It Works</h2>
-              <p className="mt-3 text-[var(--ww-text-primary)]">
+              <h2 className="text-2xl font-semibold text-[var(--ww-ink)]">How It Works</h2>
+              <p className="mt-3 text-[var(--ww-celadon)]">
                 Guests discover spaces with transparent work-readiness data. Hosts unlock demand by
                 showcasing their space during lower occupancy periods.
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--ww-text-primary)]">
+              <ul className="mt-4 space-y-2 text-sm text-[var(--ww-celadon)]">
                 <li className="inline-flex items-start gap-2">
-                  <Network className="mt-0.5 size-4 text-[var(--ww-secondary-green)]" />
+                  <Network className="mt-0.5 size-4 text-[var(--ww-celadon)]" />
                   Work Score and trust badges guide fast decisions.
                 </li>
                 <li className="inline-flex items-start gap-2">
-                  <Globe2 className="mt-0.5 size-4 text-[var(--ww-secondary-green)]" />
+                  <Globe2 className="mt-0.5 size-4 text-[var(--ww-celadon)]" />
                   Global locations across major remote-work hubs.
                 </li>
                 <li className="inline-flex items-start gap-2">
-                  <Sparkles className="mt-0.5 size-4 text-[var(--ww-secondary-green)]" />
+                  <Sparkles className="mt-0.5 size-4 text-[var(--ww-celadon)]" />
                   Workation-friendly spaces with personality.
                 </li>
               </ul>
@@ -116,7 +116,7 @@ export default function AboutPage() {
       </section>
 
       <section className="waywork-shell mt-8 md:mt-10">
-        <div className="rounded-3xl bg-[var(--ww-primary-blue)] px-6 py-10 text-center text-white md:px-12">
+        <div className="rounded-3xl bg-[var(--ww-ink)] px-6 py-10 text-center text-white md:px-12">
           <h2 className="text-3xl font-semibold md:text-4xl">
             Productive travel should feel effortless and inspiring.
           </h2>
@@ -127,7 +127,7 @@ export default function AboutPage() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Button
               size="lg"
-              className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+              className="bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95"
               asChild
             >
               <Link href="/search">Browse Workspaces</Link>

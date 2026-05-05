@@ -14,39 +14,72 @@ export function BrandLogo({
   compact = false,
 }: BrandLogoProps) {
   const gradientId = useId();
+  const shineId = useId();
 
   return (
-    <div className={cn("inline-flex items-center gap-3", className)}>
+    <div className={cn("inline-flex items-center gap-2.5", className)}>
+      {/* Mark — a home with a forward-moving path, in gold */}
       <svg
-        viewBox="0 0 64 64"
+        viewBox="0 0 48 48"
         aria-hidden="true"
-        className={cn("h-10 w-10 shrink-0", compact && "h-9 w-9")}
+        className={cn("shrink-0", compact ? "h-8 w-8" : "h-9 w-9")}
       >
         <defs>
-          <linearGradient id={gradientId} x1="0%" x2="100%" y1="0%" y2="100%">
-            <stop offset="0%" stopColor="#033f63" />
-            <stop offset="55%" stopColor="#28666e" />
-            <stop offset="100%" stopColor="#097c87" />
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stopColor="#0d1f2d" />
+            <stop offset="100%" stopColor="#1a3a52" />
+          </linearGradient>
+          <linearGradient id={shineId} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
           </linearGradient>
         </defs>
-        <rect x="4" y="4" width="56" height="56" rx="16" fill={`url(#${gradientId})`} />
-        <path d="M14 28L32 14L50 28" fill="none" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-        <rect x="17" y="28" width="30" height="22" rx="6" fill="#ffffff" fillOpacity="0.94" />
-        <path d="M25 40H39" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
-        <path d="M32 34V46" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
+        {/* Base */}
+        <rect width="48" height="48" rx="13" fill={`url(#${gradientId})`} />
+        <rect width="48" height="48" rx="13" fill={`url(#${shineId})`} />
+        {/* House roof */}
+        <path
+          d="M10 22L24 11L38 22"
+          fill="none"
+          stroke="#c9a84c"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* House body */}
+        <rect x="14" y="22" width="20" height="15" rx="4" fill="#c9a84c" fillOpacity="0.15" stroke="#c9a84c" strokeWidth="2" />
+        {/* Laptop / work symbol inside */}
+        <rect x="18" y="27" width="12" height="7" rx="2" fill="#c9a84c" fillOpacity="0.9" />
+        <path d="M16 34h16" stroke="#c9a84c" strokeWidth="2" strokeLinecap="round" />
       </svg>
+
       <div className="leading-tight">
-        <p className="font-display text-lg font-bold tracking-tight text-[var(--ww-primary-blue)]">
-          {BRAND.name}
+        <p
+          className="font-display font-bold tracking-tight"
+          style={{
+            color: "var(--ww-ink)",
+            fontSize: compact ? "1.0625rem" : "1.125rem",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          Way<span style={{ color: "var(--ww-gold)" }}>Work</span>
         </p>
-        {!compact ? (
-          <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--ww-secondary-green)]">
+        {!compact && !showTagline && (
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+            style={{ color: "var(--ww-celadon)" }}
+          >
             {BRAND.tagline}
           </p>
-        ) : null}
-        {showTagline ? (
-          <p className="mt-1 max-w-sm text-xs text-[var(--ww-text-primary)]">{BRAND.descriptor}</p>
-        ) : null}
+        )}
+        {showTagline && (
+          <p
+            className="mt-0.5 max-w-xs text-[11px] leading-relaxed"
+            style={{ color: "#7a6e62" }}
+          >
+            {BRAND.descriptor}
+          </p>
+        )}
       </div>
     </div>
   );

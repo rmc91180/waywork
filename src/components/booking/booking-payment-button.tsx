@@ -79,7 +79,7 @@ export function BookingPaymentButton({ bookingId, listingId }: BookingPaymentBut
   return (
     <Button
       size="lg"
-      className="w-full bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+      className="w-full bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95"
       onClick={handlePayment}
       disabled={loading}
     >

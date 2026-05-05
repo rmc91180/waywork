@@ -13,7 +13,7 @@ export default function AuthLayout({
         <Link href="/" className="inline-flex">
           <BrandLogo />
         </Link>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ww-secondary-green)]">
+        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ww-celadon)]">
           {BRAND.descriptor}
         </p>
       </div>

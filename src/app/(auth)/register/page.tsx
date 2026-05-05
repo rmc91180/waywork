@@ -111,8 +111,8 @@ export default function RegisterPage() {
   return (
     <Card className="w-full max-w-lg border-slate-200 bg-white/95 shadow-lg">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-[var(--ww-primary-blue)]">Sign up free</CardTitle>
-        <CardDescription className="text-[var(--ww-text-primary)]">
+        <CardTitle className="text-2xl text-[var(--ww-ink)]">Sign up free</CardTitle>
+        <CardDescription className="text-[var(--ww-celadon)]">
           Build your account in {isHostOnboarding ? "2" : "3"} quick steps and unlock a $20 welcome credit.
         </CardDescription>
         <div
@@ -127,7 +127,7 @@ export default function RegisterPage() {
               aria-current={progressStepIndex === index ? "step" : undefined}
               className={`rounded-lg border px-2 py-1.5 text-xs font-semibold ${
                 progressStepIndex === index
-                  ? "border-[var(--ww-secondary-green)] bg-emerald-50 text-[var(--ww-secondary-green)]"
+                  ? "border-[var(--ww-celadon)] bg-emerald-50 text-[var(--ww-celadon)]"
                   : "border-slate-200 text-slate-500"
               }`}
             >
@@ -175,7 +175,7 @@ export default function RegisterPage() {
               required
             />
             <Button
-              className="w-full bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+              className="w-full bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]"
               onClick={() => {
                 const nextStep = isHostOnboarding ? 2 : 1;
                 setStep(nextStep);
@@ -203,7 +203,7 @@ export default function RegisterPage() {
                 type="button"
                 className={`rounded-xl border p-3 text-left text-sm ${
                   intent === "WORKATION"
-                    ? "border-[var(--ww-secondary-green)] bg-emerald-50"
+                    ? "border-[var(--ww-celadon)] bg-emerald-50"
                     : "border-slate-200"
                 }`}
                 onClick={() => {
@@ -217,7 +217,7 @@ export default function RegisterPage() {
                 type="button"
                 className={`rounded-xl border p-3 text-left text-sm ${
                   intent === "TEAM_OFFSITE"
-                    ? "border-[var(--ww-secondary-green)] bg-emerald-50"
+                    ? "border-[var(--ww-celadon)] bg-emerald-50"
                     : "border-slate-200"
                 }`}
                 onClick={() => {
@@ -233,7 +233,7 @@ export default function RegisterPage() {
                 Back
               </Button>
               <Button
-                className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]"
+                className="bg-[var(--ww-ink)] text-white hover:bg-[var(--ww-celadon)]"
                 onClick={() => {
                   setStep(2);
                   trackEvent({ event: "signup_step_advanced", properties: { from: 2, to: 3, intent } });
@@ -259,7 +259,7 @@ export default function RegisterPage() {
                 Back
               </Button>
               <Button
-                className="bg-[var(--ww-accent-orange)] text-[var(--ww-primary-blue)] hover:brightness-95"
+                className="bg-[var(--ww-terra)] text-[var(--ww-ink)] hover:brightness-95"
                 onClick={handleCompleteSignup}
                 disabled={loading || !providersLoaded}
               >
@@ -275,7 +275,7 @@ export default function RegisterPage() {
           Already have an account?{" "}
           <Link
             href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-            className="text-[var(--ww-primary-blue)] hover:underline"
+            className="text-[var(--ww-ink)] hover:underline"
           >
             Log in
           </Link>
