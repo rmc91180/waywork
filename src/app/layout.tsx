@@ -15,27 +15,47 @@ const playfairDisplay = Playfair_Display({
   weight: ["400", "600", "700", "800"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://waywork.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: {
     default: `${BRAND.name}: ${BRAND.tagline}`,
     template: `%s | ${BRAND.name}`,
   },
   description:
-    "Way Work helps guests and teams book fun, high-speed residential workspaces worldwide with verified internet, productive layouts, and local experiences.",
+    "Way Work helps guests and teams book work-ready residential apartments worldwide — verified internet, desk setups, and Work Scores for every listing. Book solo workations or full team offsites.",
   keywords: [
     "workation",
-    "digital nomad",
-    "team offsite",
-    "remote workspace",
-    "residential workspace",
-    "work from anywhere",
+    "work from home rental",
+    "digital nomad apartment",
+    "team offsite accommodation",
+    "remote workspace rental",
+    "work ready apartment",
+    "verified internet rental",
+    "work travel accommodation",
+    "company offsite booking",
+    "coliving workspace",
   ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
   openGraph: {
     type: "website",
     siteName: BRAND.name,
     title: `${BRAND.name}: ${BRAND.tagline}`,
     description: BRAND.guestValueProp,
+    url: APP_URL,
+    images: [{ url: `${APP_URL}/images/og-default.png`, width: 1200, height: 630, alt: "Way Work — Work-ready homes worldwide" }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: `${BRAND.name}: ${BRAND.tagline}`,
+    description: BRAND.guestValueProp,
+  },
+  alternates: { canonical: APP_URL },
 };
 
 export default function RootLayout({

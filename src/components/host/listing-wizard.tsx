@@ -11,7 +11,7 @@ import { StepAmenities } from "@/components/host/step-amenities";
 import { StepConnectivity } from "@/components/host/step-connectivity";
 import { StepPhotos } from "@/components/host/step-photos";
 import { StepAvailability } from "@/components/host/step-availability";
-import { StepReview } from "@/components/host/step-review";
+import { WorkScorePreview } from "@/components/host/work-score-preview";
 import { useListingForm, type ListingFormData } from "@/hooks/use-listing-form";
 import {
   saveCompleteListing,
@@ -311,41 +311,55 @@ export function ListingWizard({
     <div>
       <WizardSteps currentStep={step} onStepClick={goToStep} />
 
-      <div className="rounded-lg border bg-white p-6">{renderStep()}</div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_280px]">
+        {/* Main step content */}
+        <div>
+          <div className="rounded-lg border bg-white p-6">{renderStep()}</div>
 
-      {/* Navigation */}
-      <div className="mt-6 flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={prevStep}
-          disabled={isFirstStep || isPending}
-        >
-          Back
-        </Button>
-
-        <div className="flex gap-2">
-          {isLastStep && (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleSaveDraft}
-                disabled={isPending || saving}
-              >
-                {saving ? "Saving..." : "Save as Draft"}
-              </Button>
-              <Button
-                onClick={handleSubmitForReview}
-                disabled={isPending || saving}
-              >
-                {saving ? "Submitting..." : "Submit for Review"}
-              </Button>
-            </>
-          )}
-          {!isLastStep && (
-            <Button onClick={handleContinue} disabled={isPending}>
-              Continue
+          {/* Navigation */}
+          <div className="mt-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={isFirstStep || isPending}
+            >
+              Back
             </Button>
-          )}
+
+            <div className="flex gap-2">
+              {isLastStep && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={handleSaveDraft}
+                    disabled={isPending || saving}
+                  >
+                    {saving ? "Saving..." : "Save as Draft"}
+                  </Button>
+                  <Button
+                    onClick={handleSubmitForReview}
+                    disabled={isPending || saving}
+                  >
+                    {saving ? "Submitting..." : "Submit for Review"}
+                  </Button>
+                </>
+              )}
+              {!isLastStep && (
+                <Button onClick={handleContinue} disabled={isPending}>
+                  Continue
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Work Score preview — sticky sidebar */}
+        <div className="hidden lg:block">
+          <WorkScorePreview
+            amenities={formData.amenities}
+            connectivity={formData.connectivity}
+            currentStep={step}
+          />
         </div>
       </div>
     </div>

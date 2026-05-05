@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { unstable_noStore as noStore } from "next/cache";
+import { unstable_cache } from "next/cache";
 import { ArrowRight, Gauge, Wifi } from "lucide-react";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,10 @@ type FeaturedListing = {
   } | null;
 };
 
-async function getHomepageData() {
-  try {
-    const pilotListings = await db.listing.findMany({
+const getHomepageData = unstable_cache(
+  async () => {
+    try {
+      const pilotListings = await db.listing.findMany({
       where: {
         status: "ACTIVE",
         city: "Madrid",
@@ -89,7 +90,10 @@ async function getHomepageData() {
       hasPilotLaunchCollection: false,
     };
   }
-}
+},
+  ["homepage-data"],
+  { revalidate: 300 }
+);
 
 const browseLinks = [
   {
@@ -110,8 +114,38 @@ const browseLinks = [
 ];
 
 export async function HomepageRefresh() {
-  noStore();
   const data = await getHomepageData();
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://waywork.com";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: "Way Work",
+        url: APP_URL,
+        description: "Book work-ready residential apartments for solo workations and team offsites. Verified internet, desk setups, and Work Scores for every listing.",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: { "@type": "EntryPoint", urlTemplate: `${APP_URL}/search?query={search_term_string}` },
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "Organization",
+        name: "Way Work",
+        url: APP_URL,
+        logo: `${APP_URL}/images/logo.png`,
+        sameAs: [],
+        contactPoint: {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          email: "support@waywork.com",
+          availableLanguage: ["English", "Hebrew"],
+        },
+      },
+    ],
+  };
 
   const heroImages: HeroImage[] = [
     {
@@ -132,7 +166,12 @@ export async function HomepageRefresh() {
   ];
 
   return (
-    <div className="pb-18">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="pb-18">
       <HomeHero
         images={heroImages}
         searchPanel={
@@ -303,5 +342,6 @@ export async function HomepageRefresh() {
       </section>
 
     </div>
+    </>
   );
 }

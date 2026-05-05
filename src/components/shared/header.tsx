@@ -54,6 +54,11 @@ export function Header() {
                 Search
               </Link>
             </Button>
+            <Button variant="ghost" className="hidden md:inline-flex text-[var(--ww-primary-blue)]" asChild>
+              <Link href="/for-teams">
+                For Teams
+              </Link>
+            </Button>
             {status === "loading" ? (
               <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />
             ) : session?.user ? (

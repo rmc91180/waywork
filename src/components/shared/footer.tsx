@@ -21,26 +21,27 @@ export function Footer() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <Link
-                  href="/search"
-                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
-                >
+                <Link href="/search" className="text-sm text-slate-600 transition-colors hover:text-slate-900">
                   Find Spaces
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/about"
-                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
-                >
+                <Link href="/cities" className="text-sm text-slate-600 transition-colors hover:text-slate-900">
+                  Destinations
+                </Link>
+              </li>
+              <li>
+                <Link href="/for-teams" className="text-sm text-slate-600 transition-colors hover:text-slate-900">
+                  For Teams
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-sm text-slate-600 transition-colors hover:text-slate-900">
                   About
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/blog"
-                  className="text-sm text-slate-600 transition-colors hover:text-slate-900"
-                >
+                <Link href="/blog" className="text-sm text-slate-600 transition-colors hover:text-slate-900">
                   Blog
                 </Link>
               </li>

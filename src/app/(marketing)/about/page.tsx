@@ -5,15 +5,47 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { BRAND } from "@/lib/brand";
 
-export const metadata = {
-  title: "About",
+import type { Metadata } from "next";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://waywork.com";
+
+export const metadata: Metadata = {
+  title: "About Way Work — Work-Ready Homes for Remote Workers & Teams",
   description:
-    "Learn how Way Work blends productivity and exploration with verified residential workspaces for digital nomads and teams.",
+    "Way Work is a marketplace for verified, work-ready residential apartments. Built for digital nomads, remote professionals, and teams who want productive stays with real local experiences.",
+  alternates: { canonical: `${APP_URL}/about` },
+  openGraph: {
+    title: "About Way Work",
+    description: "We built Way Work for remote workers and teams who want dependable productivity and real place-based experiences in one seamless stay.",
+    url: `${APP_URL}/about`,
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  name: "About Way Work",
+  url: `${APP_URL}/about`,
+  description: "Way Work is a marketplace for verified, work-ready residential apartments for digital nomads, remote professionals, and teams.",
+  mainEntity: {
+    "@type": "Organization",
+    name: "Way Work",
+    url: APP_URL,
+    foundingDate: "2024",
+    description: "Turning residential properties into productive, experiential workspaces for remote workers and teams worldwide.",
+    areaServed: "Worldwide",
+    serviceType: ["Workation Booking", "Team Offsite Coordination", "Remote Work Accommodation"],
+  },
 };
 
 export default function AboutPage() {
   return (
-    <div className="pb-14">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="pb-14">
       <section className="waywork-hero-gradient relative overflow-hidden py-14 md:py-18">
         <div className="waywork-grid-bg absolute inset-0 opacity-55" />
         <div className="waywork-shell relative">
@@ -112,5 +144,6 @@ export default function AboutPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }
