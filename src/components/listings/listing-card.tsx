@@ -1,15 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { BED_SIZE_OPTIONS, WORKSPACE_TYPES } from "@/lib/constants";
+import { WORKSPACE_TYPES } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
 import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
-import { getWorkScoreColor } from "@/lib/work-score";
 import { formatCurrency } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
-import type { SearchUiVariant } from "@/lib/experiments";
 
 export interface ListingCardData {
   id: string;
@@ -48,7 +44,7 @@ export interface ListingCardData {
 }
 
 interface ListingCardProps {
-  variant?: SearchUiVariant;
+  variant?: string;
   listing: ListingCardData;
   matchReasons?: string[];
 }
@@ -65,16 +61,17 @@ export function ListingCard({
   matchReasons = [],
 }: ListingCardProps) {
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];
-  const bedSize = BED_SIZE_OPTIONS[listing.bedSize as keyof typeof BED_SIZE_OPTIONS];
   const primaryImage = listing.images[0];
   const rating = listing.averageRating || null;
   const reviewCount = listing.reviewCount || listing._count.reviews;
   const limehomePilotMeta = getLimehomePilotMeta({ slug: listing.slug });
+  const score = listing.workScore;
+  const scoreColor = score >= 80 ? "#2d6a4f" : score >= 65 ? "#c9a84c" : "#7a6e62";
 
   return (
     <Link
       href={`/spaces/${listing.slug}`}
-      className="block"
+      className="block ww-listing-card ww-hover-lift"
       onClick={() =>
         trackEvent({
           event: "search_result_clicked",
@@ -87,125 +84,125 @@ export function ListingCard({
         })
       }
     >
-      <Card
-        className={cn(
-          "group h-full overflow-hidden border-slate-200 py-0 transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300",
-          variant === "immersive" ? "hover:shadow-xl" : "hover:shadow-lg"
+      {/* Image */}
+      <div className="relative aspect-[16/10] overflow-hidden bg-[var(--ww-mist)]">
+        {primaryImage?.url?.startsWith("http") ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={primaryImage.url}
+            alt={primaryImage.alt || listing.title}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-5xl bg-[var(--ww-gold-light)]">
+            {wsType?.icon || "🏢"}
+          </div>
         )}
-      >
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-          {primaryImage?.url?.startsWith("http") ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={primaryImage.url}
-              alt={primaryImage.alt || listing.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-5xl">
-              {wsType?.icon || "🏢"}
-            </div>
+
+        {/* Gradient overlay */}
+        <div className="ww-card-img-overlay absolute inset-0" />
+
+        {/* Top badges */}
+        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+          <span className="rounded-md bg-[var(--ww-warm-white)]/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--ww-ink)] backdrop-blur-sm">
+            {wsType?.label || listing.workspaceType}
+          </span>
+          {limehomePilotMeta && (
+            <span className="rounded-md bg-[var(--ww-celadon)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+              {limehomePilotMeta.badge}
+            </span>
           )}
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
-
-          <div className="absolute left-3 top-3 flex gap-2">
-            <Badge className="bg-white/95 text-slate-800">{wsType?.label || listing.workspaceType}</Badge>
-            {limehomePilotMeta && (
-              <Badge className="bg-cyan-600 text-white">{limehomePilotMeta.badge}</Badge>
-            )}
-            {listing.connectivityProfile?.verified && (
-              <Badge className="bg-[var(--ww-secondary-green)] text-white">Verified Internet</Badge>
-            )}
-          </div>
-
-          <div
-            className={cn(
-              "absolute right-3 top-3 rounded-full bg-white px-2.5 py-1 text-sm font-bold shadow-md",
-              getWorkScoreColor(listing.workScore)
-            )}
-          >
-            {listing.workScore}
-          </div>
-
-          <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 text-white">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">
-                {listing.city}
-                {listing.state ? `, ${listing.state}` : ""}
-              </p>
-              <p className="text-xs text-white/80">
-                Up to {listing.maxGuests} guest{listing.maxGuests > 1 ? "s" : ""}
-              </p>
-              <p className="text-xs text-white/80">
-                {listing.bedroomCount} bed · {bedSize?.label || listing.bedSize}
-              </p>
-            </div>
-            <div className="rounded-md bg-black/45 px-2 py-1 text-right backdrop-blur-sm">
-              <p className="text-sm font-semibold">{formatCurrency(listing.pricePerDay, listing.currency ?? "USD")}/day</p>
-            </div>
-          </div>
+          {listing.connectivityProfile?.verified && (
+            <span className="rounded-md bg-[var(--ww-celadon-light)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--ww-celadon)]">
+              ✓ Verified
+            </span>
+          )}
         </div>
 
-        <CardContent className="space-y-2.5 p-4">
-          <h3 className="line-clamp-2 text-base font-semibold leading-tight text-slate-900">
-            {listing.title}
-          </h3>
+        {/* Work Score — top right */}
+        <div
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl font-bold text-sm shadow-lg"
+          style={{ background: "var(--ww-ink)", color: scoreColor, fontFamily: "var(--font-mono, monospace)" }}
+        >
+          {score}
+        </div>
 
-          {limehomePilotMeta && (
-            <p className="text-sm text-slate-600">
-              {limehomePilotMeta.neighborhood} · {limehomePilotMeta.bestFor}
+        {/* Bottom — city + price */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-3.5">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white drop-shadow-sm">
+              {listing.city}
             </p>
-          )}
-
-          {matchReasons.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {matchReasons.slice(0, 3).map((reason) => (
-                <Badge
-                  key={reason}
-                  variant="secondary"
-                  className="bg-cyan-50 text-cyan-800"
-                >
-                  {reason}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          {listing.connectivityProfile && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
-              <span>{listing.connectivityProfile.declaredDownloadMbps} Mbps</span>
-              <span>{networkLabel(listing.connectivityProfile.networkType)}</span>
-              {listing.connectivityProfile.hasBackupConnection && <span>Backup internet</span>}
-              {listing.propertySizeSqm ? <span>{listing.propertySizeSqm} sqm</span> : null}
-            </div>
-          )}
-
-          {(listing.hasJacuzzi ||
-            listing.hasSwimmingPool ||
-            listing.hasBackyard ||
-            listing.hasPingPongTable ||
-            listing.hasPoolTable) && (
-            <div className="flex flex-wrap gap-1.5">
-              {listing.hasSwimmingPool && <Badge variant="secondary">Pool</Badge>}
-              {listing.hasJacuzzi && <Badge variant="secondary">Jacuzzi</Badge>}
-              {listing.hasBackyard && <Badge variant="secondary">Backyard</Badge>}
-              {listing.hasPingPongTable && <Badge variant="secondary">Ping Pong</Badge>}
-              {listing.hasPoolTable && <Badge variant="secondary">Pool Table</Badge>}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-            <div className="text-xs text-slate-500">
-              {rating ? `${rating.toFixed(1)} avg rating` : "New listing"}
-              {reviewCount > 0 ? ` · ${reviewCount} review${reviewCount > 1 ? "s" : ""}` : ""}
-            </div>
-            <span className="text-xs font-medium text-[var(--ww-primary-blue)] transition-colors group-hover:text-[var(--ww-secondary-green)]">
-              View details
-            </span>
+            <p className="text-xs text-white/75">
+              Up to {listing.maxGuests} guest{listing.maxGuests > 1 ? "s" : ""}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="shrink-0">
+            <p
+              className="text-base font-bold text-white drop-shadow-sm"
+              style={{ fontFamily: "var(--font-mono, monospace)" }}
+            >
+              {formatCurrency(listing.pricePerDay, listing.currency ?? "USD")}
+            </p>
+            <p className="text-right text-[10px] text-white/70">per night</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="p-4">
+        <h3 className="line-clamp-1 text-sm font-semibold leading-snug text-[var(--ww-ink)]">
+          {listing.title}
+        </h3>
+
+        {limehomePilotMeta && (
+          <p className="mt-0.5 text-xs text-[#7a6e62]">
+            {limehomePilotMeta.neighborhood} · {limehomePilotMeta.bestFor}
+          </p>
+        )}
+
+        {/* Connectivity quick stat */}
+        {listing.connectivityProfile && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-[#7a6e62]">
+            <span
+              className="rounded-md bg-[var(--ww-celadon-light)] px-1.5 py-0.5 font-semibold text-[var(--ww-celadon)]"
+              style={{ fontFamily: "var(--font-mono, monospace)" }}
+            >
+              {listing.connectivityProfile.declaredDownloadMbps} Mbps
+            </span>
+            <span>{networkLabel(listing.connectivityProfile.networkType)}</span>
+            {listing.connectivityProfile.hasBackupConnection && (
+              <span className="text-[var(--ww-celadon)]">· Backup</span>
+            )}
+          </div>
+        )}
+
+        {matchReasons.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {matchReasons.slice(0, 2).map((reason) => (
+              <span
+                key={reason}
+                className="rounded-md bg-[var(--ww-gold-light)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ww-ink)]"
+              >
+                {reason}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-3 flex items-center justify-between border-t border-[var(--ww-mist)] pt-2.5">
+          <span className="text-[11px] text-[#b8afa4]">
+            {rating
+              ? `★ ${rating.toFixed(1)} · ${reviewCount} review${reviewCount !== 1 ? "s" : ""}`
+              : "New listing"}
+          </span>
+          <span className="text-[11px] font-medium text-[var(--ww-terra)] transition-colors group-hover:text-[var(--ww-terra-deep)]">
+            View →
+          </span>
+        </div>
+      </div>
     </Link>
   );
 }
+

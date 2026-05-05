@@ -192,152 +192,200 @@ export async function HomepageRefresh() {
         }
       />
 
-      <section className="waywork-shell mt-14">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ww-secondary-green)]">
+      {/* ── Featured listings ──────────────────────────────────── */}
+      <section className="waywork-shell mt-16 md:mt-20">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-xl">
+            <p className="ww-eyebrow">
               {data.hasPilotLaunchCollection ? "Madrid pilot collection" : "Featured homes"}
             </p>
-            <h2 className="mt-2 text-3xl font-semibold text-[var(--ww-primary-blue)] md:text-4xl">
+            <h2 className="mt-2 text-3xl font-semibold md:text-4xl" style={{ color: "var(--ww-ink)" }}>
               {data.hasPilotLaunchCollection
                 ? "Launching with Limehome in Madrid"
-                : "Search first. Decide fast."}
+                : "Work-ready. From day one."}
             </h2>
-            <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: "#7a6e62" }}>
               {data.hasPilotLaunchCollection
-                ? "A tighter first collection of Madrid homes for solo work trips, project pairs, and compact offsites."
-                : "Every property is presented around the details that matter most for work: internet, layout, guest fit, and price."}
+                ? "A curated first collection of Madrid homes for solo trips, project pairs, and compact offsites."
+                : "Every property is presented around what matters for work: internet, layout, guest fit, and price."}
             </p>
           </div>
-          <Button variant="outline" asChild>
-            <Link href={data.hasPilotLaunchCollection ? "/search?query=madrid" : "/search"}>
-              {data.hasPilotLaunchCollection ? "Browse Madrid launch homes" : "Browse all spaces"}
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          <Link
+            href={data.hasPilotLaunchCollection ? "/search?query=madrid" : "/search"}
+            className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
+            style={{
+              borderColor: "var(--ww-mist)",
+              color: "var(--ww-ink)",
+              background: "var(--ww-warm-white)",
+            }}
+          >
+            {data.hasPilotLaunchCollection ? "Browse Madrid homes" : "Browse all spaces"}
+            <ArrowRight className="size-4" />
+          </Link>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {data.featuredListings.length > 0 ? (
             data.featuredListings.map((listing) => {
               const pilotMeta = getLimehomePilotMeta({ slug: listing.slug });
+              const score = listing.workScore;
+              const scoreColor = score >= 80 ? "var(--ww-celadon)" : score >= 65 ? "var(--ww-gold)" : "#7a6e62";
 
               return (
-                <article
+                <Link
                   key={listing.id}
-                  className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm"
+                  href={`/spaces/${listing.id}`}
+                  className="ww-listing-card ww-hover-lift group block"
                 >
-                  <div className="aspect-[4/3] bg-slate-100">
+                  {/* Image */}
+                  <div className="relative aspect-[4/3] overflow-hidden" style={{ background: "var(--ww-mist)" }}>
                     {listing.images[0]?.url ? (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={listing.images[0].url}
-                          alt={listing.images[0].alt || listing.title}
-                          loading="lazy"
-                          className="h-full w-full object-cover"
-                        />
-                      </>
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={listing.images[0].url}
+                        alt={listing.images[0].alt || listing.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                        Workspace Preview
+                      <div className="flex h-full items-center justify-center text-sm" style={{ color: "#b8afa4" }}>
+                        Preview coming soon
                       </div>
                     )}
-                  </div>
+                    <div className="ww-card-img-overlay absolute inset-0" />
 
-                  <div className="space-y-3 p-4">
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="min-w-0">
-                        {pilotMeta ? (
-                          <Badge variant="secondary" className="mb-1.5 bg-cyan-50 text-cyan-800">
-                            {pilotMeta.badge}
-                          </Badge>
-                        ) : null}
-                        <p className="text-[13px] text-slate-500">
-                          {listing.city}
-                          {listing.state ? `, ${listing.state}` : ""}, {listing.country}
-                        </p>
-                        <h3 className="mt-1 line-clamp-2 text-lg font-semibold leading-tight text-[var(--ww-primary-blue)]">
-                          {listing.title}
-                        </h3>
-                      </div>
-                      <p className="shrink-0 text-[13px] font-semibold text-[var(--ww-primary-blue)]">
-                        {formatCurrency(listing.pricePerDay)}/day
-                      </p>
+                    {/* Score badge */}
+                    <div
+                      className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold shadow-lg"
+                      style={{ background: "var(--ww-ink)", color: scoreColor, fontFamily: "var(--font-mono, monospace)" }}
+                    >
+                      {score}
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 text-[11px] text-slate-700">
-                      <span className="ww-trust-pill inline-flex items-center gap-1.5">
-                        <Wifi className="size-3.5" />
+                    {/* Pilot badge */}
+                    {pilotMeta && (
+                      <div className="absolute left-3 top-3">
+                        <span className="rounded-md bg-[var(--ww-celadon)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                          {pilotMeta.badge}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Price overlay */}
+                    <div className="absolute bottom-3 right-3">
+                      <span
+                        className="rounded-lg px-2.5 py-1 text-sm font-bold text-white"
+                        style={{ background: "rgba(13,31,45,0.55)", backdropFilter: "blur(8px)", fontFamily: "var(--font-mono, monospace)" }}
+                      >
+                        {formatCurrency(listing.pricePerDay)}/day
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-4">
+                    <p className="text-xs" style={{ color: "#b8afa4" }}>
+                      {listing.city}{listing.state ? `, ${listing.state}` : ""} · {listing.country}
+                    </p>
+                    <h3 className="mt-1 line-clamp-1 text-sm font-semibold" style={{ color: "var(--ww-ink)", fontFamily: "var(--font-playfair), Georgia, serif" }}>
+                      {listing.title}
+                    </h3>
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      <span className="ww-trust-pill">
+                        <Wifi className="size-3" />
                         {listing.connectivityProfile?.declaredDownloadMbps ?? 0} Mbps
                       </span>
-                      <span className="ww-trust-pill inline-flex items-center gap-1.5">
-                        <Gauge className="size-3.5" />
-                        Work Score {listing.workScore}
-                      </span>
-                      {pilotMeta ? (
-                        <span className="ww-trust-pill inline-flex items-center gap-1.5">
-                          {pilotMeta.bestFor}
-                        </span>
-                      ) : null}
+                      {pilotMeta && (
+                        <span className="ww-trust-pill">{pilotMeta.bestFor}</span>
+                      )}
                     </div>
-
-                    <Button
-                      variant="outline"
-                      className="w-full border-[var(--ww-secondary-green)]/25 text-[var(--ww-primary-blue)] hover:bg-emerald-50"
-                      asChild
-                    >
-                      <Link href={`/spaces/${listing.id}`}>View property</Link>
-                    </Button>
                   </div>
-                </article>
+                </Link>
               );
             })
           ) : (
-            Array.from({ length: 3 }).map((_, index) => (
-              <article
-                key={`placeholder-${index}`}
-                className="rounded-[30px] border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500"
-              >
-                Featured property coming soon.
-              </article>
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={`placeholder-${i}`}
+                className="aspect-[4/3] rounded-2xl ww-shimmer"
+              />
             ))
           )}
         </div>
       </section>
 
-      <section className="waywork-shell mt-14">
-        <div className="grid gap-4 rounded-[32px] border border-slate-200 bg-white p-5 md:grid-cols-3 md:p-6">
-          {browseLinks.map((link) => (
+      {/* ── Browse categories ──────────────────────────────────── */}
+      <section className="waywork-shell mt-14 md:mt-18">
+        <div className="grid gap-4 md:grid-cols-3">
+          {browseLinks.map((link, i) => (
             <Link
               key={link.label}
               href={link.href}
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-[var(--ww-secondary-green)]/35 hover:bg-white"
+              className="group relative overflow-hidden rounded-2xl p-6 transition ww-hover-lift"
+              style={{
+                background: i === 0 ? "var(--ww-ink)" : i === 1 ? "var(--ww-celadon)" : "var(--ww-terra)",
+                color: "white",
+              }}
             >
-              <p className="text-lg font-semibold text-[var(--ww-primary-blue)]">{link.label}</p>
-              <p className="mt-1 text-sm text-[var(--ww-text-primary)]">{link.description}</p>
+              <div
+                className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full"
+                style={{ background: "rgba(255,255,255,0.06)" }}
+              />
+              <div
+                className="pointer-events-none absolute -bottom-4 -left-4 size-28 rounded-full"
+                style={{ background: "rgba(255,255,255,0.04)" }}
+              />
+              <p className="relative text-lg font-semibold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
+                {link.label}
+              </p>
+              <p className="relative mt-1 text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
+                {link.description}
+              </p>
+              <ArrowRight className="relative mt-4 size-4 transition-transform group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.6)" }} />
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="waywork-shell mt-14">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-[32px] border border-slate-200 bg-[#f7f8fa] px-6 py-6 md:px-8">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--ww-secondary-green)]">
-              For hosts
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-[var(--ww-primary-blue)] md:text-3xl">
-              Want to list a work-ready home?
-            </h2>
-            <p className="mt-2 text-sm text-[var(--ww-text-primary)] md:text-base">
-              We&apos;ll refine the host experience next. For now, guests stay front and center and
-              hosts still have a clear route in.
-            </p>
+      {/* ── Host CTA ───────────────────────────────────────────── */}
+      <section className="waywork-shell mt-14 md:mt-18">
+        <div
+          className="relative overflow-hidden rounded-3xl px-8 py-10 md:px-12 md:py-12"
+          style={{ background: "var(--ww-gold-light)", border: "1px solid rgba(201,168,76,0.3)" }}
+        >
+          {/* Decorative background text */}
+          <span
+            className="pointer-events-none absolute -right-4 -top-4 select-none text-[120px] font-bold leading-none"
+            style={{ color: "rgba(201,168,76,0.12)", fontFamily: "var(--font-playfair), Georgia, serif" }}
+            aria-hidden
+          >
+            Host
+          </span>
+
+          <div className="relative flex flex-wrap items-center justify-between gap-6">
+            <div className="max-w-xl">
+              <p className="ww-eyebrow" style={{ color: "var(--ww-celadon)" }}>For hosts</p>
+              <h2 className="mt-2 text-2xl font-semibold md:text-3xl" style={{ color: "var(--ww-ink)" }}>
+                Your property earns more with work travelers.
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "#5a5047" }}>
+                Remote workers stay longer, treat spaces better, and book shoulder seasons.
+                Add your home to WayWork and we'll handle the rest.
+              </p>
+            </div>
+            <Link
+              href="/register?callbackUrl=%2Fhost"
+              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+              style={{
+                background: "var(--ww-ink)",
+                color: "var(--ww-gold-light)",
+                boxShadow: "0 2px 8px rgba(13,31,45,0.2)",
+              }}
+            >
+              Become a host
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
-          <Button asChild className="bg-[var(--ww-primary-blue)] text-white hover:bg-[var(--ww-secondary-green)]">
-            <Link href="/register?callbackUrl=%2Fhost">Become a Host</Link>
-          </Button>
         </div>
       </section>
 

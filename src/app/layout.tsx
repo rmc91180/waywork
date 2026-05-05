@@ -1,18 +1,31 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { DM_Sans, Playfair_Display, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/shared/providers";
 import { BRAND } from "@/lib/brand";
 
-const inter = Inter({
-  variable: "--font-inter",
+// DM Sans — humanist, warm, excellent on screens, not Inter-generic
+const dmSans = DM_Sans({
+  variable: "--font-inter", // keep var name for compatibility
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
+// Playfair Display — editorial serif for headings
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+// DM Mono — for prices, scores, numbers — adds craft
+const dmMono = DM_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://waywork.com";
@@ -65,7 +78,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${playfairDisplay.variable} font-sans antialiased`}>
+      <body className={`${dmSans.variable} ${playfairDisplay.variable} ${dmMono.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

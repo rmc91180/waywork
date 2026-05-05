@@ -76,97 +76,82 @@ export function HomeQuickSearchForm() {
   }
 
   return (
-    <div className="grid gap-2 rounded-[24px] border border-white/45 bg-white/92 p-2 shadow-xl shadow-slate-900/10 backdrop-blur md:grid-cols-[minmax(0,1.45fr)_minmax(0,1.1fr)_minmax(0,0.8fr)_auto] md:items-stretch">
+    <div
+      className="grid gap-1.5 rounded-2xl p-1.5 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1.1fr)_minmax(0,0.8fr)_auto] md:items-stretch"
+      style={{
+        background: "rgba(250,248,244,0.94)",
+        border: "1px solid rgba(201,168,76,0.25)",
+        backdropFilter: "blur(24px)",
+        boxShadow: "0 4px 32px rgba(13,31,45,0.18), 0 1px 4px rgba(13,31,45,0.1)",
+      }}
+    >
+      {/* Where */}
       <Popover open={whereOpen} onOpenChange={setWhereOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex h-14 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left transition hover:border-slate-300 hover:bg-slate-50"
+            className="flex h-14 items-center justify-between gap-3 rounded-xl px-4 text-left transition"
+            style={{ background: "transparent" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(201,168,76,0.08)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
           >
             <span className="min-w-0">
-              <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <span className="block text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--ww-celadon)" }}>
                 Where
               </span>
-              <span
-                className={cn(
-                  "mt-1 block truncate text-sm",
-                  location.trim() ? "text-slate-900" : "text-slate-400"
-                )}
-              >
+              <span className="mt-0.5 block truncate text-sm font-medium" style={{ color: location.trim() ? "var(--ww-ink)" : "#b8afa4" }}>
                 {locationLabel}
               </span>
             </span>
-            <MapPin className="size-4 shrink-0 text-slate-500" />
+            <MapPin className="size-4 shrink-0" style={{ color: "var(--ww-gold)" }} />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" sideOffset={12} className="w-[320px] border-slate-200 p-4">
+        <PopoverContent align="start" sideOffset={12} className="w-[320px] p-4" style={{ border: "1px solid var(--ww-mist)", background: "var(--ww-warm-white)", borderRadius: "1rem" }}>
           <div className="space-y-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Where
-              </p>
-              <h3 className="mt-1 text-base font-semibold text-slate-900">
-                Pick a city or neighborhood
-              </h3>
-            </div>
+            <p className="ww-eyebrow">Pick a city or neighbourhood</p>
             <Input
               autoFocus
               value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              placeholder="City, neighborhood, or property"
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Madrid, Lisbon, Bangkok…"
+              className="ww-input"
+              style={{ fontFamily: "var(--font-inter), system-ui" }}
             />
             <div className="flex items-center justify-between gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation("")}
-                className="text-slate-500"
-              >
-                Clear
-              </Button>
-              <Button type="button" size="sm" onClick={() => setWhereOpen(false)}>
-                Done
-              </Button>
+              <button type="button" onClick={() => setLocation("")} className="text-xs" style={{ color: "#7a6e62" }}>Clear</button>
+              <button type="button" onClick={() => setWhereOpen(false)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white" style={{ background: "var(--ww-ink)" }}>Done</button>
             </div>
           </div>
         </PopoverContent>
       </Popover>
 
+      {/* Separator */}
+      <div className="hidden w-px self-stretch my-2 md:block" style={{ background: "var(--ww-mist)" }} />
+
+      {/* When */}
       <Popover open={whenOpen} onOpenChange={setWhenOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex h-14 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left transition hover:border-slate-300 hover:bg-slate-50"
+            className="flex h-14 items-center justify-between gap-3 rounded-xl px-4 text-left transition"
+            style={{ background: "transparent" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(201,168,76,0.08)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
           >
             <span className="min-w-0">
-              <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <span className="block text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--ww-celadon)" }}>
                 When
               </span>
-              <span
-                className={cn(
-                  "mt-1 block truncate text-sm",
-                  checkIn ? "text-slate-900" : "text-slate-400"
-                )}
-              >
+              <span className="mt-0.5 block truncate text-sm font-medium" style={{ color: checkIn ? "var(--ww-ink)" : "#b8afa4" }}>
                 {whenLabel}
               </span>
             </span>
-            <CalendarDays className="size-4 shrink-0 text-slate-500" />
+            <CalendarDays className="size-4 shrink-0" style={{ color: "var(--ww-gold)" }} />
           </button>
         </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          sideOffset={12}
-          className="w-auto border-slate-200 p-0 shadow-xl"
-        >
-          <div className="border-b border-slate-200 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              When
-            </p>
-            <h3 className="mt-1 text-base font-semibold text-slate-900">
-              Choose check-in and check-out dates
-            </h3>
+        <PopoverContent align="start" sideOffset={12} className="w-auto p-0 shadow-xl" style={{ border: "1px solid var(--ww-mist)", background: "var(--ww-warm-white)", borderRadius: "1rem" }}>
+          <div className="border-b px-4 py-3" style={{ borderColor: "var(--ww-mist)" }}>
+            <p className="ww-eyebrow">Choose your dates</p>
           </div>
           <Calendar
             mode="range"
@@ -175,109 +160,81 @@ export function HomeQuickSearchForm() {
             onSelect={(range) => {
               setCheckIn(range?.from ? format(range.from, "yyyy-MM-dd") : "");
               setCheckOut(range?.to ? format(range.to, "yyyy-MM-dd") : "");
-
-              if (range?.from && range?.to) {
-                setWhenOpen(false);
-              }
+              if (range?.from && range?.to) setWhenOpen(false);
             }}
             disabled={{ before: today }}
           />
-          <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setCheckIn("");
-                setCheckOut("");
-              }}
-              className="text-slate-500"
-            >
-              Clear
-            </Button>
-            <Button type="button" size="sm" onClick={() => setWhenOpen(false)}>
-              Done
-            </Button>
+          <div className="flex items-center justify-between border-t px-4 py-3" style={{ borderColor: "var(--ww-mist)" }}>
+            <button type="button" onClick={() => { setCheckIn(""); setCheckOut(""); }} className="text-xs" style={{ color: "#7a6e62" }}>Clear</button>
+            <button type="button" onClick={() => setWhenOpen(false)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white" style={{ background: "var(--ww-ink)" }}>Done</button>
           </div>
         </PopoverContent>
       </Popover>
 
+      {/* Separator */}
+      <div className="hidden w-px self-stretch my-2 md:block" style={{ background: "var(--ww-mist)" }} />
+
+      {/* Who */}
       <Popover open={whoOpen} onOpenChange={setWhoOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex h-14 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left transition hover:border-slate-300 hover:bg-slate-50"
+            className="flex h-14 items-center justify-between gap-3 rounded-xl px-4 text-left transition"
+            style={{ background: "transparent" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(201,168,76,0.08)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
           >
             <span className="min-w-0">
-              <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <span className="block text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--ww-celadon)" }}>
                 Who
               </span>
-              <span
-                className={cn(
-                  "mt-1 block truncate text-sm",
-                  guests ? "text-slate-900" : "text-slate-400"
-                )}
-              >
+              <span className="mt-0.5 block truncate text-sm font-medium" style={{ color: guests ? "var(--ww-ink)" : "#b8afa4" }}>
                 {whoLabel}
               </span>
             </span>
-            <Users className="size-4 shrink-0 text-slate-500" />
+            <Users className="size-4 shrink-0" style={{ color: "var(--ww-gold)" }} />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" sideOffset={12} className="w-[320px] border-slate-200 p-4">
+        <PopoverContent align="start" sideOffset={12} className="w-[280px] p-4" style={{ border: "1px solid var(--ww-mist)", background: "var(--ww-warm-white)", borderRadius: "1rem" }}>
           <div className="space-y-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Who
-              </p>
-              <h3 className="mt-1 text-base font-semibold text-slate-900">
-                Choose the number of guests
-              </h3>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {Array.from({ length: 10 }, (_, index) => index + 1).map((count) => (
-                <Button
+            <p className="ww-eyebrow">Number of guests</p>
+            <div className="grid grid-cols-5 gap-1.5">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((count) => (
+                <button
                   key={count}
                   type="button"
-                  variant={guests === String(count) ? "default" : "outline"}
-                  size="sm"
-                  className="h-10 rounded-xl px-0"
-                  onClick={() => {
-                    setGuests(String(count));
-                    setWhoOpen(false);
+                  onClick={() => { setGuests(String(count)); setWhoOpen(false); }}
+                  className="flex h-10 items-center justify-center rounded-lg text-sm font-semibold transition"
+                  style={{
+                    background: guests === String(count) ? "var(--ww-ink)" : "var(--ww-parchment)",
+                    color: guests === String(count) ? "white" : "var(--ww-ink)",
+                    border: `1px solid ${guests === String(count) ? "var(--ww-ink)" : "var(--ww-mist)"}`,
+                    fontFamily: "var(--font-mono, monospace)",
                   }}
                 >
                   {count}
-                </Button>
+                </button>
               ))}
-            </div>
-            <div className="flex items-center justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setGuests("")}
-                className="text-slate-500"
-              >
-                Clear
-              </Button>
-              <Button type="button" size="sm" onClick={() => setWhoOpen(false)}>
-                Done
-              </Button>
             </div>
           </div>
         </PopoverContent>
       </Popover>
 
-      <Button
+      {/* Search button */}
+      <button
         type="button"
-        size="lg"
-        className="h-14 rounded-2xl bg-[var(--ww-primary-blue)] px-5 text-white hover:bg-[var(--ww-secondary-green)] md:min-w-28"
         onClick={submitSearch}
+        className="flex h-14 items-center justify-center gap-2 rounded-xl px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+        style={{
+          background: "var(--ww-terra)",
+          boxShadow: "0 2px 8px rgba(193,123,74,0.35)",
+          minWidth: "6rem",
+        }}
       >
         <Search className="size-4" />
         Search
-      </Button>
+      </button>
     </div>
   );
+
 }
