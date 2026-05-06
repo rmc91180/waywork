@@ -75,7 +75,7 @@ npm run dev
 - `R2_BUCKET_NAME`
 - `R2_PUBLIC_URL`
 - `NEXT_PUBLIC_MAPBOX_TOKEN`
-- `PMS_ACTIVE_PROVIDER` (`SITEMINDER` default, supports `MEWS` and `NONE`)
+- `PMS_ACTIVE_PROVIDER` (`SITEMINDER` default, supports `MEWS`, `APALEO`, and `NONE`)
 - `MEWS_API_BASE_URL`
 - `MEWS_CLIENT_TOKEN`
 - `MEWS_CONNECTION_TOKEN`
@@ -153,3 +153,4 @@ Key API routes:
 - `POST /api/pms/siteminder/channel-manager/updatePrices` - inbound rate updates from SiteMinder
 - `GET /api/health/pms` - PMS queue and connection health status
 - `POST /api/pms/mews/*` - returns HTTP `410` when `PMS_ACTIVE_PROVIDER` is not `MEWS`
+

@@ -26,6 +26,9 @@ if (process.env.RESEND_API_KEY) {
   );
 }
 
+if (process.env.NODE_ENV === "production" && providers.length === 0) {
+  throw new Error("No production auth provider configured.");
+}
 // Demo/preview mode: allow credentials-based login when no OAuth is configured
 const isDemo = providers.length === 0;
 if (isDemo) {
@@ -116,3 +119,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
