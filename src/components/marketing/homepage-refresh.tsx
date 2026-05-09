@@ -95,24 +95,6 @@ const getHomepageData = unstable_cache(
   { revalidate: 300 }
 );
 
-const browseLinks = [
-  {
-    label: "Deep focus",
-    description: "Quiet homes with strong internet",
-    href: "/search?workspaceTypes=PRIVATE_OFFICE,HOME_OFFICE&minWorkScore=75&verifiedInternet=true",
-  },
-  {
-    label: "Team stays",
-    description: "Small-group homes with space to work together",
-    href: "/search?workspaceTypes=HYBRID_SPACE,MEETING_ROOM&guests=4",
-  },
-  {
-    label: "City escapes",
-    description: "Well-located stays for work and downtime",
-    href: "/search?sortBy=recommended",
-  },
-];
-
 export async function HomepageRefresh() {
   const data = await getHomepageData();
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://waywork.com";
@@ -311,81 +293,6 @@ export async function HomepageRefresh() {
               />
             ))
           )}
-        </div>
-      </section>
-
-      {/* ── Browse categories ──────────────────────────────────── */}
-      <section className="waywork-shell mt-14 md:mt-18">
-        <div className="grid gap-4 md:grid-cols-3">
-          {browseLinks.map((link, i) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="group relative overflow-hidden rounded-2xl p-6 transition ww-hover-lift"
-              style={{
-                background: i === 0 ? "var(--ww-ink)" : i === 1 ? "var(--ww-celadon)" : "var(--ww-terra)",
-                color: "white",
-              }}
-            >
-              <div
-                className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full"
-                style={{ background: "rgba(255,255,255,0.06)" }}
-              />
-              <div
-                className="pointer-events-none absolute -bottom-4 -left-4 size-28 rounded-full"
-                style={{ background: "rgba(255,255,255,0.04)" }}
-              />
-              <p className="relative text-lg font-semibold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
-                {link.label}
-              </p>
-              <p className="relative mt-1 text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
-                {link.description}
-              </p>
-              <ArrowRight className="relative mt-4 size-4 transition-transform group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.6)" }} />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Host CTA ───────────────────────────────────────────── */}
-      <section className="waywork-shell mt-14 md:mt-18">
-        <div
-          className="relative overflow-hidden rounded-3xl px-8 py-10 md:px-12 md:py-12"
-          style={{ background: "var(--ww-gold-light)", border: "1px solid rgba(201,168,76,0.3)" }}
-        >
-          {/* Decorative background text */}
-          <span
-            className="pointer-events-none absolute -right-4 -top-4 select-none text-[120px] font-bold leading-none"
-            style={{ color: "rgba(201,168,76,0.12)", fontFamily: "var(--font-playfair), Georgia, serif" }}
-            aria-hidden
-          >
-            Host
-          </span>
-
-          <div className="relative flex flex-wrap items-center justify-between gap-6">
-            <div className="max-w-xl">
-              <p className="ww-eyebrow" style={{ color: "var(--ww-celadon)" }}>For hosts</p>
-              <h2 className="mt-2 text-2xl font-semibold md:text-3xl" style={{ color: "var(--ww-ink)" }}>
-                Your property earns more with work travelers.
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: "#5a5047" }}>
-                Remote workers stay longer, treat spaces better, and book shoulder seasons.
-                Add your home to WayWork and we'll handle the rest.
-              </p>
-            </div>
-            <Link
-              href="/register?callbackUrl=%2Fhost"
-              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
-              style={{
-                background: "var(--ww-ink)",
-                color: "var(--ww-gold-light)",
-                boxShadow: "0 2px 8px rgba(13,31,45,0.2)",
-              }}
-            >
-              Become a host
-              <ArrowRight className="size-4" />
-            </Link>
-          </div>
         </div>
       </section>
 

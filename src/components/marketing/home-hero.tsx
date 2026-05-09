@@ -96,13 +96,13 @@ export function HomeHero({ images, searchPanel }: HomeHeroProps) {
             className="text-[2.75rem] font-bold leading-[1.06] tracking-tight text-white md:text-6xl lg:text-7xl"
             style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
           >
-            Homes where
+            Find beautiful spaces
             <br />
             <span
               className="relative inline-block"
               style={{ color: "#f5e6c0" }}
             >
-              work happens.
+              that work for work.
               <span
                 className="absolute -bottom-1 left-0 h-0.5 w-full rounded-full"
                 style={{

@@ -140,6 +140,15 @@ export function Header() {
                     </Link>
                   </Button>
                   <Button
+                    variant="ghost"
+                    className="hidden text-[var(--ww-ink)] md:inline-flex"
+                    asChild
+                  >
+                    <Link href="/become-a-host">
+                      Become a host
+                    </Link>
+                  </Button>
+                  <Button
                     className="bg-[var(--ww-terra)] text-white hover:bg-[var(--ww-terra-deep)] shadow-sm"
                     asChild
                   >
