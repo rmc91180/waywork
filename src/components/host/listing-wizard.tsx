@@ -11,6 +11,7 @@ import { StepAmenities } from "@/components/host/step-amenities";
 import { StepConnectivity } from "@/components/host/step-connectivity";
 import { StepPhotos } from "@/components/host/step-photos";
 import { StepAvailability } from "@/components/host/step-availability";
+import { StepReview } from "@/components/host/step-review";
 import { WorkScorePreview } from "@/components/host/work-score-preview";
 import { useListingForm, type ListingFormData } from "@/hooks/use-listing-form";
 import {
