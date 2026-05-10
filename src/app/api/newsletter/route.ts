@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     await db.analyticsEvent.create({
       data: {
         event: "newsletter_signup",
+        sessionId: "newsletter",
         properties: { email, source: "footer" },
       },
     });

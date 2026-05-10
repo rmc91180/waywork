@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     await db.analyticsEvent.create({
       data: {
         event: "for_teams_intake",
+        sessionId: "teams-intake",
         properties: data,
       },
     });
