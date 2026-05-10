@@ -42,6 +42,7 @@ async function loadSpaceMetadataFromDb(client: PrismaClient, id: string) {
       title: true,
       description: true,
       city: true,
+      workspaceType: true,
       images: { where: { isPrimary: true }, take: 1, select: { url: true, alt: true } },
     },
   });
