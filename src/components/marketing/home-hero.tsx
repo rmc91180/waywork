@@ -146,6 +146,19 @@ export function HomeHero({ images, searchPanel }: HomeHeroProps) {
             >
               Planning a team offsite?
             </Link>
+            <Link
+              href="/become-a-host"
+              onClick={() => trackEvent({ event: "hero_cta_clicked", properties: { cta: "become_a_host" } })}
+              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5"
+              style={{
+                background: "rgba(201,168,76,0.15)",
+                color: "#f5e6c0",
+                border: "1px solid rgba(201,168,76,0.3)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              Become a host
+            </Link>
           </div>
 
           {/* Trust pills */}
