@@ -587,12 +587,12 @@ export default async function SpaceDetailPage({ params }: Props) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
-                { label: "Connectivity", score: workScore.connectivity, max: 30, tip: "Internet speed, network type, and backup connection" },
-                { label: "Desk Setup", score: workScore.deskSetup, max: 20, tip: "Dedicated desk, monitor, and standing desk availability" },
-                { label: "Meeting Space", score: workScore.meetingSpace, max: 15, tip: "Conference table, whiteboard, and collaboration area" },
-                { label: "Quiet", score: workScore.quietEnvironment, max: 15, tip: "Private rooms and low-noise environment for focus work" },
-                { label: "Ergonomics", score: workScore.ergonomics, max: 10, tip: "Ergonomic chair, adjustable desk, and proper lighting" },
-                { label: "AV Ready", score: workScore.avReadiness, max: 10, tip: "Webcam, speaker, external monitor, and presentation screen" },
+                { label: "Connectivity", score: workScore.connectivity, max: 40, tip: "Download speed, upload speed, fiber/ethernet, verified test, backup connection" },
+                { label: "Desk & Display", score: workScore.deskSetup, max: 20, tip: "Dedicated desk, standing option, external monitor, big screen 60\"+" },
+                { label: "Quiet & Focus", score: workScore.quietEnvironment, max: 15, tip: "Private rooms, soundproofing, dedicated study or office space" },
+                { label: "Meeting & AV", score: workScore.meetingSpace, max: 10, tip: "Conference table, whiteboard, webcam, HDMI cable, speakerphone" },
+                { label: "Ergonomics", score: workScore.ergonomics, max: 8, tip: "Ergonomic chair, adjustable desk, task lighting, footrest" },
+                { label: "Office Equip.", score: workScore.avReadiness, max: 7, tip: "Printer, business TV, UPS power backup, secure storage" },
               ].map((item) => (
                 <Tooltip key={item.label}>
                   <TooltipTrigger asChild>

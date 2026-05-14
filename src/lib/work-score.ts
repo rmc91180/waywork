@@ -4,8 +4,8 @@ interface WorkScoreInput {
   amenities: Pick<ListingAmenity, "category" | "name" | "quantity">[];
   connectivity: Pick<
     ConnectivityProfile,
-    "declaredDownloadMbps" | "declaredUploadMbps" | "verified"
-  > | null;
+    "declaredDownloadMbps" | "declaredUploadMbps"
+  > & { verified?: boolean } | null;
 }
 
 export interface WorkScoreBreakdown {

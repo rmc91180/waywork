@@ -149,7 +149,7 @@ export function StepConnectivity({ data, onChange }: StepConnectivityProps) {
                   : data.connectivity.declaredDownloadMbps >= 10
                     ? "8"
                     : "3"}
-            /30
+            /40
           </div>
           <p className="text-xs text-gray-500">
             {data.connectivity.declaredDownloadMbps >= 100

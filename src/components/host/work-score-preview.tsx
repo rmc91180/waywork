@@ -24,12 +24,12 @@ interface WorkScorePreviewProps {
 }
 
 const CATEGORIES = [
-  { key: "connectivity", label: "Connectivity", max: 30, icon: Wifi, tip: "Speed & network type" },
-  { key: "deskSetup", label: "Desk Setup", max: 20, icon: Monitor, tip: "Desk, monitor, standing option" },
-  { key: "meetingSpace", label: "Meeting", max: 15, icon: Users, tip: "Conference table, whiteboard" },
-  { key: "quietEnvironment", label: "Quiet", max: 15, icon: Volume2, tip: "Private rooms, focus environment" },
-  { key: "ergonomics", label: "Ergonomics", max: 10, icon: Armchair, tip: "Chair, lighting, adjustable desk" },
-  { key: "avReadiness", label: "AV Ready", max: 10, icon: Video, tip: "Webcam, speaker, monitor" },
+  { key: "connectivity",     label: "Connectivity",    max: 40, icon: Wifi,     tip: "Download, upload, fiber/ethernet, verified test, backup" },
+  { key: "deskSetup",        label: "Desk & Display",  max: 20, icon: Monitor,  tip: "Dedicated desk, standing option, monitor, big screen 60\"+" },
+  { key: "quietEnvironment", label: "Quiet & Focus",   max: 15, icon: Volume2,  tip: "Private rooms, soundproofing, dedicated study" },
+  { key: "meetingSpace",     label: "Meeting & AV",    max: 10, icon: Users,    tip: "Conference table, whiteboard, webcam, HDMI" },
+  { key: "ergonomics",       label: "Ergonomics",      max: 8,  icon: Armchair, tip: "Ergonomic chair, adjustable desk, task lighting" },
+  { key: "avReadiness",      label: "Office Equip.",   max: 7,  icon: Video,    tip: "Printer, business TV, UPS, secure storage" },
 ] as const;
 
 // Quick-win suggestions keyed by what's missing

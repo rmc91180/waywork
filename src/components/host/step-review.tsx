@@ -82,12 +82,12 @@ export function StepReview({ data }: StepReviewProps) {
             </p>
           </div>
           <div className="text-right text-xs text-gray-500 space-y-0.5">
-            <div>Connectivity: {workScore.connectivity}/30</div>
+            <div>Connectivity: {workScore.connectivity}/40</div>
             <div>Desk Setup: {workScore.deskSetup}/20</div>
             <div>Meeting: {workScore.meetingSpace}/15</div>
             <div>Quiet: {workScore.quietEnvironment}/15</div>
             <div>Ergonomics: {workScore.ergonomics}/10</div>
-            <div>AV: {workScore.avReadiness}/10</div>
+            <div>Office Equip.: {workScore.avReadiness}/7</div>
           </div>
         </div>
       </div>
