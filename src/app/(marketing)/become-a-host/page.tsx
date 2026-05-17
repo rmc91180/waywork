@@ -113,7 +113,7 @@ export default function BecomeAHostPage() {
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               { value: "5–14", label: "Avg nights per booking" },
-              { value: "12%",  label: "WayWork commission" },
+              { value: "15%",  label: "WayWork commission" },
               { value: "48h",  label: "Payout after check-in" },
               { value: "Free", label: "To list your property" },
             ].map((s) => (
@@ -227,17 +227,17 @@ export default function BecomeAHostPage() {
               className="text-2xl font-bold"
               style={{ fontFamily: "var(--font-playfair), Georgia, serif", color: "var(--ww-ink)" }}
             >
-              12% commission. Nothing else.
+              15% commission. Nothing else.
             </h3>
             <p className="mt-3 text-sm leading-relaxed" style={{ color: "#5a5047" }}>
               No subscription fees. No listing fees. No surprise charges. WayWork takes
-              12% of each booking — you keep the rest. Payouts land 24 hours after check-in.
+              WayWork takes 15% of each booking — you keep the rest. Payouts land 24 hours after check-in.
             </p>
             <div className="mt-6 space-y-3">
               {[
                 { label: "Guest pays", value: "€1,000" },
-                { label: "WayWork commission (12%)", value: "−€120" },
-                { label: "You receive", value: "€880", highlight: true },
+                { label: "WayWork commission (15%)", value: "−€150" },
+                { label: "You receive", value: "€850", highlight: true },
               ].map((row) => (
                 <div
                   key={row.label}
