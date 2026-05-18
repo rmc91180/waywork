@@ -260,7 +260,7 @@ export default function ForTeamsPage() {
             </p>
             <h2 className="mt-2 text-3xl font-semibold leading-tight text-[var(--ww-ink)] md:text-4xl">
               Hotels are built for sleep. <br />
-              We're built for work.
+              We&apos;re built for work.
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-600">
               A hotel gives you a room and a shared meeting room that costs extra. WayWork gives

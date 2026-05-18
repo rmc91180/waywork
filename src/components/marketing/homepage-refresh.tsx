@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { ArrowRight, Gauge, Wifi } from "lucide-react";
+import { ArrowRight, Wifi } from "lucide-react";
 import { db } from "@/lib/db";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
 import { formatCurrency } from "@/lib/stripe";
 import { HomeHero, type HeroImage } from "@/components/marketing/home-hero";

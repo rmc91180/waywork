@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PlusCircle, ArrowRight, Eye, Pencil, BarChart2 } from "lucide-react";
+import { PlusCircle, Eye, Pencil, BarChart2 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/stripe";

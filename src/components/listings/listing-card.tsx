@@ -5,7 +5,6 @@ import { WORKSPACE_TYPES } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
 import { getLimehomePilotMeta } from "@/lib/limehome-pilot";
 import { formatCurrency } from "@/lib/stripe";
-import { cn } from "@/lib/utils";
 
 export interface ListingCardData {
   id: string;
@@ -57,7 +56,6 @@ function networkLabel(type: string) {
 
 export function ListingCard({
   listing,
-  variant = "control",
   matchReasons = [],
 }: ListingCardProps) {
   const wsType = WORKSPACE_TYPES[listing.workspaceType as keyof typeof WORKSPACE_TYPES];

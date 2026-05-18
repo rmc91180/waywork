@@ -14,8 +14,7 @@ import {
   LEISURE_FEATURE_LABELS,
   WORKSPACE_TYPES,
 } from "@/lib/constants";
-import { computeWorkScore, getWorkScoreColor } from "@/lib/work-score";
-import { cn } from "@/lib/utils";
+import { computeWorkScore } from "@/lib/work-score";
 import { BookingSidebar } from "@/components/booking/booking-sidebar";
 import { InquiryButton } from "@/components/messaging/inquiry-button";
 import { PropertyAnalyticsTracker } from "@/components/listings/property-analytics-tracker";

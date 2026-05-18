@@ -78,12 +78,6 @@ function scoreColor(score: number, max: number) {
   return "bg-slate-300";
 }
 
-function totalColor(score: number) {
-  if (score >= 80) return "text-emerald-600";
-  if (score >= 60) return "text-amber-600";
-  return "text-slate-500";
-}
-
 function scoreLabel(score: number) {
   if (score >= 85) return "Exceptional";
   if (score >= 70) return "Work-ready";

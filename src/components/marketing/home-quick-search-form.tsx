@@ -6,12 +6,10 @@ import { format, isValid, parseISO, startOfDay } from "date-fns";
 import { CalendarDays, MapPin, Search, Users } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { trackEvent } from "@/lib/analytics";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DEFAULT_SEARCH_FILTERS, serializeSearchFilterParams } from "@/lib/search-filters";
-import { cn } from "@/lib/utils";
 
 function parseDate(value: string) {
   if (!value) return undefined;
